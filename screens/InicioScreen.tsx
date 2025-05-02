@@ -9,6 +9,11 @@ type RootStackParamList = {
   Inicio: undefined;
   Registro: undefined;
   InicioSesion: undefined;
+  HomePerfil: undefined;
+  Menu: undefined;
+  Seguimiento: undefined;
+  Habitos: undefined;
+  Perfil: undefined;
 };
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
