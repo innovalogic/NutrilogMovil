@@ -7,6 +7,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 type RootStackParamList = {
   Menu: undefined;
+  Registro: undefined;
 };
 
 const InicioSesionScreen = () => {

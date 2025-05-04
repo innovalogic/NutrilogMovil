@@ -5,7 +5,7 @@ import BottomNavBar from '../Componentes/BottomNavBar';
 export default function HomePerfilScreen() {
   return (
     <View className="flex-1 bg-[#5F75E4] relative">
-      <View className="items-center p-4">
+      <View className="items-center p-20">
         <Text className="text-white text-2xl font-bold">Perfil</Text>
       </View>
       <View className="p-4">
