@@ -27,11 +27,11 @@ const BottomNavBar = () => {
         onPress={() => navigation.navigate('Menu')}
       >
         <Image
-          source={require('../assets/Inicio.png')}
+          source={require('../assets/Menu.png')}
           className="w-6 h-6 mb-1"
           resizeMode="contain"
         />
-        <Text className="text-white text-xs">Inicio</Text>
+        <Text className="text-white text-xs">Menu</Text>
       </TouchableOpacity>
       <TouchableOpacity
         className="items-center"
