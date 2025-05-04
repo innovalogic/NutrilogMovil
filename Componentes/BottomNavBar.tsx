@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
@@ -26,25 +26,45 @@ const BottomNavBar = () => {
         className="items-center"
         onPress={() => navigation.navigate('Menu')}
       >
-        <Text className="text-white text-xs mt-1">Menú</Text>
+        <Image
+          source={require('../assets/Inicio.png')}
+          className="w-6 h-6 mb-1"
+          resizeMode="contain"
+        />
+        <Text className="text-white text-xs">Inicio</Text>
       </TouchableOpacity>
       <TouchableOpacity
         className="items-center"
         onPress={() => navigation.navigate('Seguimiento')}
       >
-        <Text className="text-white text-xs mt-1">Seguimiento</Text>
+        <Image
+          source={require('../assets/Seguimiento.png')}
+          className="w-6 h-6 mb-1"
+          resizeMode="contain"
+        />
+        <Text className="text-white text-xs">Seguimiento</Text>
       </TouchableOpacity>
       <TouchableOpacity
         className="items-center"
         onPress={() => navigation.navigate('Habitos')}
       >
-        <Text className="text-white text-xs mt-1">Hábitos</Text>
+        <Image
+          source={require('../assets/Habitos.png')}
+          className="w-6 h-6 mb-1"
+          resizeMode="contain"
+        />
+        <Text className="text-white text-xs">Hábitos</Text>
       </TouchableOpacity>
       <TouchableOpacity
         className="items-center"
         onPress={() => navigation.navigate('Perfil')}
       >
-        <Text className="text-white text-xs mt-1">Perfil</Text>
+        <Image
+          source={require('../assets/Perfil.png')}
+          className="w-6 h-6 mb-1"
+          resizeMode="contain"
+        />
+        <Text className="text-white text-xs">Perfil</Text>
       </TouchableOpacity>
     </View>
   );
