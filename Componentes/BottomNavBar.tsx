@@ -21,7 +21,7 @@ const BottomNavBar = () => {
   const navigation = useNavigation<NavigationProp>();
 
   return (
-    <View className="flex-row justify-around items-center bg-cyan-950 py-4 border-t border-cyan-950">
+    <View className="flex-row justify-around items-center bg-black py-4 border-t border-black">
 
       <TouchableOpacity
         className="items-center"
