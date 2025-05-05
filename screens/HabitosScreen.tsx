@@ -19,7 +19,7 @@ export default function HabitosScreen() {
         <Text className="text-white text-4xl font-bold">HÁBITOS</Text>
         <Text className="text-white text-3xl font-medium mt-5">¿Qué hábito deseas adquirir?</Text>
       </View>
-      <View className="p-4 mt-[-55]">
+      <View className="p-4 mt-[-40]">
         <View className="flex-row justify-around mb-8">
           <TouchableOpacity
             className="items-center"
