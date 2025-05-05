@@ -11,14 +11,14 @@ export default function CategoriasEjercicioFisico() {
       </View>
       {/* Buttons */}
       <View className="flex-1 justify-center items-center">
-        <TouchableOpacity className="bg-[#5F75E4] rounded-full py-4 px-8 mb-6">
-          <Text className="text-white text-xl font-bold">Yoga</Text>
+        <TouchableOpacity className="bg-[#5F75E4] rounded-lg py-6 px-10 mb-6 w-3/4">
+          <Text className="text-white text-2xl font-bold text-center">Yoga</Text>
         </TouchableOpacity>
-        <TouchableOpacity className="bg-[#5F75E4] rounded-full py-4 px-8 mb-6">
-          <Text className="text-white text-xl font-bold">Entrenamiento</Text>
+        <TouchableOpacity className="bg-[#5F75E4] rounded-lg py-6 px-10 mb-6 w-3/4">
+          <Text className="text-white text-2xl font-bold text-center">Entrenamiento</Text>
         </TouchableOpacity>
-        <TouchableOpacity className="bg-[#5F75E4] rounded-full py-4 px-8">
-          <Text className="text-white text-xl font-bold">Cardio</Text>
+        <TouchableOpacity className="bg-[#5F75E4] rounded-lg py-6 px-10 w-3/4">
+          <Text className="text-white text-2xl font-bold text-center">Cardio</Text>
         </TouchableOpacity>
       </View>
     </View>
