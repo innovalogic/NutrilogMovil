@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text,TouchableOpacity } from 'react-native';
+import { View, Text, Image, TouchableOpacity,TouchableOpacity } from 'react-native';
 import BottomNavBar from '../Componentes/BottomNavBar';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -22,21 +22,43 @@ export default function HabitosScreen() {
   const navigation = useNavigation<NavigationProp>();
 
   return (
-    <View className="flex-1 bg-[#5F75E4]">
-      <View className="flex-1 items-center justify-center">
-        <Text className="text-white text-2xl font-bold">Pantalla de Hábitos</Text>
-
-        <TouchableOpacity
-                className="bg-white px-20 py-3 rounded-[30px] mb-4 "
-                onPress={() => navigation.navigate('Cardio')}
-              >
-                <Text className="text-black text-2xl font-bold">Cardio</Text>
-                <Text className="text-black text-lg font-semibold">Salud cardiovascular y</Text>
-                <Text className="text-black text-lg font-semibold">perdida de peso</Text>
-              </TouchableOpacity>
-
+    <View className="flex-1 bg-[#5F75E4] relative">
+      <View className="items-center p-20">
+        <Text className="text-white text-2xl font-bold">Hábitos</Text>
       </View>
-      <BottomNavBar />
+      <View className="p-4 mt-38">
+        <View className="flex-row justify-around mb-6">
+          <TouchableOpacity className="items-center">
+            <Image
+              source={require('../assets/EjercicioFisico.png')}
+              className="w-32 h-32 rounded-full"
+              resizeMode="contain"
+            />
+            <Text className="text-white text-base mt-7">Ejercicio Físico</Text>
+          </TouchableOpacity>
+          <TouchableOpacity className="items-center">
+            <Image
+              source={require('../assets/Alimentacion.png')}
+              className="w-32 h-32 rounded-full"
+              resizeMode="contain"
+            />
+            <Text className="text-white text-base mt-7">Alimentación</Text>
+          </TouchableOpacity>
+        </View>
+        <View className="items-center">
+          <TouchableOpacity className="items-center">
+            <Image
+              source={require('../assets/SaludMental.png')}
+              className="w-32 h-32 rounded-full"
+              resizeMode="contain"
+            />
+            <Text className="text-white text-base mt-7">Salud Mental</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+      <View className="absolute bottom-0 w-full">
+        <BottomNavBar />
+      </View>
     </View>
   );
 }
