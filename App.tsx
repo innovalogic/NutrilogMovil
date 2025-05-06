@@ -14,16 +14,19 @@ import RegisterExerciseScreen from "screens/RegistroHabitos/RegisterExerciseScre
 import RegisterYogaLevelScreen from "screens/RegistroHabitos/RegisterYogaLevelScreen";
 import RegisterTrainingLevelScreen from "screens/RegistroHabitos/RegisterTrainingLevelScreen";
 import RegisterCardioLevelScreen from "screens/RegistroHabitos/RegisterCardioLevelScreen";
+import CategoriasEjercicioFisico from 'screens/HabitoEjercicioFisico/CategoriasEjercicioFisico';
 
 const Stack = createNativeStackNavigator();
 
 export default function App() {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Inicio"
-       screenOptions={{
-        headerShown: false, // Desactiva el encabezado en todas las pantallas
-      }}>
+      <Stack.Navigator
+        initialRouteName="Inicio"
+        screenOptions={{
+          headerShown: false, // Desactiva el encabezado en todas las pantallas
+        }}
+      >
         <Stack.Screen name="Inicio" component={InicioScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Registro" component={RegistroScreen} />
         <Stack.Screen name="InicioSesion" component={InicioSesionScreen} />
@@ -38,6 +41,7 @@ export default function App() {
         <Stack.Screen name="RegistroYogaLevel" component={RegisterYogaLevelScreen} />
         <Stack.Screen name="RegistroTrainingLevel" component={RegisterTrainingLevelScreen} />
         <Stack.Screen name="RegistroCardioLevel" component={RegisterCardioLevelScreen} />
+        <Stack.Screen name="CategoriasEjercicioFisico" component={CategoriasEjercicioFisico} />
       </Stack.Navigator>
     </NavigationContainer>
   );
