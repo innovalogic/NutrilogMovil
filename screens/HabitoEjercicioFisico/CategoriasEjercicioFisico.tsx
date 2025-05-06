@@ -15,7 +15,7 @@ export default function CategoriasEjercicioFisico() {
           <View className="flex-row items-center">
             <Image
               source={require('../../assets/Yoga.png')}
-              className="w-14 h-28 mr-4 ml-[-18px]"
+              className="w-16 h-28 mr-4 ml-[-24px]"
             />
             <View>
               <Text className="text-white text-2xl font-bold">Yoga</Text>
@@ -29,7 +29,7 @@ export default function CategoriasEjercicioFisico() {
           <View className="flex-row items-center">
             <Image
               source={require('../../assets/Entrenamiento.png')}
-              className="w-14 h-28 mr-4 ml-[-18px]"
+              className="w-20 h-28 mr-4 ml-[-34px]"
             />
             <View>
               <Text className="text-white text-2xl font-bold">Entrenamiento</Text>
@@ -43,7 +43,7 @@ export default function CategoriasEjercicioFisico() {
           <View className="flex-row items-center">
             <Image
               source={require('../../assets/Cardio.png')}
-              className="w-14 h-28 mr-4 ml-[-18px]"
+              className="w-20 h-28 mr-4 ml-[-34px]"
             />
             <View>
               <Text className="text-white text-2xl font-bold">Cardio</Text>
