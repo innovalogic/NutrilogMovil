@@ -11,34 +11,46 @@ export default function CategoriasEjercicioFisico() {
       </View>
       {/* Buttons */}
       <View className="flex-1 justify-center items-center">
-        <TouchableOpacity className="bg-[#5F75E4] rounded-lg py-6 px-10 mb-6 w-3/4">
+        <TouchableOpacity className="bg-[#5F75E4] rounded-lg py-6 px-14 mb-10 w-3/4">
           <View className="flex-row items-center">
             <Image
-              source={require('../../assets/Yoga.png')} // Ruta ajustada
-              className="w-12 h-12 mr-2" // Usando Tailwind para los estilos
+              source={require('../../assets/Yoga.png')}
+              className="w-14 h-28 mr-4 ml-[-18px]"
             />
             <View>
               <Text className="text-white text-2xl font-bold">Yoga</Text>
-              <Text className="text-white text-lg font-medium text-center mt-1">
+              <Text className="text-white font-medium text-left mt-7">
                 Alivio del estrés, flexibilidad, fuerza
               </Text>
             </View>
           </View>
         </TouchableOpacity>
-        <TouchableOpacity className="bg-[#5F75E4] rounded-lg py-6 px-10 mb-6 w-3/4">
-          <View className="items-center">
-            <Text className="text-white text-2xl font-bold">Entrenamiento</Text>
-            <Text className="text-white text-lg font-medium text-center mt-1">
-              Desarrollo muscular, aumento del metabolismo
-            </Text>
+        <TouchableOpacity className="bg-[#5F75E4] rounded-lg py-6 px-14 mb-10 w-3/4">
+          <View className="flex-row items-center">
+            <Image
+              source={require('../../assets/Entrenamiento.png')}
+              className="w-14 h-28 mr-4 ml-[-18px]"
+            />
+            <View>
+              <Text className="text-white text-2xl font-bold">Entrenamiento</Text>
+              <Text className="text-white font-medium text-left mt-7">
+                Desarrollo muscular, aumento del metabolismo
+              </Text>
+            </View>
           </View>
         </TouchableOpacity>
-        <TouchableOpacity className="bg-[#5F75E4] rounded-lg py-6 px-10 w-3/4">
-          <View className="items-center">
-            <Text className="text-white text-2xl font-bold">Cardio</Text>
-            <Text className="text-white text-lg font-medium text-center mt-1">
-              Salud cardiovascular, pérdida de peso
-            </Text>
+        <TouchableOpacity className="bg-[#5F75E4] rounded-lg py-6 px-14 w-3/4">
+          <View className="flex-row items-center">
+            <Image
+              source={require('../../assets/Cardio.png')}
+              className="w-14 h-28 mr-4 ml-[-18px]"
+            />
+            <View>
+              <Text className="text-white text-2xl font-bold">Cardio</Text>
+              <Text className="text-white font-medium text-left mt-7">
+                Salud cardiovascular, pérdida de peso
+              </Text>
+            </View>
           </View>
         </TouchableOpacity>
       </View>
