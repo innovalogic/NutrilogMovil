@@ -1,7 +1,18 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Image } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
+type RootStackParamList = {
+  RegistroCardioLevel: undefined;
+  RegistroYogaLevel: undefined;
+};
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export default function CategoriasEjercicioFisico() {
+  const navigation = useNavigation<NavigationProp>();
+
   return (
     <View className="flex-1 bg-white">
       {/* Title and Subtitle */}
@@ -11,7 +22,8 @@ export default function CategoriasEjercicioFisico() {
       </View>
       {/* Buttons */}
       <View className="flex-1 justify-center items-center">
-        <TouchableOpacity className="bg-[#5F75E4] rounded-lg py-6 px-14 mb-10 w-3/4">
+        <TouchableOpacity className="bg-[#5F75E4] rounded-lg py-6 px-14 mb-10 w-3/4"
+        onPress={() => navigation.navigate('RegistroYogaLevel')}>
           <View className="flex-row items-center">
             <Image
               source={require('../../assets/Yoga.png')}
@@ -39,7 +51,8 @@ export default function CategoriasEjercicioFisico() {
             </View>
           </View>
         </TouchableOpacity>
-        <TouchableOpacity className="bg-[#5F75E4] rounded-lg py-6 px-14 w-3/4">
+        <TouchableOpacity className="bg-[#5F75E4] rounded-lg py-6 px-14 w-3/4"
+         onPress={() => navigation.navigate('RegistroCardioLevel')}>
           <View className="flex-row items-center">
             <Image
               source={require('../../assets/Cardio.png')}

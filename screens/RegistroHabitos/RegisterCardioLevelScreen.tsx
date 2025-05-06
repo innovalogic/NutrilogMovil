@@ -10,7 +10,20 @@ type RootStackParamList = {
   RegistroEjercicios: undefined;
 };
 
-const levels = ['Principiante', 'Intermedio', 'Avanzado'];
+const niveles = [
+  {
+    nombre: 'Quemador Principiante',
+    icono: require('../../assets/cardioCaminar.png')
+  },
+  {
+    nombre: 'Cardio Fuego',
+    icono: require('../../assets/cardioTrotar.png'),
+  },
+  {
+    nombre: 'Cardio Extremo',
+    icono: require('../../assets/cardioCorrer.png'),
+  }
+];
 
 const RegisterCardioLevelScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -55,27 +68,43 @@ const RegisterCardioLevelScreen = () => {
 
   return (
     <View className="flex-1 justify-center items-center bg-blue-500">
-      <Text className="text-white text-3xl font-bold mb-5">Selecciona tu nivel de inicio</Text>
-      <Text className="text-white text-lg mb-10">Actividad: Cardio</Text>
 
-      {levels.map((level) => (
+      <View className="mt-20">
+        <Text className="text-white text-3xl font-mono mb-5">Selecciona tu nivel de inicio</Text>
+         <Text className="text-white text-3xl font-mono mb-5">Actividad: Cardio</Text>
+      </View>
+
+      <View>
+        <Image
+          source={require('../../assets/cardioMenu.png')}
+          className="rounded-2xl w-[363] h-[222]"
+        />
+      </View>
+
+      <View className="flex-1 items-center justify-center mt-[-20] rounded-t-3xl px-5 bg-blue">
+        {niveles.map((level, index) => (
+          <TouchableOpacity
+            key={index}
+            className={`flex-row items-center p-3 my-3 rounded-lg w-full border-2 border-black/30 rounded-2xl bg-white  ${selectedLevel === level.nombre ? 'bg-[#fc6059]' : ''}`}
+            onPress={() => setSelectedLevel(level.nombre)}
+          >
+            <View className='flex-1'>
+              <Text className={`text-3xl font-bold text-black mb-1 ${selectedLevel === level.nombre ? 'text-black' : 'text-black'}`}>
+                {level.nombre}
+              </Text>
+              <Text className={`text-base ${selectedLevel === level.nombre ? 'text-white' : 'text-black'}`}>
+              </Text>
+            </View>
+            <Image source={level.icono} className="w-16 h-16 ml-2 rounded-full" />
+          </TouchableOpacity>
+        ))}
+
         <TouchableOpacity
-          key={level}
-          className={`py-3 px-8 rounded-md mb-5 w-64 items-center ${
-            selectedLevel === level ? 'bg-yellow-400' : 'bg-orange-600'
-          }`}
-          onPress={() => setSelectedLevel(level)}
-        >
-          <Text className="text-white text-lg font-bold">{level}</Text>
+          className="bg-[#fc6059] px-5 py-3 rounded-lg mt-6"
+          onPress={handleSave}>
+          <Text className="text-white text-lg font-bold">Guardar y Volver</Text>
         </TouchableOpacity>
-      ))}
-
-      <TouchableOpacity
-        className="bg-green-600 py-3 px-8 rounded-md w-64 items-center"
-        onPress={handleSave}
-      >
-        <Text className="text-white text-lg font-bold">Guardar y Volver</Text>
-      </TouchableOpacity>
+      </View>
     </View>
   );
 };
