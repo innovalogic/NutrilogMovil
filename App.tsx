@@ -38,6 +38,7 @@ export default function App() {
         <Stack.Screen name="RegistroYogaLevel" component={RegisterYogaLevelScreen} />
         <Stack.Screen name="RegistroTrainingLevel" component={RegisterTrainingLevelScreen} />
         <Stack.Screen name="RegistroCardioLevel" component={RegisterCardioLevelScreen} />
+        
       </Stack.Navigator>
     </NavigationContainer>
   );
