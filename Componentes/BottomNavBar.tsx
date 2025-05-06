@@ -21,7 +21,8 @@ const BottomNavBar = () => {
   const navigation = useNavigation<NavigationProp>();
 
   return (
-    <View className="flex-row justify-around items-center bg-[#1D3A6D] py-4 border-t border-gray-300">
+    <View className="flex-row justify-around items-center bg-black py-4 border-t border-black">
+
       <TouchableOpacity
         className="items-center"
         onPress={() => navigation.navigate('Menu')}
@@ -31,7 +32,7 @@ const BottomNavBar = () => {
           className="w-6 h-6 mb-1"
           resizeMode="contain"
         />
-        <Text className="text-white text-xs">Menu</Text>
+        <Text className="text-white text-xs font-extrabold">Menu</Text>
       </TouchableOpacity>
       <TouchableOpacity
         className="items-center"
@@ -42,7 +43,7 @@ const BottomNavBar = () => {
           className="w-6 h-6 mb-1"
           resizeMode="contain"
         />
-        <Text className="text-white text-xs">Seguimiento</Text>
+        <Text className="text-white text-xs font-extrabold">Seguimiento</Text>
       </TouchableOpacity>
       <TouchableOpacity
         className="items-center"
@@ -53,7 +54,7 @@ const BottomNavBar = () => {
           className="w-6 h-6 mb-1"
           resizeMode="contain"
         />
-        <Text className="text-white text-xs">Hábitos</Text>
+        <Text className="text-white text-xs font-extrabold">Hábitos</Text>
       </TouchableOpacity>
       <TouchableOpacity
         className="items-center"
@@ -64,7 +65,7 @@ const BottomNavBar = () => {
           className="w-6 h-6 mb-1"
           resizeMode="contain"
         />
-        <Text className="text-white text-xs">Perfil</Text>
+        <Text className="text-white text-xs font-extrabold">Perfil</Text>
       </TouchableOpacity>
     </View>
   );
