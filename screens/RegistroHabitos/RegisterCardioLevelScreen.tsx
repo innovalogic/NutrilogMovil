@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Text, TouchableOpacity, View, Alert } from 'react-native';
+import { Text, TouchableOpacity, View, Alert, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { getAuth } from 'firebase/auth';

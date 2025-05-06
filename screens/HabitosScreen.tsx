@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity,TouchableOpacity } from 'react-native';
+import { View, Text, Image, TouchableOpacity } from 'react-native';
 import BottomNavBar from '../Componentes/BottomNavBar';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -13,6 +13,7 @@ type RootStackParamList = {
   Seguimiento: undefined;
   Habitos: undefined;
   Perfil: undefined;
+  RegistroHabitos: undefined;
 };
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -28,13 +29,17 @@ export default function HabitosScreen() {
       </View>
       <View className="p-4 mt-38">
         <View className="flex-row justify-around mb-6">
-          <TouchableOpacity className="items-center">
+          <TouchableOpacity 
+            className="items-center"
+            onPress={() => navigation.navigate('RegistroHabitos')}
+          >
             <Image
               source={require('../assets/EjercicioFisico.png')}
               className="w-32 h-32 rounded-full"
               resizeMode="contain"
             />
             <Text className="text-white text-base mt-7">Ejercicio Físico</Text>
+
           </TouchableOpacity>
           <TouchableOpacity className="items-center">
             <Image
