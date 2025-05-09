@@ -17,7 +17,7 @@ import RegisterCardioLevelScreen from "screens/RegistroHabitos/RegisterCardioLev
 import CategoriasEjercicioFisico from 'screens/HabitoEjercicioFisico/CategoriasEjercicioFisico';
 import Entrenamiento from 'screens/HabitoEjercicioFisico/Entrenamiento';
 import RutinaSuperior from 'screens/HabitoEjercicioFisico/RutinaSuperior';
-
+import CronometroS from 'screens/HabitoEjercicioFisico/CronometroS';
 
 const Stack = createNativeStackNavigator();
 
@@ -47,7 +47,7 @@ export default function App() {
         <Stack.Screen name="CategoriasEjercicioFisico" component={CategoriasEjercicioFisico} />
         <Stack.Screen name="Entrenamiento" component={Entrenamiento} />
         <Stack.Screen name="RutinaSuperior" component={RutinaSuperior} />
-
+        <Stack.Screen name="CronometroS" component={CronometroS} />
 
       </Stack.Navigator>
     </NavigationContainer>
