@@ -1,16 +1,15 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert, Modal, Button } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { auth, firestore } from '../../firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import { RadioButton } from 'react-native-paper'; 
-import DateTimePicker from '@react-native-community/datetimepicker'; // Importa el DateTimePicker
+import DateTimePicker from '@react-native-community/datetimepicker';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 type RootStackParamList = {
-    RegistroPerfil: undefined;
-    RegistroHabitos: undefined;
-  };
+  RegistroHabitosCategorias: undefined;
+};
 
 const RegisterProfileScreen = () => {
   const [fullName, setFullName] = useState<string>('');
@@ -23,7 +22,7 @@ const RegisterProfileScreen = () => {
 
   const handleDateChange = (event: any, selectedDate: Date | undefined) => {
     const currentDate = selectedDate || birthDate;
-    setShowDatePicker(false); // Cerrar el picker una vez se selecciona la fecha
+    setShowDatePicker(false);
     setBirthDate(currentDate);
   };
 
@@ -35,26 +34,28 @@ const RegisterProfileScreen = () => {
 
     const user = auth.currentUser; 
 
-    if (user) {
-      try {
-        const userRef = doc(firestore, 'users', user.uid);
-
-        await setDoc(userRef, {
-          fullName,
-          gender,
-          birthDate: birthDate.toISOString(), 
-          height,
-          weight,
-        });
-
-        Alert.alert('¡Perfil Guardado!', 'Tu perfil ha sido guardado exitosamente.');
-        navigation.navigate('RegistroHabitos');
-      } catch (error) {
-        Alert.alert('Error', 'Hubo un problema al guardar tu perfil');
-        console.log(error);
-      }
-    } else {
+    if (!user) {
       Alert.alert('Error', 'No se encontró un usuario autenticado');
+      console.log('No authenticated user found');
+      return;
+    }
+
+    try {
+      const userRef = doc(firestore, 'users', user.uid);
+      await setDoc(userRef, {
+        fullName,
+        gender,
+        birthDate: birthDate.toISOString(), 
+        height,
+        weight,
+      });
+
+      Alert.alert('¡Perfil Guardado!', 'Tu perfil ha sido guardado exitosamente.');
+      console.log('Navigating to RegistroHabitosCategorias');
+      navigation.navigate('RegistroHabitosCategorias');
+    } catch (error: any) {
+      Alert.alert('Error', 'Hubo un problema al guardar tu perfil');
+      console.error('Firebase error:', error.message);
     }
   };
 
@@ -70,7 +71,6 @@ const RegisterProfileScreen = () => {
         onChangeText={setFullName}
       />
 
-      {/* Fecha de nacimiento */}
       <TouchableOpacity 
         onPress={() => setShowDatePicker(true)} 
         className="w-full h-12 bg-white border-2 border-black rounded-md mb-5 px-3 justify-center"
@@ -80,7 +80,6 @@ const RegisterProfileScreen = () => {
         </Text>
       </TouchableOpacity>
 
-      {/* Modal para el selector de fecha */}
       {showDatePicker && (
         <DateTimePicker
           value={birthDate}
@@ -90,7 +89,6 @@ const RegisterProfileScreen = () => {
         />
       )}
 
-      {/* Género (Radio Buttons) */}
       <Text className="text-lg font-bold text-black mb-3">Género</Text>
       <View className="flex-row items-center mb-5">
         <RadioButton
@@ -130,8 +128,8 @@ const RegisterProfileScreen = () => {
       />
 
       <TouchableOpacity 
-        onPress={handleSubmitProfile} 
-        className="bg-blue-600 w-full py-3 rounded-md mb-5 items-center"
+        className="items-center bg-blue-600 w-full py-3 rounded-md mb-5"
+        onPress={() => handleSubmitProfile()}
       >
         <Text className="text-white font-bold text-lg">Continuar</Text>
       </TouchableOpacity>
