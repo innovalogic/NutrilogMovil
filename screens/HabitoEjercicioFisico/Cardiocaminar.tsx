@@ -1,41 +1,26 @@
-import React from 'react';
-import { View, Text,TouchableOpacity } from 'react-native';
-import BottomNavBar from '../../Componentes/BottomNavBar';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useEffect, useState } from 'react';
+import { Pedometer } from 'expo-sensors';
+import { Text, View } from 'react-native';
 
-type RootStackParamList = {
-  Inicio: undefined;
-  Registro: undefined;
-  InicioSesion: undefined;
-  HomePerfil: undefined;
-  Menu: undefined;
-  Seguimiento: undefined;
-  Habitos: undefined;
-  Perfil: undefined;
-};
+export default function Cardiocaminar() {
+  const [steps, setSteps] = useState(0);
+  const [isAvailable, setIsAvailable] = useState(false);
 
-type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+  useEffect(() => {
+    // Verificar disponibilidad
+    Pedometer.isAvailableAsync().then(setIsAvailable);
+    
+    // Suscribirse a actualizaciones
+    const subscription = Pedometer.watchStepCount(({ steps }) => {
+      setSteps(steps);
+    });
 
-export default function Cardio() {
+    return () => subscription && subscription.remove();
+  }, []);
 
-  const navigation = useNavigation<NavigationProp>();
+  if (!isAvailable) {
+    return <Text>Podómetro no disponible en este dispositivo</Text>;
+  }
 
-  return (
-    <View className="flex-1 bg-[#5F75E4]">
-      <View className="flex-1 items-center justify-center">
-        <Text className="text-white text-2xl font-bold">Pantalla de Hábitos</Text>
-
-        <TouchableOpacity
-                className="bg-white px-20 py-3 rounded-[30px] mb-4 "
-              >
-                <Text className="text-black text-2xl font-bold">Cardio</Text>
-                <Text className="text-black text-lg font-semibold">Salud cardiovascular y</Text>
-                <Text className="text-black text-lg font-semibold">perdida de peso</Text>
-              </TouchableOpacity>
-
-      </View>
-      <BottomNavBar />
-    </View>
-  );
+  return <Text>Pasos en esta sesión: {steps}</Text>;
 }

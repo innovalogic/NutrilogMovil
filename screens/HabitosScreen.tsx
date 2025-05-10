@@ -1,38 +1,60 @@
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, Image, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import BottomNavBar from '../Componentes/BottomNavBar';
 
-// Define the navigation stack param list
 type RootStackParamList = {
-  Habitos: undefined;
-  Entrenamiento: undefined;
+  CategoriasEjercicioFisico: undefined;
 };
 
-type HabitosScreenNavigationProp = StackNavigationProp<RootStackParamList>;
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export default function HabitosScreen() {
-  const navigation = useNavigation<HabitosScreenNavigationProp>();
-
-  const handleEntrenamientoPress = () => {
-    navigation.navigate('Entrenamiento');
-  };
+  const navigation = useNavigation<NavigationProp>();
 
   return (
-    <View className="flex-1 bg-gray-700">
-      {/* Main Content */}
-      <View className="flex-1 justify-center items-center">
-        <Text className="text-2xl font-bold text-white">Hábito Seleccionado</Text>
-        <Text className="text-lg text-white mt-2">¡Bienvenido a tus hábitos!</Text>
-        <TouchableOpacity
-          className="bg-blue-500 rounded-lg py-2 px-4 mt-6"
-          onPress={handleEntrenamientoPress}
-        >
-          <Text className="text-white font-medium text-lg">Entrenamiento</Text>
-        </TouchableOpacity>
+    <View className="flex-1 bg-[#5F75E4] relative">
+      <View className="items-center p-20">
+        <Text className="text-white text-4xl font-bold">HÁBITOS</Text>
+        <Text className="text-white text-3xl font-medium mt-5">¿Qué hábito deseas adquirir?</Text>
       </View>
-      <BottomNavBar />
+      <View className="p-4 mt-[-40]">
+        <View className="flex-row justify-around mb-8">
+          <TouchableOpacity
+            className="items-center"
+            onPress={() => navigation.navigate('CategoriasEjercicioFisico')} // Navigate on press
+          >
+            <Image
+              source={require('../assets/EjercicioFisico.png')}
+              className="w-40 h-40 rounded-full"
+              resizeMode="contain"
+            />
+            <Text className="text-white text-lg font-extrabold mt-7">Ejercicio Físico</Text>
+          </TouchableOpacity>
+          <TouchableOpacity className="items-center">
+            <Image
+              source={require('../assets/Alimentacion.png')}
+              className="w-40 h-40 rounded-full"
+              resizeMode="contain"
+            />
+            <Text className="text-white text-lg font-extrabold mt-7">Alimentación</Text>
+          </TouchableOpacity>
+        </View>
+        <View className="items-center">
+          <TouchableOpacity className="items-center">
+            <Image
+              source={require('../assets/SaludMental.png')}
+              className="w-40 h-40 rounded-full"
+              resizeMode="contain"
+            />
+            <Text className="text-white text-lg font-extrabold mt-7">Salud Mental</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+      <View className="absolute bottom-0 w-full">
+        <BottomNavBar />
+      </View>
     </View>
   );
 }

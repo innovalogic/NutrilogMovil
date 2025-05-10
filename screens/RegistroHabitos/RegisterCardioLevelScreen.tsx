@@ -8,6 +8,9 @@ import { auth, firestore } from '../../firebase'; // Asegúrate de que la import
 
 type RootStackParamList = {
   RegistroEjercicios: undefined;
+  Cardiocaminar: undefined;  
+  CardioFuego: undefined;         
+  CardioExtremo: undefined;
 };
 
 const niveles = [
@@ -73,7 +76,6 @@ const RegisterCardioLevelScreen = () => {
         <Text className="text-white text-3xl font-mono mb-5">Selecciona tu nivel de inicio</Text>
          <Text className="text-white text-3xl font-mono mb-5">Actividad: Cardio</Text>
       </View>
-
       <View>
         <Image
           source={require('../../assets/cardioMenu.png')}
@@ -86,7 +88,7 @@ const RegisterCardioLevelScreen = () => {
           <TouchableOpacity
             key={index}
             className={`flex-row items-center p-3 my-3 rounded-lg w-full border-2 border-black/30 rounded-2xl bg-white  ${selectedLevel === level.nombre ? 'bg-[#fc6059]' : ''}`}
-            onPress={() => setSelectedLevel(level.nombre)}
+            onPress={() => navigation.navigate('Cardiocaminar')}
           >
             <View className='flex-1'>
               <Text className={`text-3xl font-bold text-black mb-1 ${selectedLevel === level.nombre ? 'text-black' : 'text-black'}`}>
