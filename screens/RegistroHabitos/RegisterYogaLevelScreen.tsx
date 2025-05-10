@@ -70,10 +70,10 @@ const RegisterYogaLevelScreen = () => {
   };
 
   return (
-    <View className="flex-1 justify-center items-center bg-blue-500">
+    <View className="flex-1 justify-center items-center bg-[#595959]">
 
       <View className="mt-12">
-        <Text className="text-white text-3xl font-mono mb-5">Selecciona tu nivel de inicio</Text>
+        <Text className="text-white text-3xl font-extralight mb-5">Selecciona tu nivel de inicio</Text>
         {/* <Text className="text-white text-lg mb-10">Actividad: Yoga</Text> */}
       </View>
 
@@ -88,14 +88,14 @@ const RegisterYogaLevelScreen = () => {
         {niveles.map((level, index) => (
           <TouchableOpacity
             key={index}
-            className={`flex-row items-center p-3 my-3 rounded-lg w-full border-2 border-black/30 rounded-2xl ${selectedLevel === level.nombre ? 'bg-[#fc6059]' : ''}`}
+            className={`flex-row items-center p-3 my-3 rounded-3x1 w-full border-2 border-black/10 rounded-2xl ${selectedLevel === level.nombre ? 'bg-black' : ''}`}
             onPress={() => setSelectedLevel(level.nombre)}
           >
             <View className='flex-1'>
-              <Text className={`text-3xl font-bold text-black mb-1 ${selectedLevel === level.nombre ? 'text-white' : 'text-black'}`}>
+              <Text className={`text-3xl font-extralight text-black mb-1 ${selectedLevel === level.nombre ? 'text-white' : 'text-black'}`}>
                 {level.nombre}
               </Text>
-              <Text className={`text-base ${selectedLevel === level.nombre ? 'text-white' : 'text-black'}`}>
+              <Text className={`text-base ${selectedLevel === level.nombre ? 'text-gray-400' : 'text-black'}`}>
                 {level.descripcion}
               </Text>
             </View>
@@ -104,9 +104,9 @@ const RegisterYogaLevelScreen = () => {
         ))}
 
         <TouchableOpacity
-          className="bg-[#fc6059] px-5 py-3 rounded-lg mt-6"
+          className="bg-[#595959] px-5 py-3 rounded-lg mt-6"
           onPress={handleSave}>
-          <Text className="text-white text-lg font-bold">Guardar y Volver</Text>
+          <Text className="text-white text-lg font-extralight">Guardar y Volver</Text>
         </TouchableOpacity>
       </View>
     </View>
