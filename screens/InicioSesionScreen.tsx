@@ -31,8 +31,8 @@ const InicioSesionScreen = () => {
       <Text className="text-white text-3xl font-bold mb-5">Bienvenido de nuevo</Text>
 
       <Image
-        source={require('../assets/logo.png')}
-        className="w-24 h-24 mb-5"
+        source={require('../assets/logosinfondo2.png')}
+        className="w-44 h-44 mb-5"
         resizeMode="contain"
       />
 
