@@ -41,7 +41,7 @@ const Timer = ({ tiempoObjetivo = 30, onTimeUp = () => {} }) => {
     };
 
     return (
-        <View className="items-center justify-center rounded-3xl w-[250px] p-5 bg-[#595959]">
+        <View className="items-center justify-center rounded-3xl w-[250px] p-5 bg-black">
             {/* Botones */}
             <View className="flex-row justify-around w-full mb-6">
                 <TouchableOpacity
