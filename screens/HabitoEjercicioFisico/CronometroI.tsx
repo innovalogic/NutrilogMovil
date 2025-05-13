@@ -4,32 +4,30 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 
 type RootStackParamList = {
-  RutinaSuperior: {
+  RutinaMedio: {
     exercise: string;
     reps: string;
     totalTime: number;
     restTime: number;
   };
-  CronometroS: undefined;
+  CronometroI: undefined;
 };
 
-type CronometroNavigationProp = StackNavigationProp<RootStackParamList, 'CronometroS'>;
+type CronometroNavigationProp = StackNavigationProp<RootStackParamList, 'CronometroI'>;
 
-const App = () => {
+const CronometroI = () => {
   const navigation = useNavigation<CronometroNavigationProp>();
   const [seconds, setSeconds] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
-  const [exercise, setExercise] = useState('Flexiones de brazos');
+  const [exercise, setExercise] = useState('Sentadillas');
   const [reps, setReps] = useState('');
   const [restSeconds, setRestSeconds] = useState(0);
   const [isResting, setIsResting] = useState(false);
   const [expanded, setExpanded] = useState(false);
 
-  // Estados para los modales
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedTimeType, setSelectedTimeType] = useState('');
 
-  // Estados para los valores
   const [seriesCount, setSeriesCount] = useState(1);
   const [warmupMinutes, setWarmupMinutes] = useState(0);
   const [warmupSeconds, setWarmupSeconds] = useState(0);
@@ -38,9 +36,8 @@ const App = () => {
   const [restMinutes, setRestMinutes] = useState(0);
   const [restSecondsSetting, setRestSecondsSetting] = useState(15);
 
-  const exercises = ['Flexiones de brazos', 'Press de banca', 'Dominadas', 'Elevacion de Hombros'];
+  const exercises = ['Sentadillas', 'Peso Muerto', 'Zancadas', 'Elevaciones de talones'];
 
-  // Datos para la estructura del entrenamiento
   const structureData = [
     { id: '1', title: 'Número de Series', value: seriesCount.toString() },
     { id: '2', title: 'Tiempo de Calentamiento', value: `${warmupMinutes} min ${warmupSeconds} s` },
@@ -83,7 +80,7 @@ const App = () => {
   };
 
   const handleFinish = () => {
-    navigation.navigate('RutinaSuperior', {
+    navigation.navigate('RutinaMedio', {
       exercise,
       reps,
       totalTime: seconds,
@@ -102,7 +99,6 @@ const App = () => {
     setModalVisible(true);
   };
 
-  // Función para crear botones numéricos
   const renderNumberButtons = (
     start: number,
     end: number,
@@ -243,7 +239,6 @@ const App = () => {
         </View>
       )}
 
-      {/* Estructura del Entrenamiento */}
       {structureData.map(item => (
         <TouchableOpacity
           key={item.id}
@@ -255,7 +250,6 @@ const App = () => {
         </TouchableOpacity>
       ))}
 
-      {/* Modal para seleccionar tiempo */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -310,5 +304,4 @@ const App = () => {
   );
 };
 
-export default App;
-
+export default CronometroI;
