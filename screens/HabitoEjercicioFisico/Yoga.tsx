@@ -30,7 +30,7 @@ const PantallaSesionYoga = () => {
             <View className="flex-1 items-center  bg-white rounded-t-2xl w-full p-4">
                 <View className='mt-12'>
                     <Text className="text-center text-2xl font-semibold mb-2">
-                        Ajusta el Temporizador
+                        Temporizador de Ejercicio
                     </Text>
                 </View>
                 
