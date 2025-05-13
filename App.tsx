@@ -9,7 +9,6 @@ import MenuScreen from './screens/MenuScreen';
 import SeguimientoScreen from './screens/SeguimientoScreen';
 import HabitosScreen from './screens/HabitosScreen';
 import RegisterProfileScreen from "screens/RegistroPerfil/RegisterProfileScreen";
-import RegisterHabitCategoryScreen from "screens/RegistroHabitos/RegisterHabitCategoryScreen";
 import RegisterExerciseScreen from "screens/RegistroHabitos/RegisterExerciseScreen";
 import RegisterYogaLevelScreen from "screens/RegistroHabitos/RegisterYogaLevelScreen";
 import RegisterTrainingLevelScreen from "screens/RegistroHabitos/RegisterTrainingLevelScreen";
@@ -17,7 +16,8 @@ import RegisterCardioLevelScreen from "screens/RegistroHabitos/RegisterCardioLev
 import CategoriasEjercicioFisico from 'screens/HabitoEjercicioFisico/CategoriasEjercicioFisico';
 import Entrenamiento from 'screens/HabitoEjercicioFisico/Entrenamiento';
 import RutinaSuperior from 'screens/HabitoEjercicioFisico/RutinaSuperior';
-
+import CronometroS from 'screens/HabitoEjercicioFisico/CronometroS';
+import RegistroHabitosCategorias from 'screens/RegistroHabitos/RegistroHabitosCategorias';
 
 const Stack = createNativeStackNavigator();
 
@@ -39,7 +39,6 @@ export default function App() {
         <Stack.Screen name="Habitos" component={HabitosScreen} />
         <Stack.Screen name="Perfil" component={HomePerfilScreen} />
         <Stack.Screen name="RegistroPerfil" component={RegisterProfileScreen} />
-        <Stack.Screen name="RegistroHabitos" component={RegisterHabitCategoryScreen} />
         <Stack.Screen name="RegistroEjercicios" component={RegisterExerciseScreen} />
         <Stack.Screen name="RegistroYogaLevel" component={RegisterYogaLevelScreen} />
         <Stack.Screen name="RegistroTrainingLevel" component={RegisterTrainingLevelScreen} />
@@ -47,7 +46,8 @@ export default function App() {
         <Stack.Screen name="CategoriasEjercicioFisico" component={CategoriasEjercicioFisico} />
         <Stack.Screen name="Entrenamiento" component={Entrenamiento} />
         <Stack.Screen name="RutinaSuperior" component={RutinaSuperior} />
-
+        <Stack.Screen name="CronometroS" component={CronometroS} />
+        <Stack.Screen name="RegistroHabitosCategorias" component={RegistroHabitosCategorias} />
 
       </Stack.Navigator>
     </NavigationContainer>

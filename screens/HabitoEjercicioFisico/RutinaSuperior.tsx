@@ -1,14 +1,33 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Image } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { View, Text, TouchableOpacity, ScrollView, Image, StatusBar } from 'react-native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RouteProp } from '@react-navigation/native';
 
-export default function UpperBodyWorkout() {
-    const navigation = useNavigation();
+type RootStackParamList = {
+    UpperBodyWorkout: { 
+        exercise: string; 
+        reps: string; 
+        totalTime: number; 
+        restTime: number; 
+    };
+    CronometroS: undefined; 
+};
+
+type UpperBodyWorkoutNavigationProp = StackNavigationProp<RootStackParamList, 'UpperBodyWorkout'>;
+type UpperBodyWorkoutRouteProp = RouteProp<RootStackParamList, 'UpperBodyWorkout'>;
+
+export default function RutinaSuperior() {
+    const navigation = useNavigation<UpperBodyWorkoutNavigationProp>();
+    const route = useRoute<UpperBodyWorkoutRouteProp>(); // Obtener los parámetros de la ruta
+
+    const { exercise, reps, totalTime, restTime } = route.params || {}; // Usa el tipo correcto
 
     return (
         <View className="flex-1 bg-black">
             {/* Header */}
-            <View className="p-4 border-b border-gray-700">
+            <View className="p-4 border-b border-gray-700" style={{ marginTop: StatusBar.currentHeight }}>
                 <Text className="text-2xl font-bold text-white">Rutina Superior</Text>
             </View>
 
@@ -16,17 +35,12 @@ export default function UpperBodyWorkout() {
             <ScrollView className="flex-1">
                 {/* Hero Image */}
                 <View className="h-64 w-full bg-gray-700 rounded-lg overflow-hidden">
-                    <Image
-                        source={require('../../assets/pull_up.jpg')}
-                        className="w-full h-full object-cover"
-                    />
+                    <Image source={require('../../assets/pull_up.jpg')} className="w-full h-full object-cover" />
                 </View>
 
                 {/* Workout Description */}
                 <View className="p-4">
-                    <Text className="text-gray-300 mb-4">
-                        Fortalece la parte superior del cuerpo con estos ejercicios.
-                    </Text>
+                    <Text className="text-gray-300 mb-4">Fortalece la parte superior del cuerpo con estos ejercicios.</Text>
 
                     {/* Exercises Section */}
                     <Text className="text-xl font-bold text-white mb-2">Ejercicios</Text>
@@ -46,6 +60,20 @@ export default function UpperBodyWorkout() {
                             </View>
                         ))}
                     </View>
+
+                    {/* Mostrar los datos del cronómetro */}
+                    {exercise && (
+                        <Text className="text-white">Ejercicio: {exercise}</Text>
+                    )}
+                    {reps && (
+                        <Text className="text-white">Repeticiones: {reps}</Text>
+                    )}
+                    {totalTime !== undefined && (
+                        <Text className="text-white">Tiempo total: {totalTime} s</Text>
+                    )}
+                    {restTime !== undefined && (
+                        <Text className="text-white">Tiempo de descanso: {restTime} s</Text>
+                    )}
 
                     {/* Tips Section */}
                     <Text className="text-xl font-bold text-white mb-2">Consejos</Text>
@@ -85,8 +113,8 @@ export default function UpperBodyWorkout() {
 
             {/* Start Workout Button */}
             <View className="p-4">
-                <TouchableOpacity className="w-full bg-blue-600 py-4 rounded-lg">
-                    <Text className="text-center text-white font-bold">Iniciar ejercicio</Text>
+                <TouchableOpacity className="w-full bg-blue-600 py-4 rounded-lg" onPress={() => navigation.navigate('CronometroS')}>
+                    <Text className="text-center text-white font-bold">Iniciar Ejercicio</Text>
                 </TouchableOpacity>
             </View>
         </View>
