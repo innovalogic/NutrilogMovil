@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Image, StatusBar } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, Image, StatusBar, Linking } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -23,6 +23,13 @@ export default function RutinaSuperior() {
     const route = useRoute<UpperBodyWorkoutRouteProp>(); // Obtener los parámetros de la ruta
 
     const { exercise, reps, totalTime, restTime } = route.params || {}; // Usa el tipo correcto
+    const [expanded, setExpanded] = useState(false); // Estado para controlar el despliegue
+
+    // Lista de consejos con enlaces
+    const tips = [
+        { title: 'Tips para mejorar la técnica', url: 'https://www.youtube.com/watch?v=H_e0t3iwyrM' },
+        { title: 'Errores comunes', url: 'https://www.youtube.com/shorts/m4baLYJPFs4' }
+    ];
 
     return (
         <View className="flex-1 bg-black">
@@ -77,37 +84,20 @@ export default function RutinaSuperior() {
 
                     {/* Tips Section */}
                     <Text className="text-xl font-bold text-white mb-2">Consejos</Text>
-                    <View className="mb-4">
-                        {['Tips para mejorar la técnica', 'Errores comunes'].map((tip, index) => (
-                            <TouchableOpacity key={index} className="flex-row justify-between bg-gray-800 p-4 rounded-lg mb-2">
-                                <Text className="text-white">{tip}</Text>
-                                <Text className="text-gray-400">→</Text>
-                            </TouchableOpacity>
-                        ))}
-                    </View>
-
-                    {/* Progress Section */}
-                    <Text className="text-xl font-bold text-white mb-2">Tu Progreso</Text>
-                    <View className="mb-4">
-                        <Text className="text-gray-400">Peso levantado</Text>
-                        <View className="flex-row items-baseline mb-2">
-                            <Text className="text-3xl font-bold text-white">100lb</Text>
-                            <Text className="ml-2 text-green-500">+20%</Text>
-                        </View>
-                        <Text className="text-gray-400 text-sm mb-2">1y</Text>
-
-                        {/* Progress Graph */}
-                        <View className="h-24 w-full bg-gray-700 rounded-lg mb-2">
-                            <Text className="text-center text-gray-400">[Estadísticas]</Text>
-                        </View>
-
-                        {/* Months */}
-                        <View className="flex-row justify-between text-gray-400">
-                            {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'].map((month) => (
-                                <Text key={month}>{month}</Text>
+                    <TouchableOpacity onPress={() => setExpanded(!expanded)} className="flex-row justify-between bg-gray-800 p-4 rounded-lg mb-2">
+                        <Text className="text-white">Ver Consejos</Text>
+                        <Ionicons name={expanded ? "chevron-up" : "chevron-down"} size={20} color="#fff" />
+                    </TouchableOpacity>
+                    {expanded && (
+                        <View className="bg-gray-700 rounded-lg p-4 mb-4">
+                            {tips.map((tip, index) => (
+                                <TouchableOpacity key={index} onPress={() => Linking.openURL(tip.url)} className="flex-row items-center mb-2">
+                                    <Ionicons name="logo-youtube" size={20} color="#FF0000" />
+                                    <Text className="text-blue-400 underline ml-2">{tip.title}</Text>
+                                </TouchableOpacity>
                             ))}
                         </View>
-                    </View>
+                    )}
                 </View>
             </ScrollView>
 

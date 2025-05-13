@@ -16,11 +16,16 @@ import RegisterCardioLevelScreen from "screens/RegistroHabitos/RegisterCardioLev
 import CategoriasEjercicioFisico from 'screens/HabitoEjercicioFisico/CategoriasEjercicioFisico';
 import Entrenamiento from 'screens/HabitoEjercicioFisico/Entrenamiento';
 import RutinaSuperior from 'screens/HabitoEjercicioFisico/RutinaSuperior';
+import RutinaMedia from 'screens/HabitoEjercicioFisico/RutinaMedia';
+import RutinaInferior from 'screens/HabitoEjercicioFisico/RutinaInferior';
 import CronometroS from 'screens/HabitoEjercicioFisico/CronometroS';
+import CronometroM from 'screens/HabitoEjercicioFisico/CronometroM';
+import CronometroI from 'screens/HabitoEjercicioFisico/CronometroI';
 import RegistroHabitosCategorias from 'screens/RegistroHabitos/RegistroHabitosCategorias';
 import Cardiocaminar from 'screens/HabitoEjercicioFisico/Cardiocaminar';
 import CardioTrotar from 'screens/HabitoEjercicioFisico/CardioTrotar';
 import CardioCorrer from 'screens/HabitoEjercicioFisico/CardioCorrer';
+
 
 const Stack = createNativeStackNavigator();
 
@@ -49,7 +54,11 @@ export default function App() {
         <Stack.Screen name="CategoriasEjercicioFisico" component={CategoriasEjercicioFisico} />
         <Stack.Screen name="Entrenamiento" component={Entrenamiento} />
         <Stack.Screen name="RutinaSuperior" component={RutinaSuperior} />
+        <Stack.Screen name="RutinaMedia" component={RutinaMedia} />
+        <Stack.Screen name="RutinaInferior" component={RutinaInferior} />
         <Stack.Screen name="CronometroS" component={CronometroS} />
+        <Stack.Screen name="CronometroM" component={CronometroM} />
+        <Stack.Screen name="CronometroI" component={CronometroI} />
         <Stack.Screen name="RegistroHabitosCategorias" component={RegistroHabitosCategorias} />
         <Stack.Screen name="Cardiocaminar" component={Cardiocaminar} />
         <Stack.Screen name="CardioTrotar" component={CardioTrotar} />

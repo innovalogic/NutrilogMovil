@@ -4,7 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 
 type RootStackParamList = {
-  RutinaSuperior: {
+  RutinaMedio: {
     exercise: string;
     reps: string;
     totalTime: number;
@@ -19,7 +19,7 @@ const App = () => {
   const navigation = useNavigation<CronometroNavigationProp>();
   const [seconds, setSeconds] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
-  const [exercise, setExercise] = useState('Flexiones de brazos');
+  const [exercise, setExercise] = useState('Plancha');
   const [reps, setReps] = useState('');
   const [restSeconds, setRestSeconds] = useState(0);
   const [isResting, setIsResting] = useState(false);
@@ -38,7 +38,7 @@ const App = () => {
   const [restMinutes, setRestMinutes] = useState(0);
   const [restSecondsSetting, setRestSecondsSetting] = useState(15);
 
-  const exercises = ['Flexiones de brazos', 'Press de banca', 'Dominadas', 'Elevacion de Hombros'];
+  const exercises = ['Plancha', 'Giro ruso', 'Abdominales con peso', 'Levantamiento de piernas'];
 
   // Datos para la estructura del entrenamiento
   const structureData = [
@@ -83,7 +83,7 @@ const App = () => {
   };
 
   const handleFinish = () => {
-    navigation.navigate('RutinaSuperior', {
+    navigation.navigate('RutinaMedio', {
       exercise,
       reps,
       totalTime: seconds,
@@ -311,4 +311,3 @@ const App = () => {
 };
 
 export default App;
-

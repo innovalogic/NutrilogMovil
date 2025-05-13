@@ -5,7 +5,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 
 type RootStackParamList = {
     RutinaSuperior: undefined;
-    RutinaMedio: undefined;
+    RutinaMedia: undefined;
     RutinaInferior: undefined;
 };
 
@@ -28,7 +28,7 @@ const EntrenamientoScreen = () => {
                 <Text className="text-sm text-gray-600">Enfocada en el fortalecimiento de la parte superior del cuerpo</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity className="bg-white rounded-lg p-4 mb-2 w-full shadow-md" onPress={() => handleNavigation('RutinaMedio')}>
+            <TouchableOpacity className="bg-white rounded-lg p-4 mb-2 w-full shadow-md" onPress={() => handleNavigation('RutinaMedia')}>
                 <Text className="text-lg font-semibold">Rutina de Tren Medio</Text>
                 <Text className="text-sm text-gray-600">Favorece la estabilidad, el equilibrio y la postura</Text>
             </TouchableOpacity>
