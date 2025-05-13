@@ -9,6 +9,7 @@ type RootStackParamList = {
   Entrenamiento: undefined;
   Yoga: undefined;
   Cardio: undefined;
+  RegistroYogaLevel: undefined; // Match the name from App.tsx
 };
 
 type HabitosScreenNavigationProp = StackNavigationProp<RootStackParamList>;
@@ -20,7 +21,7 @@ export default function HabitosScreen() {
 
   const handleHabitPress = () => {
     if (selectedHabit === 'Yoga') {
-      navigation.navigate('Yoga');
+      navigation.navigate('RegistroYogaLevel'); // Updated to match App.tsx
     } else if (selectedHabit === 'Entrenamiento') {
       navigation.navigate('Entrenamiento');
     } else if (selectedHabit === 'Cardio') {
