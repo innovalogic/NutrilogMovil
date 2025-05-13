@@ -1,22 +1,31 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import BottomNavBar from '../Componentes/BottomNavBar';
 
-// Define the navigation stack param list
 type RootStackParamList = {
-  Habitos: undefined;
+  Habitos: { selectedHabit: 'Yoga' | 'Entrenamiento' | 'Cardio' };
   Entrenamiento: undefined;
+  Yoga: undefined;
+  Cardio: undefined;
 };
 
 type HabitosScreenNavigationProp = StackNavigationProp<RootStackParamList>;
 
 export default function HabitosScreen() {
   const navigation = useNavigation<HabitosScreenNavigationProp>();
+  const route = useRoute();
+  const { selectedHabit = 'Entrenamiento' } = route.params as { selectedHabit: 'Yoga' | 'Entrenamiento' | 'Cardio' };
 
-  const handleEntrenamientoPress = () => {
-    navigation.navigate('Entrenamiento');
+  const handleHabitPress = () => {
+    if (selectedHabit === 'Yoga') {
+      navigation.navigate('Yoga');
+    } else if (selectedHabit === 'Entrenamiento') {
+      navigation.navigate('Entrenamiento');
+    } else if (selectedHabit === 'Cardio') {
+      navigation.navigate('Cardio');
+    }
   };
 
   return (
@@ -27,9 +36,9 @@ export default function HabitosScreen() {
         <Text className="text-lg text-white mt-2">¡Bienvenido a tus hábitos!</Text>
         <TouchableOpacity
           className="bg-blue-500 rounded-lg py-2 px-4 mt-6"
-          onPress={handleEntrenamientoPress}
+          onPress={handleHabitPress}
         >
-          <Text className="text-white font-medium text-lg">Entrenamiento</Text>
+          <Text className="text-white font-medium text-lg">{selectedHabit}</Text>
         </TouchableOpacity>
       </View>
       <BottomNavBar />
