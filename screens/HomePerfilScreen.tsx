@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Image, TouchableOpacity } from 'react-native';
-import { auth, firestore } from '../firebase'; // Importa desde tu archivo firebase.js
+import { auth, firestore } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc, DocumentData } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import BottomNavBar from '../Componentes/BottomNavBar';
-import { useNavigation } from '@react-navigation/native'; // Asegúrate de importar useNavigation
+import { useNavigation } from '@react-navigation/native';
 
-// Definir un tipo para los datos del usuario
 interface UserData {
   fullName?: string;
   birthDate?: string;
@@ -16,7 +15,7 @@ interface UserData {
 }
 
 export default function HomePerfilScreen() {
-  const navigation = useNavigation(); // Tipado automático con useNavigation
+  const navigation = useNavigation();
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -28,7 +27,7 @@ export default function HomePerfilScreen() {
           const userDocSnap = await getDoc(userDocRef);
 
           if (userDocSnap.exists()) {
-            setUserData(userDocSnap.data() as UserData); // Casteo explícito a UserData
+            setUserData(userDocSnap.data() as UserData);
           } else {
             setUserData(null);
           }
@@ -38,7 +37,7 @@ export default function HomePerfilScreen() {
         }
       } else {
         setUserData(null);
-        navigation.navigate('Login' as never); // Casteo para evitar errores de navegación
+        navigation.navigate('Login' as never);
       }
       setLoading(false);
     });
@@ -48,7 +47,7 @@ export default function HomePerfilScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 bg-[#5F75E4] items-center justify-center">
+      <View className="flex-1 bg-gray-700 items-center justify-center">
         <Text className="text-white text-lg">Cargando...</Text>
       </View>
     );
@@ -58,7 +57,6 @@ export default function HomePerfilScreen() {
     return null;
   }
 
-  // Formatear la fecha de nacimiento
   const birthDate = userData.birthDate
     ? new Date(userData.birthDate).toLocaleDateString('es-ES', {
         day: '2-digit',
@@ -68,22 +66,22 @@ export default function HomePerfilScreen() {
     : 'No disponible';
 
   return (
-    <View className="flex-1 bg-[#5F75E4] relative">
-      <View className="items-center p-20">
+    <View className="flex-1 bg-gray-700 relative">
+      <View className="items-center p-16">
         <Text className="text-white text-2xl font-bold">Perfil</Text>
       </View>
-      <View className="p-4">
-        <View className="mt-[-10%]">
+      <View className="p-16">
+        <View className="mt-[-10%] flex-row items-center">
           <Image
             source={require('../assets/Perfil.png')}
-            className="w-36 h-80 ml-8"
+            className="w-36 h-80"
             resizeMode="contain"
           />
-        </View>
-        <View>
-          <Text className="text-white text-lg font-semibold mt-4 ml-8">
+          <Text className="text-white text-3xl font-semibold ml-12 flex-1">
             {userData.fullName || 'Usuario sin nombre'}
           </Text>
+        </View>
+        <View>
           <Text className="text-white text-base mt-2 ml-8">
             Fecha de nacimiento: {birthDate}
           </Text>
