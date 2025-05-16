@@ -10,7 +10,7 @@ type RootStackParamList = {
   Habitos: undefined;
   Entrenamiento: undefined;
   Yoga: undefined;
-  Cardio: undefined;
+  RegistroCardioLevel: undefined;
   RegistroYogaLevel: undefined;
 };
 
@@ -46,7 +46,7 @@ export default function HabitosScreen() {
     } else if (habit === 'Entrenamiento') {
       navigation.navigate('Entrenamiento');
     } else if (habit === 'Cardio') {
-      navigation.navigate('Cardio');
+      navigation.navigate('RegistroCardioLevel');
     }
   };
 
