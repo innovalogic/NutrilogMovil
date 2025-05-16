@@ -4,7 +4,7 @@ import BottomNavBar from '../Componentes/BottomNavBar';
 
 export default function MenuScreen() {
   return (
-    <View className="flex-1 bg-[#5F75E4]">
+    <View className="flex-1 bg-gray-900">
       <ScrollView contentContainerStyle={{ paddingTop: 60, paddingHorizontal: 20, paddingBottom: 100 }}>
         <Text className="text-white text-3xl font-bold mb-6">¡Bienvenido de nuevo!</Text>
 

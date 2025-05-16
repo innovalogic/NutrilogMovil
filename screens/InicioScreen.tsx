@@ -22,7 +22,7 @@ export default function InicioScreen() {
   const navigation = useNavigation<NavigationProp>();
 
   return (
-    <View className="flex-1 items-center justify-center bg-[#374151]">
+    <View className="flex-1 items-center justify-center bg-gray-900">
       <Image
         source={require('../assets/logosinfondo6.png')}
         className="w-56 h-56 mb-4"
