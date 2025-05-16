@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Image, Modal, Pressable } from 'react-native';
+import { View, Text, TouchableOpacity, Image, Modal, Pressable,Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { auth, firestore } from '../../firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
-type RootStackParamList = {
+type RootStackParamList = { 
   Yoga: undefined;
   Entrenamiento: undefined;
   Cardio: undefined;
@@ -22,12 +24,35 @@ export default function CategoriasEjercicioFisico() {
     setModalVisible(true);
   };
 
-  const handleModalAccept = () => {
+  const handleModalAccept = async () => {
     setModalVisible(false);
+
     if (selectedRoute) {
+      const user = auth.currentUser;
+      if (user) {
+        try {
+          // Referencia a la subcolección de hábitos físicos dentro del usuario actual
+          const habitosFisicosRef = collection(firestore, 'habitosUsuarios', user.uid, 'habitosFisicos');
+          
+          // Agregar un nuevo documento con el hábito seleccionado
+          await addDoc(habitosFisicosRef, {
+            habitoSeleccionado: selectedRoute,
+            timestamp: serverTimestamp()
+          });
+
+          console.log('Hábito registrado correctamente');
+        } catch (error) {
+          console.error('Error al registrar el hábito:', error);
+          Alert.alert('Error', 'Hubo un problema al registrar tu hábito.');
+        }
+      } else {
+        Alert.alert('Error', 'Usuario no autenticado.');
+      }
+
       navigation.navigate('Habitos', { selectedHabit: selectedRoute });
     }
   };
+
 
   return (
     <View className="flex-1 bg-gray-700">

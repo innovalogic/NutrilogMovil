@@ -60,9 +60,9 @@ const RegisterProfileScreen = () => {
   };
 
   return (
-    <View className="flex-1 justify-center items-center bg-red-500 p-5">
-      <Text className="text-3xl font-bold text-black mb-2">Empecemos a conocerte!</Text>
-      <Text className="text-sm text-black mb-5 text-center mx-2">Nosotros usaremos esta información para sugerirte hábitos saludables.</Text>
+    <View className="flex-1 justify-center items-center bg-gray-700 p-5">
+      <Text className="text-3xl font-bold text-white mb-2">Empecemos a conocerte!</Text>
+      <Text className="text-lg text-white mb-5 text-center mx-2">Nosotros usaremos esta información para sugerirte hábitos saludables.</Text>
 
       <TextInput
         className="w-full h-12 bg-white border-2 border-black rounded-md mb-5 px-3"
@@ -89,26 +89,26 @@ const RegisterProfileScreen = () => {
         />
       )}
 
-      <Text className="text-lg font-bold text-black mb-3">Género</Text>
+      <Text className="text-lg font-bold text-white mb-3">Género</Text>
       <View className="flex-row items-center mb-5">
         <RadioButton
           value="Femenino"
           status={gender === 'Femenino' ? 'checked' : 'unchecked'}
           onPress={() => setGender('Femenino')}
         />
-        <Text>Femenino</Text>
+        <Text className="text-lg font-bold text-white mb-3">Femenino</Text>
         <RadioButton
           value="Masculino"
           status={gender === 'Masculino' ? 'checked' : 'unchecked'}
           onPress={() => setGender('Masculino')}
         />
-        <Text>Masculino</Text>
+        <Text className="text-lg font-bold text-white mb-3">Masculino</Text>
         <RadioButton
           value="Otro"
           status={gender === 'Otro' ? 'checked' : 'unchecked'}
           onPress={() => setGender('Otro')}
         />
-        <Text>Otro</Text>
+        <Text className="text-lg font-bold text-white mb-3">Otro</Text>
       </View>
 
       <TextInput
