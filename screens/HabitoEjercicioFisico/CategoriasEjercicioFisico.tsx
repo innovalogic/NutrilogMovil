@@ -4,10 +4,10 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 
 type RootStackParamList = {
-    Yoga: undefined;
-    Entrenamiento: undefined;
-    Cardio: undefined;
-    Habitos: undefined; // Updated to match 'Habitos' in App.tsx
+  Yoga: undefined;
+  Entrenamiento: undefined;
+  Cardio: undefined;
+  Habitos: { selectedHabit: 'Yoga' | 'Entrenamiento' | 'Cardio' }; // Define selectedHabit as a literal union type
 };
 
 type HabitScreenNavigationProp = StackNavigationProp<RootStackParamList>;
@@ -15,18 +15,18 @@ type HabitScreenNavigationProp = StackNavigationProp<RootStackParamList>;
 export default function CategoriasEjercicioFisico() {
   const navigation = useNavigation<HabitScreenNavigationProp>();
   const [modalVisible, setModalVisible] = useState(false);
+  const [selectedRoute, setSelectedRoute] = useState<'Yoga' | 'Entrenamiento' | 'Cardio' | null>(null);
 
-  const handleNavigation = (route: keyof RootStackParamList) => {
-    if (route === 'Entrenamiento') {
-      setModalVisible(true);
-    } else {
-      navigation.navigate(route);
-    }
+  const handleNavigation = (route: 'Yoga' | 'Entrenamiento' | 'Cardio') => {
+    setSelectedRoute(route);
+    setModalVisible(true);
   };
 
   const handleModalAccept = () => {
     setModalVisible(false);
-    navigation.navigate('Habitos'); // Updated to 'Habitos'
+    if (selectedRoute) {
+      navigation.navigate('Habitos', { selectedHabit: selectedRoute });
+    }
   };
 
   return (

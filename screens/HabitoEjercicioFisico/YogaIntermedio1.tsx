@@ -15,14 +15,17 @@ const PantallaSesionYoga = () => {
     return (
         <View className="flex-1 items-center justify-center bg-[#595959]">
             <View className='mt-12'>
-                <Text className="text-white font-extralight text-3xl mb-5">
-                    YOGA: Principiante
+                <Text className="text-white font-extralight text-3xl mb-3">
+                    YOGA: Intermedio
+                </Text>
+                <Text className="text-white text-center font-extralight text-xl">
+                    Postura del Camello
                 </Text>
             </View>
             
-            <View className="w-[90%] h-52 mb-5">
+            <View className="w-[90%] h-52 mb-5 rounded-xl overflow-hidden">
                 <WebView
-                    source={{ uri: 'https://www.youtube.com/embed/v7AYKMP6rOE' }}
+                    source={{ uri: 'https://www.youtube.com/embed/LUnaKNG2VrA' }}
                     style={{ flex: 1, borderRadius: 10, overflow: 'hidden' }}
                 />
             </View>

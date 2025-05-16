@@ -22,7 +22,9 @@ import CronometroS from 'screens/HabitoEjercicioFisico/CronometroS';
 import CronometroM from 'screens/HabitoEjercicioFisico/CronometroM';
 import CronometroI from 'screens/HabitoEjercicioFisico/CronometroI';
 import RegistroHabitosCategorias from 'screens/RegistroHabitos/RegistroHabitosCategorias';
-
+import Yoga from 'screens/HabitoEjercicioFisico/Yoga'
+import YogaAvanzado from 'screens/HabitoEjercicioFisico/YogaAvanzado1'
+import YogaIntermedio from 'screens/HabitoEjercicioFisico/YogaIntermedio1'
 
 const Stack = createNativeStackNavigator();
 
@@ -57,8 +59,9 @@ export default function App() {
         <Stack.Screen name="CronometroM" component={CronometroM} />
         <Stack.Screen name="CronometroI" component={CronometroI} />
         <Stack.Screen name="RegistroHabitosCategorias" component={RegistroHabitosCategorias} />
-
-
+        <Stack.Screen name="Yoga" component={Yoga} />
+        <Stack.Screen name="YogaIntermedio" component={YogaIntermedio} />
+        <Stack.Screen name="YogaAvanzado" component={YogaAvanzado} />
       </Stack.Navigator>
     </NavigationContainer>
   );

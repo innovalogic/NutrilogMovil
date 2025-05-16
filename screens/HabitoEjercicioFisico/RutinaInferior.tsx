@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, ImageBackground, ScrollView, Linking } fr
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
+import { WebView } from 'react-native-webview';
 
 type RootStackParamList = {
     RutinaSuperior: undefined;
@@ -15,13 +16,6 @@ type HabitScreenNavigationProp = StackNavigationProp<RootStackParamList>;
 
 const RutinaInferior = () => {
     const navigation = useNavigation<HabitScreenNavigationProp>();
-    const [expanded, setExpanded] = useState(false); 
-
-    // Lista de consejos con enlaces
-    const tips = [
-        { title: 'Tips para mejorar la técnica', url: 'https://www.youtube.com/watch?v=SasACgGscHg' },
-        { title: 'Errores comunes', url: 'https://www.youtube.com/watch?v=g72DHPfg8iY' }
-    ];
 
     const handleStart = () => {
         navigation.navigate('CronometroI'); 
@@ -93,21 +87,24 @@ const RutinaInferior = () => {
                 ))}
 
                 {/* Tips Section */}
-                <Text className="text-xl font-bold text-white mb-2 px-4 pt-4">Consejos</Text>
-                <TouchableOpacity onPress={() => setExpanded(!expanded)} className="flex-row justify-between bg-gray-800 p-4 rounded-lg mb-2 px-4">
-                    <Text className="text-white">Ver Consejos</Text>
-                    <Ionicons name={expanded ? "chevron-up" : "chevron-down"} size={20} color="#fff" />
-                </TouchableOpacity>
-                {expanded && (
-                    <View className="bg-gray-700 rounded-lg p-4 mb-4 px-4">
-                        {tips.map((tip, index) => (
-                            <TouchableOpacity key={index} onPress={() => Linking.openURL(tip.url)} className="flex-row items-center mb-2">
-                                <Ionicons name="logo-youtube" size={20} color="#FF0000" />
-                                <Text className="text-blue-400 underline ml-2">{tip.title}</Text>
-                            </TouchableOpacity>
-                        ))}
+                <Text className="text-xl font-bold text-white mb-2">Consejos</Text>
+                    <View className="w-full h-64 mb-5 rounded-xl overflow-hidden border border-gray-600">
+                        <WebView 
+                            source={{ uri: 'https://www.youtube.com/watch?v=SasACgGscHg' }} 
+                            style={{ flex: 1, borderRadius: 10, overflow: 'hidden' }}
+
+                        />
                     </View>
-                )}
+
+                    <Text className="text-xl font-bold text-white mb-2">Errores</Text>
+                    <View className="w-full h-64 mb-5 rounded-xl overflow-hidden border border-gray-600">
+                        <WebView 
+                            source={{ uri: 'https://www.youtube.com/watch?v=g72DHPfg8iY' }} 
+                            style={{ flex: 1, borderRadius: 10, overflow: 'hidden' }}
+
+                        />
+                    </View>
+
             </ScrollView>
 
             {/* Start Workout Button */}

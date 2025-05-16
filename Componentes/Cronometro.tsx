@@ -41,23 +41,23 @@ const Timer = ({ tiempoObjetivo = 30, onTimeUp = () => {} }) => {
     };
 
     return (
-        <View className="items-center justify-center p-5">
+        <View className="items-center justify-center rounded-3xl w-[250px] p-5 bg-black">
             {/* Botones */}
             <View className="flex-row justify-around w-full mb-6">
                 <TouchableOpacity
                     onPress={activarTemporizador}
-                    className="bg-[#fc6059] py-2 px-5 rounded-lg mx-2"
+                    className="bg-white py-2 px-5 rounded-lg mx-2"
                 >
-                    <Text className="text-white text-lg font-semibold">
+                    <Text className="text-black text-lg font-semibold">
                         {corriendo ? 'Detener' : 'Iniciar'}
                     </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                     onPress={reiniciarTemporizador}
-                    className="bg-[#fc6059] py-2 px-5 rounded-lg mx-2"
+                    className="bg-white py-2 px-5 rounded-lg mx-2"
                 >
-                    <Text className="text-white text-lg font-semibold">Reiniciar</Text>
+                    <Text className="text-black text-lg font-semibold">Reiniciar</Text>
                 </TouchableOpacity>
             </View>
 
