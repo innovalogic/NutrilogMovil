@@ -29,10 +29,11 @@ const InicioSesionScreen = () => {
   return (
     <View className="flex-1 bg-blue-500 items-center justify-center px-5">
       <Text className="text-white text-3xl font-bold mb-5">Bienvenido de nuevo</Text>
+      <Text className="text-white text-3xl font-bold mb-5">A NutriLog</Text>
 
       <Image
-        source={require('../assets/logo.png')}
-        className="w-24 h-24 mb-5"
+        source={require('../assets/logosinfondo7.png')}
+        className="w-56 h-56 mb-5"
         resizeMode="contain"
       />
 
@@ -55,15 +56,22 @@ const InicioSesionScreen = () => {
       />
 
       <TouchableOpacity
-        className="bg-red-400 w-full py-3 rounded-md mb-4 items-center"
+        className="bg-green-500 w-full py-3 rounded-md mb-4 items-center"
         onPress={handleLogin}
       >
         <Text className="text-white font-bold text-base">Iniciar Sesión</Text>
       </TouchableOpacity>
+      <TouchableOpacity
+            className="bg-red-600 py-3 px-5 mb-5 rounded w-full items-center"
+            /*</View>disabled={!request}
+            onPress={() => promptAsync()}*/
+          >
+            <Text className="text-white font-bold">Registro con Google</Text>
+          </TouchableOpacity>
 
       <TouchableOpacity onPress={() => navigation.navigate('Registro')}>
-        <Text className="text-white text-sm">
-          Nuevo Usuario? <Text className="underline">Regístrate</Text>
+        <Text className="text-white mt-5 underline">
+          Nuevo Usuario? Regístrate
         </Text>
       </TouchableOpacity>
     </View>
