@@ -4,14 +4,30 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 type RootStackParamList = {
-  RegistroCardioLevel: undefined;
-  RegistroYogaLevel: undefined;
+  Yoga: undefined;
+  Entrenamiento: undefined;
+  Cardio: undefined;
+  Habitos: { selectedHabit: 'Yoga' | 'Entrenamiento' | 'Cardio' }; // Define selectedHabit as a literal union type
 };
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export default function CategoriasEjercicioFisico() {
-  const navigation = useNavigation<NavigationProp>();
+  const navigation = useNavigation<HabitScreenNavigationProp>();
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedRoute, setSelectedRoute] = useState<'Yoga' | 'Entrenamiento' | 'Cardio' | null>(null);
+
+  const handleNavigation = (route: 'Yoga' | 'Entrenamiento' | 'Cardio') => {
+    setSelectedRoute(route);
+    setModalVisible(true);
+  };
+
+  const handleModalAccept = () => {
+    setModalVisible(false);
+    if (selectedRoute) {
+      navigation.navigate('Habitos', { selectedHabit: selectedRoute });
+    }
+  };
 
   return (
     <View className="flex-1 bg-white">

@@ -25,7 +25,9 @@ import RegistroHabitosCategorias from 'screens/RegistroHabitos/RegistroHabitosCa
 import Cardiocaminar from 'screens/HabitoEjercicioFisico/Cardiocaminar';
 import CardioTrotar from 'screens/HabitoEjercicioFisico/CardioTrotar';
 import CardioCorrer from 'screens/HabitoEjercicioFisico/CardioCorrer';
-
+import Yoga from 'screens/HabitoEjercicioFisico/Yoga';
+import YogaAvanzado from 'screens/HabitoEjercicioFisico/YogaAvanzado1';
+import YogaIntermedio from 'screens/HabitoEjercicioFisico/YogaIntermedio1';
 
 const Stack = createNativeStackNavigator();
 
@@ -63,6 +65,9 @@ export default function App() {
         <Stack.Screen name="Cardiocaminar" component={Cardiocaminar} />
         <Stack.Screen name="CardioTrotar" component={CardioTrotar} />
         <Stack.Screen name="CardioCorrer" component={CardioCorrer} />
+        <Stack.Screen name="Yoga" component={Yoga} />
+        <Stack.Screen name="YogaIntermedio" component={YogaIntermedio} />
+        <Stack.Screen name="YogaAvanzado" component={YogaAvanzado} />
       </Stack.Navigator>
     </NavigationContainer>
   );
