@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Image, TouchableOpacity, SafeAreaView } from 'react-native';
 import { auth, firestore } from '../firebase';
-import { onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import BottomNavBar from '../Componentes/BottomNavBar';
 import { useNavigation } from '@react-navigation/native';
@@ -21,7 +21,7 @@ const wellnessTips = [
   { category: 'Mental', tip: 'Realiza 5 respiraciones profundas para reducir el estrés.' },
   { category: 'Nutrition', tip: '¡Agrega una verdura colorida a tu próxima comida!' },
   { category: 'Physical', tip: 'Estírate durante 5 minutos para mejorar la flexibilidad.' },
-  { category: 'Mental', tip: "Escribe 3 cosas por las que estés agradecido." },
+  { category: 'Mental', tip: 'Escribe 3 cosas por las que estés agradecido.' },
   { category: 'Nutrition', tip: 'Mantente hidratado, ¡Siempre es un buen momento para beber agua!' },
 ];
 
@@ -49,17 +49,30 @@ export default function HomePerfilScreen() {
         }
       } else {
         setUserData(null);
-        navigation.navigate('Login' as never);
+        navigation.navigate('InicioSesion' as never); // Cambiado a InicioSesion
       }
       setLoading(false);
     });
 
-    // Set a random daily tip
     const randomTip = wellnessTips[Math.floor(Math.random() * wellnessTips.length)];
     setDailyTip(randomTip);
 
     return () => unsubscribe();
   }, [navigation]);
+
+  const handleSignOut = async () => {
+    setLoading(true); // Mostrar pantalla de carga durante el cierre
+    try {
+      await signOut(auth);
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Inicio' as never }],
+      });
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+      setLoading(false); // Ocultar carga en caso de error
+    }
+  };
 
   if (loading) {
     return (
@@ -83,15 +96,12 @@ export default function HomePerfilScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-gray-900">
-      {/* Header */}
       <View className="items-center py-14 bg-gray-900 shadow-md">
         <Text className="text-white text-3xl font-bold tracking-tight">Mi Perfil</Text>
       </View>
 
-      {/* Profile Card */}
       <View className="flex-1 px-6 py-16">
         <View className="bg-gray-800 rounded-2xl shadow-lg p-6 mx-2">
-          {/* Profile Avatar and Name */}
           <View className="flex-row items-center mb-6">
             <View className="w-24 h-24 rounded-full overflow-hidden border-4 border-[#FF6464] shadow-md">
               <Image
@@ -108,7 +118,6 @@ export default function HomePerfilScreen() {
             </View>
           </View>
 
-          {/* Profile Details */}
           <View className="space-y-3">
             <View className="flex-row items-center">
               <Ionicons name="calendar-outline" size={20} color="#FF6464" />
@@ -136,7 +145,6 @@ export default function HomePerfilScreen() {
             </View>
           </View>
 
-          {/* Edit Profile Button */}
           <TouchableOpacity
             className="mt-8 rounded-full overflow-hidden"
             onPress={() => navigation.navigate('EditProfile' as never)}
@@ -150,10 +158,23 @@ export default function HomePerfilScreen() {
               </Text>
             </LinearGradient>
           </TouchableOpacity>
+
+          <TouchableOpacity
+            className="mt-4 rounded-full overflow-hidden"
+            onPress={handleSignOut}
+          >
+            <LinearGradient
+              colors={['#FF6464', '#FF8A8A']}
+              className="py-3 px-6 items-center rounded-full"
+            >
+              <Text className="text-white text-base font-semibold tracking-wide">
+                Cerrar Sesión
+              </Text>
+            </LinearGradient>
+          </TouchableOpacity>
         </View>
 
-        {/* Daily Wellness Tip */}
-        <View className="mt-6 bg-gray-800 attorno-2xl shadow-lg p-6 mx-2">
+        <View className="mt-6 bg-gray-800 rounded-2xl shadow-lg p-6 mx-2">
           <Text className="text-white text-xl font-semibold mb-3">Consejo del Día</Text>
           <View className="flex-row items-center">
             <Ionicons
@@ -172,7 +193,6 @@ export default function HomePerfilScreen() {
         </View>
       </View>
 
-      {/* Bottom Navigation */}
       <View className="absolute bottom-0 w-full">
         <BottomNavBar />
       </View>
