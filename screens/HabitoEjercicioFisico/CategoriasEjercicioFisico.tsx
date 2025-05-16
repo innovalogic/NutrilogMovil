@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Image, Modal, Pressable } from 'react-native';
+import { View, Text, TouchableOpacity, Image, Modal, Pressable,Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { auth, firestore } from '../../firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
-type RootStackParamList = {
-    Yoga: undefined;
-    Entrenamiento: undefined;
-    Cardio: undefined;
-    Habitos: undefined; // Updated to match 'Habitos' in App.tsx
+type RootStackParamList = { 
+  Yoga: undefined;
+  Entrenamiento: undefined;
+  Cardio: undefined;
+  Habitos: { selectedHabit: 'Yoga' | 'Entrenamiento' | 'Cardio' }; // Define selectedHabit as a literal union type
 };
 
 type HabitScreenNavigationProp = StackNavigationProp<RootStackParamList>;
@@ -15,19 +17,42 @@ type HabitScreenNavigationProp = StackNavigationProp<RootStackParamList>;
 export default function CategoriasEjercicioFisico() {
   const navigation = useNavigation<HabitScreenNavigationProp>();
   const [modalVisible, setModalVisible] = useState(false);
+  const [selectedRoute, setSelectedRoute] = useState<'Yoga' | 'Entrenamiento' | 'Cardio' | null>(null);
 
-  const handleNavigation = (route: keyof RootStackParamList) => {
-    if (route === 'Entrenamiento') {
-      setModalVisible(true);
-    } else {
-      navigation.navigate(route);
+  const handleNavigation = (route: 'Yoga' | 'Entrenamiento' | 'Cardio') => {
+    setSelectedRoute(route);
+    setModalVisible(true);
+  };
+
+  const handleModalAccept = async () => {
+    setModalVisible(false);
+
+    if (selectedRoute) {
+      const user = auth.currentUser;
+      if (user) {
+        try {
+          // Referencia a la subcolección de hábitos físicos dentro del usuario actual
+          const habitosFisicosRef = collection(firestore, 'habitosUsuarios', user.uid, 'habitosFisicos');
+          
+          // Agregar un nuevo documento con el hábito seleccionado
+          await addDoc(habitosFisicosRef, {
+            habitoSeleccionado: selectedRoute,
+            timestamp: serverTimestamp()
+          });
+
+          console.log('Hábito registrado correctamente');
+        } catch (error) {
+          console.error('Error al registrar el hábito:', error);
+          Alert.alert('Error', 'Hubo un problema al registrar tu hábito.');
+        }
+      } else {
+        Alert.alert('Error', 'Usuario no autenticado.');
+      }
+
+      navigation.navigate('Habitos', { selectedHabit: selectedRoute });
     }
   };
 
-  const handleModalAccept = () => {
-    setModalVisible(false);
-    navigation.navigate('Habitos'); // Updated to 'Habitos'
-  };
 
   return (
     <View className="flex-1 bg-gray-700">

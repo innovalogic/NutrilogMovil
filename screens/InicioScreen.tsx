@@ -22,13 +22,13 @@ export default function InicioScreen() {
   const navigation = useNavigation<NavigationProp>();
 
   return (
-    <View className="flex-1 items-center justify-center bg-[#5F75E4]">
+    <View className="flex-1 items-center justify-center bg-[#374151]">
       <Image
-        source={require('../assets/logo.png')}
-        className="w-36 h-36 mb-4"
+        source={require('../assets/logosinfondo6.png')}
+        className="w-56 h-56 mb-4"
         resizeMode="contain"
       />
-      <Text className="text-white text-2xl font-extrabold mb-8 mt-20">NUTRILOG</Text>
+      <Text className="text-white text-4xl font-extrabold mb-8">NUTRILOG</Text>
       <TouchableOpacity
         className="bg-red-500 px-20 py-3 rounded-[30px] mb-4"
         onPress={() => navigation.navigate('InicioSesion')}
