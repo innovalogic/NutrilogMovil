@@ -13,7 +13,7 @@ export default function RegistroHabitosCategorias() {
   const navigation = useNavigation<NavigationProp>();
 
   return (
-    <View className="flex-1 bg-gray-700 relative">
+    <View className="flex-1 bg-gray-900 relative">
       <View className="items-center p-20">
         <Text className="text-white text-4xl font-bold">HÁBITOS</Text>
         <Text className="text-white text-3xl font-medium mt-5">¿Qué hábito deseas adquirir?</Text>

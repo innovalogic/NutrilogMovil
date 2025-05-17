@@ -55,7 +55,7 @@ export default function CategoriasEjercicioFisico() {
 
 
   return (
-    <View className="flex-1 bg-gray-700">
+    <View className="flex-1 bg-gray-900">
       <Modal
         animationType="slide"
         transparent={true}

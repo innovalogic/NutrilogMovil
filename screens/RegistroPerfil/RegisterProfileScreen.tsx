@@ -60,7 +60,7 @@ const RegisterProfileScreen = () => {
   };
 
   return (
-    <View className="flex-1 justify-center items-center bg-gray-700 p-5">
+    <View className="flex-1 justify-center items-center bg-gray-900 p-5">
       <Text className="text-3xl font-bold text-white mb-2">Empecemos a conocerte!</Text>
       <Text className="text-lg text-white mb-5 text-center mx-2">Nosotros usaremos esta información para sugerirte hábitos saludables.</Text>
 
