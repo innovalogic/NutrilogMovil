@@ -1,11 +1,22 @@
 import { View, Text, Image, StatusBar, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRoute } from '@react-navigation/native';
+import type { RouteProp } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useNavigation } from '@react-navigation/native';
 
-interface Props {
-    nivel?: string;
-}
+type RootStackParamList = {
+    mensaje: { nivel: string; motivacion: string };
+    Seguimiento: undefined;
+};  
 
-export default function FelicitacionView({ nivel }: Props) {
+type MensajeRouteProp = RouteProp<RootStackParamList, 'mensaje'>;
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
+export default function FelicitacionView() {
+    const route = useRoute<MensajeRouteProp>();
+    const navigation = useNavigation<NavigationProp>();
+    const { nivel, motivacion } = route.params;
     return (
         <LinearGradient 
         colors={['#00353f', '#006d5b']} 
@@ -34,14 +45,16 @@ export default function FelicitacionView({ nivel }: Props) {
                 <View className=" p-4 rounded-lg relative mt-6 w-4/5 bg-black/50">
                     <Text className="absolute top-[-10px] left-[-10px] text-9xl text-[#a9b355]">“</Text>
                     <Text className="text-white italic text-center text-xl">
-                        La constancia vence lo que la dicha no alcanza.
+                        {`${motivacion}`}
                     </Text>
                     <Text className="absolute bottom-[-10px] right-[-10px] text-8xl text-[#a9b355]">”</Text>
                 </View>
 
 
                 <View>
-                    <TouchableOpacity className="bg-[#2cad6a] px-20 py-4 rounded-3xl mt-6">
+                    <TouchableOpacity
+                        onPress={() => navigation.navigate('Seguimiento')}
+                        className="bg-[#2cad6a] px-20 py-4 rounded-3xl mt-6">
                         <Text className="text-center text-3xl font-light text-white">Terminar</Text>
                     </TouchableOpacity>
                 </View>
