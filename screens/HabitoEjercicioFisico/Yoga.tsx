@@ -7,10 +7,10 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 
 type RootStackParamList = {
-    YogaAvanzado: undefined;
+    Yoga2: undefined;
 };
 
-type siguiente = StackNavigationProp<RootStackParamList>;
+type siguienteYoga = StackNavigationProp<RootStackParamList>;
 
 const PantallaSesionYoga = () => {
     const [tiempo, setTiempo] = useState(30);
@@ -22,7 +22,7 @@ const PantallaSesionYoga = () => {
         if (tiempo > 10) setTiempo(tiempo - 10);
     };
 
-    const navigation = useNavigation<siguiente>();
+    const navigation = useNavigation<siguienteYoga>();
 
     return (
         <View className="flex-1 items-center justify-center bg-black">
@@ -30,14 +30,11 @@ const PantallaSesionYoga = () => {
                 <Text className="text-white font-extralight text-3xl mb-2">
                     YOGA: Principiante
                 </Text>
-                <Text className="text-white text-center font-extralight text-xl">
-                    Parada Sobre Antebrazos
-                </Text>
             </View>
 
             <View className="w-[90%] h-52 mb-5 rounded-xl overflow-hidden">
                 <WebView
-                    source={{ uri: 'https://www.youtube.com/embed/v7AYKMP6rOE' }}
+                    source={{ uri: 'https://www.youtube.com/embed/yAgjjEOEveY' }}
                     style={{ flex: 1, borderRadius: 10, overflow: 'hidden' }}
                 />
             </View>
@@ -90,13 +87,16 @@ const PantallaSesionYoga = () => {
                         <View className="p-2 shadow-2xl shadow-gray">
                             <Timer
                                 tiempoObjetivo={tiempo}
-                                onTimeUp={() => alert('¡El tiempo ha finalizado!')}
+                                onTimeUp={() => {
+                                        alert('¡El tiempo ha finalizado!')
+                                    }
+                                }
                             />
                         </View>
                     </View>
                     <View className='mb-10'>
                         <TouchableOpacity
-                            onPress={() => navigation.navigate('YogaAvanzado')}
+                            onPress={() => navigation.navigate('Yoga2')}
                             className="bg-green-300/30 px-5 py-2 rounded-lg ">
                             <Text className="text-white text-lg">Siguiente Ejercicio</Text>
                         </TouchableOpacity>
