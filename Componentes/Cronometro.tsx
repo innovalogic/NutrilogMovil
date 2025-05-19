@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
+import { Audio } from 'expo-av';
 
-const Timer = ({ tiempoObjetivo = 30, onTimeUp = () => {} }) => {
+const Timer = ({ tiempoObjetivo = 30, onTimeUp = () => { } }) => {
     const [segundos, setSegundos] = useState(0);
     const [corriendo, setCorriendo] = useState(false);
 
@@ -15,7 +16,17 @@ const Timer = ({ tiempoObjetivo = 30, onTimeUp = () => {} }) => {
     };
 
     useEffect(() => {
-        let intervalo:  ReturnType<typeof setInterval> | null = null;
+        let intervalo: ReturnType<typeof setInterval> | null = null;
+        const reproducirSonido = async () => {
+            try {
+                const { sound } = await Audio.Sound.createAsync(
+                    require('../assets/complet.mp3')
+                );
+                await sound.playAsync();
+            } catch (error) {
+                console.error('Error al reproducir sonido:', error);
+            }
+        }
         if (corriendo) {
             intervalo = setInterval(() => {
                 setSegundos((prev) => prev + 1);
@@ -26,6 +37,7 @@ const Timer = ({ tiempoObjetivo = 30, onTimeUp = () => {} }) => {
             if (onTimeUp) {
                 onTimeUp();
             }
+            reproducirSonido();
             reiniciarTemporizador();
         }
 
