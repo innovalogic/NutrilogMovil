@@ -7,7 +7,7 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 
 type RootStackParamList = {
-    YogaIntermedio2: undefined;
+    YogaIntermedio3: undefined;
 };
 
 type siguienteYoga = StackNavigationProp<RootStackParamList>;
@@ -34,7 +34,7 @@ const PantallaSesionYoga = () => {
 
             <View className="w-[90%] h-52 mb-5 rounded-xl overflow-hidden">
                 <WebView
-                    source={{ uri: 'https://www.youtube.com/embed/LUnaKNG2VrA' }}
+                    source={{ uri: 'https://www.youtube.com/embed/8vROKGeU8e0' }}
                     style={{ flex: 1, borderRadius: 10, overflow: 'hidden' }}
                 />
             </View>
@@ -93,7 +93,7 @@ const PantallaSesionYoga = () => {
                     </View>
                     <View className='mb-10'>
                         <TouchableOpacity
-                            onPress={() => navigation.navigate('YogaIntermedio2')}
+                            onPress={() => navigation.navigate('YogaIntermedio3')}
                             className="bg-green-300/30 px-5 py-2 rounded-lg ">
                             <Text className="text-white text-lg">Siguiente Ejercicio</Text>
                         </TouchableOpacity>
