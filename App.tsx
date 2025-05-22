@@ -29,6 +29,8 @@ import Yoga from 'screens/HabitoEjercicioFisico/Yoga';
 import YogaAvanzado from 'screens/HabitoEjercicioFisico/YogaAvanzado1';
 import YogaIntermedio from 'screens/HabitoEjercicioFisico/YogaIntermedio1';
 
+import CategoriasAlimentacion from 'screens/HabitoAlimentacion/CategoriasAlimentacion';
+
 const Stack = createNativeStackNavigator();
 
 export default function App() {
@@ -68,6 +70,8 @@ export default function App() {
         <Stack.Screen name="Yoga" component={Yoga} />
         <Stack.Screen name="YogaIntermedio" component={YogaIntermedio} />
         <Stack.Screen name="YogaAvanzado" component={YogaAvanzado} />
+
+        <Stack.Screen name="CategoriasAlimentacion" component={CategoriasAlimentacion} />
       </Stack.Navigator>
     </NavigationContainer>
   );
