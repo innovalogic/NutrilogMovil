@@ -18,6 +18,7 @@ type RootStackParamList = {
   RegistroLecturaDiaria: undefined;
   RegistroVideoInspira: undefined;
   RegistroOrigamiDiario: undefined;
+  RegistroHabitosCategorias:undefined;
 };
 
 type HabitosScreenNavigationProp = StackNavigationProp<RootStackParamList>;
@@ -244,6 +245,17 @@ export default function HabitosScreen() {
           </View>
         )}
       </View>
+      <TouchableOpacity
+        onPress={() => navigation.navigate('RegistroHabitosCategorias')}
+        style={{
+          backgroundColor: '#2563eb',
+          borderRadius: 30,
+          paddingVertical: 14,
+          alignItems: 'center',
+        }}
+      >
+        <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold' }}>+ Añadir Hábito</Text>
+      </TouchableOpacity>
 
       <BottomNavBar />
     </View>
