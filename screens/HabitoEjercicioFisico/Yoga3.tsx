@@ -5,14 +5,20 @@ import Timer from '../../Componentes/Cronometro'
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import type { RouteProp } from '@react-navigation/native';
+import { useRoute } from '@react-navigation/native';
 
 type RootStackParamList = {
-    mensaje: { nivel: string, motivacion: string};
+    Yoga3: { minutos: number; segundos: number };
+    mensaje: { nivel: string; motivacion: string; minutos: number; segundos:number };
 };
 
 type siguienteYoga = StackNavigationProp<RootStackParamList>;
+type Yoga3RouteProp = RouteProp<RootStackParamList, 'Yoga3'>;
 
 const PantallaSesionYoga = () => {
+    const route = useRoute<Yoga3RouteProp>();
+    const { minutos: minutosRecibidos, segundos: segundosRecibidos } = route.params;
     const [tiempo, setTiempo] = useState(30);
     const minutos = Math.floor(tiempo / 60);
     const segundos = tiempo % 60;
@@ -93,7 +99,18 @@ const PantallaSesionYoga = () => {
                     </View>
                     <View className='mb-10'>
                         <TouchableOpacity
-                            onPress={() => navigation.navigate('mensaje', { nivel: 'Principiante', motivacion: '¡incéndiate, rompe límites y deja huella!'})}
+                            onPress={() => {
+                                const totalSegundos = minutosRecibidos * 60 + segundosRecibidos + tiempo;
+                                const minutosTotales = Math.floor(totalSegundos / 60);
+                                const segundosTotales = totalSegundos % 60;
+
+                                navigation.navigate('mensaje', {
+                                    nivel: 'Principiante',
+                                    motivacion: '¡Incéndiate, rompe límites y deja huella!',
+                                    minutos: minutosTotales,
+                                    segundos: segundosTotales,
+                                });
+                            }}
                             className="bg-green-300/30 px-5 py-2 rounded-lg ">
                             <Text className="text-white text-lg">Siguiente Ejercicio</Text>
                         </TouchableOpacity>

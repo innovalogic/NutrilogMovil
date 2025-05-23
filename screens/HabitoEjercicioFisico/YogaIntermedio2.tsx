@@ -5,14 +5,20 @@ import Timer from '../../Componentes/Cronometro'
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { useRoute } from '@react-navigation/native';
+import type { RouteProp } from '@react-navigation/native';
 
 type RootStackParamList = {
-    YogaIntermedio3: undefined;
+    YogaIntermedio2: { minutos: number; segundos: number };
+    YogaIntermedio3: { minutos: number; segundos: number };
 };
 
 type siguienteYoga = StackNavigationProp<RootStackParamList>;
+type YogaIntermedio2RouteProp = RouteProp<RootStackParamList, 'YogaIntermedio2'>;
 
 const PantallaSesionYoga = () => {
+    const route = useRoute<YogaIntermedio2RouteProp>();
+    const { minutos: minutosRecibidos, segundos: segundosRecibidos } = route.params;
     const [tiempo, setTiempo] = useState(30);
     const minutos = Math.floor(tiempo / 60);
     const segundos = tiempo % 60;
@@ -93,8 +99,18 @@ const PantallaSesionYoga = () => {
                     </View>
                     <View className='mb-10'>
                         <TouchableOpacity
-                            onPress={() => navigation.navigate('YogaIntermedio3')}
-                            className="bg-green-300/30 px-5 py-2 rounded-lg ">
+                            onPress={() => {
+                                const totalSegundos = minutosRecibidos * 60 + segundosRecibidos + tiempo;
+                                const minutosTotales = Math.floor(totalSegundos / 60);
+                                const segundosTotales = totalSegundos % 60;
+
+                                navigation.navigate('YogaIntermedio3', {
+                                    minutos: minutosTotales,
+                                    segundos: segundosTotales,
+                                });
+                            }}
+                            className="bg-green-300/30 px-5 py-2 rounded-lg"
+                        >
                             <Text className="text-white text-lg">Siguiente Ejercicio</Text>
                         </TouchableOpacity>
                     </View>

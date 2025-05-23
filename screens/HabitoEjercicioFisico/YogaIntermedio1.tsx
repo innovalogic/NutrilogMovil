@@ -7,7 +7,7 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 
 type RootStackParamList = {
-    YogaIntermedio2: undefined;
+    YogaIntermedio2: { minutos: number; segundos: number };
 };
 
 type siguienteYoga = StackNavigationProp<RootStackParamList>;
@@ -87,13 +87,16 @@ const PantallaSesionYoga = () => {
                         <View className="p-2 shadow-2xl shadow-gray">
                             <Timer
                                 tiempoObjetivo={tiempo}
-                                onTimeUp={() => alert('¡El tiempo ha finalizado!')}
+                                onTimeUp={() => alert('¡El tiempo de Yoga ha finalizado!')}
                             />
                         </View>
                     </View>
                     <View className='mb-10'>
                         <TouchableOpacity
-                            onPress={() => navigation.navigate('YogaIntermedio2')}
+                            onPress={() => navigation.navigate('YogaIntermedio2', {
+                                minutos,
+                                segundos,
+                            })}
                             className="bg-green-300/30 px-5 py-2 rounded-lg ">
                             <Text className="text-white text-lg">Siguiente Ejercicio</Text>
                         </TouchableOpacity>
