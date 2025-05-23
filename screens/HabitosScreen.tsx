@@ -12,6 +12,10 @@ type RootStackParamList = {
   Yoga: undefined;
   RegistroCardioLevel: undefined;
   RegistroYogaLevel: undefined;
+  // Añade pantallas para hábitos de alimentación
+  RegistroDietaBajarPeso: undefined;
+  RegistroDietaMantenerPeso: undefined;
+  RegistroDietaSubirPeso: undefined;
 };
 
 type HabitosScreenNavigationProp = StackNavigationProp<RootStackParamList>;
@@ -19,17 +23,24 @@ type HabitosScreenNavigationProp = StackNavigationProp<RootStackParamList>;
 export default function HabitosScreen() {
   const navigation = useNavigation<HabitosScreenNavigationProp>();
   const [habitosFisicos, setHabitosFisicos] = useState<string[]>([]);
+  const [habitosAlimenticios, setHabitosAlimenticios] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchHabitos = async () => {
       const user = auth.currentUser;
       if (user) {
         try {
+          // Recuperar hábitos físicos
           const habitosFisicosRef = collection(firestore, 'habitosUsuarios', user.uid, 'habitosFisicos');
-          const snapshot = await getDocs(habitosFisicosRef);
+          const fisicosSnapshot = await getDocs(habitosFisicosRef);
+          const habitosFisicos = fisicosSnapshot.docs.map(doc => doc.data().habitoSeleccionado);
+          setHabitosFisicos(habitosFisicos);
 
-          const habitos = snapshot.docs.map(doc => doc.data().habitoSeleccionado);
-          setHabitosFisicos(habitos);
+          // Recuperar hábitos alimenticios
+          const habitosAlimenticiosRef = collection(firestore, 'habitosUsuarios', user.uid, 'habitosAlimenticios');
+          const alimenticiosSnapshot = await getDocs(habitosAlimenticiosRef);
+          const habitosAlimenticios = alimenticiosSnapshot.docs.map(doc => doc.data().habitoSeleccionado);
+          setHabitosAlimenticios(habitosAlimenticios);
         } catch (error) {
           console.error('Error al obtener los hábitos:', error);
           Alert.alert('Error', 'No se pudieron cargar tus hábitos.');
@@ -41,6 +52,7 @@ export default function HabitosScreen() {
   }, []);
 
   const handleHabitPress = (habit: string) => {
+    // Hábitos físicos
     if (habit === 'Yoga') {
       navigation.navigate('RegistroYogaLevel');
     } else if (habit === 'Entrenamiento') {
@@ -48,64 +60,121 @@ export default function HabitosScreen() {
     } else if (habit === 'Cardio') {
       navigation.navigate('RegistroCardioLevel');
     }
+    // Hábitos alimenticios
+    else if (habit === 'Dieta Para Bajar de Peso') {
+      navigation.navigate('RegistroDietaBajarPeso');
+    } else if (habit === 'Dieta Para Mantener el Peso') {
+      navigation.navigate('RegistroDietaMantenerPeso');
+    } else if (habit === 'Dieta Para Subir de Peso') {
+      navigation.navigate('RegistroDietaSubirPeso');
+    }
   };
 
-  // ✅ Puedes mapear imágenes según el hábito
+  // Mapear imágenes según el hábito
   const habitImages: Record<string, any> = {
     'Yoga': require('../assets/yogamenu.png'),
     'Entrenamiento': require('../assets/gymmenu.png'),
     'Cardio': require('../assets/cardiomenu.png'),
-    // Puedes agregar más aquí si quieres.
+    'Dieta Para Bajar de Peso': require('../assets/DietaBajarPeso.png'),
+    'Dieta Para Mantener el Peso': require('../assets/DietaMantenerPeso.png'),
+    'Dieta Para Subir de Peso': require('../assets/DietaSubirPeso.png'),
   };
 
   return (
     <View className="flex-1 bg-gray-900">
       <View className="items-center mt-12 mb-6 px-4">
-        <Text className="text-2xl font-bold text-white">Tus Hábitos Físicos</Text>
+        <Text className="text-2xl font-bold text-white">Tus Hábitos</Text>
       </View>
 
       <View className="flex-1 px-6">
-        {habitosFisicos.length > 0 ? (
-          <FlatList
-            data={habitosFisicos}
-            keyExtractor={(item, index) => index.toString()}
-            contentContainerStyle={{
-              paddingBottom: 20,
-            }}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                onPress={() => handleHabitPress(item)}
-                activeOpacity={0.8}
-                style={{
-                  backgroundColor: '#fff',
-                  borderRadius: 16,
-                  paddingVertical: 20,
-                  paddingHorizontal: 20,
-                  marginBottom: 16,
-                  alignItems: 'center',
-                  shadowColor: '#000',
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.3,
-                  shadowRadius: 5,
-                  elevation: 6,
-                }}
-              >
-                {/* Imagen arriba */}
-                <Image
-                  source={habitImages[item] || require('../assets/yogamenu.png')}
-                  style={{
-                    width: 80,
-                    height: 80,
-                    marginBottom: 12,
-                    borderRadius: 40,
-                    resizeMode: 'cover',
-                  }}
+        {habitosFisicos.length > 0 || habitosAlimenticios.length > 0 ? (
+          <>
+            {/* Hábitos físicos */}
+            {habitosFisicos.length > 0 && (
+              <>
+                <Text className="text-xl font-semibold text-white mb-4">Hábitos Físicos</Text>
+                <FlatList
+                  data={habitosFisicos}
+                  keyExtractor={(item, index) => `fisico-${index}`}
+                  contentContainerStyle={{ paddingBottom: 20 }}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity
+                      onPress={() => handleHabitPress(item)}
+                      activeOpacity={0.8}
+                      style={{
+                        backgroundColor: '#fff',
+                        borderRadius: 16,
+                        paddingVertical: 20,
+                        paddingHorizontal: 20,
+                        marginBottom: 16,
+                        alignItems: 'center',
+                        shadowColor: '#000',
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: 0.3,
+                        shadowRadius: 5,
+                        elevation: 6,
+                      }}
+                    >
+                      <Image
+                        source={habitImages[item] || require('../assets/yogamenu.png')}
+                        style={{
+                          width: 80,
+                          height: 80,
+                          marginBottom: 12,
+                          borderRadius: 40,
+                          resizeMode: 'cover',
+                        }}
+                      />
+                      <Text style={{ fontSize: 20, fontWeight: '600', color: '#1f2937' }}>{item}</Text>
+                    </TouchableOpacity>
+                  )}
                 />
-                {/* Texto debajo */}
-                <Text style={{ fontSize: 20, fontWeight: '600', color: '#1f2937' }}>{item}</Text>
-              </TouchableOpacity>
+              </>
             )}
-          />
+
+            {/* Hábitos alimenticios */}
+            {habitosAlimenticios.length > 0 && (
+              <>
+                <Text className="text-xl font-semibold text-white mb-4">Hábitos Alimenticios</Text>
+                <FlatList
+                  data={habitosAlimenticios}
+                  keyExtractor={(item, index) => `alimenticio-${index}`}
+                  contentContainerStyle={{ paddingBottom: 20 }}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity
+                      onPress={() => handleHabitPress(item)}
+                      activeOpacity={0.8}
+                      style={{
+                        backgroundColor: '#fff',
+                        borderRadius: 16,
+                        paddingVertical: 20,
+                        paddingHorizontal: 20,
+                        marginBottom: 16,
+                        alignItems: 'center',
+                        shadowColor: '#000',
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: 0.3,
+                        shadowRadius: 5,
+                        elevation: 6,
+                      }}
+                    >
+                      <Image
+                        source={habitImages[item] || require('../assets/yogamenu.png')}
+                        style={{
+                          width: 80,
+                          height: 80,
+                          marginBottom: 12,
+                          borderRadius: 40,
+                          resizeMode: 'cover',
+                        }}
+                      />
+                      <Text style={{ fontSize: 20, fontWeight: '600', color: '#1f2937' }}>{item}</Text>
+                    </TouchableOpacity>
+                  )}
+                />
+              </>
+            )}
+          </>
         ) : (
           <View className="flex-1 justify-center items-center">
             <Text className="text-white text-lg">No tienes hábitos registrados aún.</Text>
