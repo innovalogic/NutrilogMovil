@@ -12,10 +12,12 @@ type RootStackParamList = {
   Yoga: undefined;
   RegistroCardioLevel: undefined;
   RegistroYogaLevel: undefined;
-  // Añade pantallas para hábitos de alimentación
   RegistroDietaBajarPeso: undefined;
   RegistroDietaMantenerPeso: undefined;
   RegistroDietaSubirPeso: undefined;
+  RegistroLecturaDiaria: undefined;
+  RegistroVideoInspira: undefined;
+  RegistroOrigamiDiario: undefined;
 };
 
 type HabitosScreenNavigationProp = StackNavigationProp<RootStackParamList>;
@@ -24,6 +26,7 @@ export default function HabitosScreen() {
   const navigation = useNavigation<HabitosScreenNavigationProp>();
   const [habitosFisicos, setHabitosFisicos] = useState<string[]>([]);
   const [habitosAlimenticios, setHabitosAlimenticios] = useState<string[]>([]);
+  const [habitosSaludMental, setHabitosSaludMental] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchHabitos = async () => {
@@ -41,6 +44,12 @@ export default function HabitosScreen() {
           const alimenticiosSnapshot = await getDocs(habitosAlimenticiosRef);
           const habitosAlimenticios = alimenticiosSnapshot.docs.map(doc => doc.data().habitoSeleccionado);
           setHabitosAlimenticios(habitosAlimenticios);
+
+          // Recuperar hábitos de salud mental
+          const habitosSaludMentalRef = collection(firestore, 'habitosUsuarios', user.uid, 'habitosSaludMental');
+          const saludMentalSnapshot = await getDocs(habitosSaludMentalRef);
+          const habitosSaludMental = saludMentalSnapshot.docs.map(doc => doc.data().habitoSeleccionado);
+          setHabitosSaludMental(habitosSaludMental);
         } catch (error) {
           console.error('Error al obtener los hábitos:', error);
           Alert.alert('Error', 'No se pudieron cargar tus hábitos.');
@@ -68,6 +77,14 @@ export default function HabitosScreen() {
     } else if (habit === 'Dieta Para Subir de Peso') {
       navigation.navigate('RegistroDietaSubirPeso');
     }
+    // Hábitos de salud mental
+    else if (habit === 'Lectura diaria') {
+      navigation.navigate('RegistroLecturaDiaria');
+    } else if (habit === 'Video-Inspira') {
+      navigation.navigate('RegistroVideoInspira');
+    } else if (habit === 'Origami Diario') {
+      navigation.navigate('RegistroOrigamiDiario');
+    }
   };
 
   // Mapear imágenes según el hábito
@@ -78,6 +95,9 @@ export default function HabitosScreen() {
     'Dieta Para Bajar de Peso': require('../assets/DietaBajarPeso.png'),
     'Dieta Para Mantener el Peso': require('../assets/DietaMantenerPeso.png'),
     'Dieta Para Subir de Peso': require('../assets/DietaSubirPeso.png'),
+    'Lectura diaria': require('../assets/LecturaDiaria.png'),
+    'Video-Inspira': require('../assets/VideoInspira.png'),
+    'Origami Diario': require('../assets/Origami.png'),
   };
 
   return (
@@ -87,7 +107,7 @@ export default function HabitosScreen() {
       </View>
 
       <View className="flex-1 px-6">
-        {habitosFisicos.length > 0 || habitosAlimenticios.length > 0 ? (
+        {habitosFisicos.length > 0 || habitosAlimenticios.length > 0 || habitosSaludMental.length > 0 ? (
           <>
             {/* Hábitos físicos */}
             {habitosFisicos.length > 0 && (
@@ -139,6 +159,49 @@ export default function HabitosScreen() {
                 <FlatList
                   data={habitosAlimenticios}
                   keyExtractor={(item, index) => `alimenticio-${index}`}
+                  contentContainerStyle={{ paddingBottom: 20 }}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity
+                      onPress={() => handleHabitPress(item)}
+                      activeOpacity={0.8}
+                      style={{
+                        backgroundColor: '#fff',
+                        borderRadius: 16,
+                        paddingVertical: 20,
+                        paddingHorizontal: 20,
+                        marginBottom: 16,
+                        alignItems: 'center',
+                        shadowColor: '#000',
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: 0.3,
+                        shadowRadius: 5,
+                        elevation: 6,
+                      }}
+                    >
+                      <Image
+                        source={habitImages[item] || require('../assets/yogamenu.png')}
+                        style={{
+                          width: 80,
+                          height: 80,
+                          marginBottom: 12,
+                          borderRadius: 40,
+                          resizeMode: 'cover',
+                        }}
+                      />
+                      <Text style={{ fontSize: 20, fontWeight: '600', color: '#1f2937' }}>{item}</Text>
+                    </TouchableOpacity>
+                  )}
+                />
+              </>
+            )}
+
+            {/* Hábitos de salud mental */}
+            {habitosSaludMental.length > 0 && (
+              <>
+                <Text className="text-xl font-semibold text-white mb-4">Hábitos de Salud Mental</Text>
+                <FlatList
+                  data={habitosSaludMental}
+                  keyExtractor={(item, index) => `saludMental-${index}`}
                   contentContainerStyle={{ paddingBottom: 20 }}
                   renderItem={({ item }) => (
                     <TouchableOpacity
