@@ -30,45 +30,67 @@ const App = () => {
   const [selectedTimeType, setSelectedTimeType] = useState('');
 
   // Estados para los valores
-  const [seriesCount, setSeriesCount] = useState(1);
-  const [warmupMinutes, setWarmupMinutes] = useState(0);
-  const [warmupSeconds, setWarmupSeconds] = useState(0);
-  const [workMinutes, setWorkMinutes] = useState(0);
-  const [workSeconds, setWorkSeconds] = useState(0);
-  const [restMinutes, setRestMinutes] = useState(0);
-  const [restSecondsSetting, setRestSecondsSetting] = useState(15);
+  const [seriesCount, setSeriesCount] = useState(3); // Ajustado a 3
+  const [warmupSeconds, setWarmupSeconds] = useState(30); // Ajustado a 30
+  const [workSeconds, setWorkSeconds] = useState(30); // Ajustado a 30
+  const [restSecondsSetting, setRestSecondsSetting] = useState(60); // Ajustado a 60
 
   const exercises = ['Plancha', 'Giro ruso', 'Abdominales con peso', 'Levantamiento de piernas'];
 
   // Datos para la estructura del entrenamiento
   const structureData = [
     { id: '1', title: 'Número de Series', value: seriesCount.toString() },
-    { id: '2', title: 'Tiempo de Calentamiento', value: `${warmupMinutes} min ${warmupSeconds} s` },
-    { id: '3', title: 'Tiempo de Trabajo', value: `${workMinutes} min ${workSeconds} s` },
-    { id: '4', title: 'Tiempo de Descanso', value: `${restMinutes} min ${restSecondsSetting} s` },
+    { id: '2', title: 'Tiempo de Calentamiento', value: `${warmupSeconds} s` },
+    { id: '3', title: 'Tiempo de Trabajo', value: `${workSeconds} s` },
+    { id: '4', title: 'Tiempo de Descanso', value: `${restSecondsSetting} s` },
   ];
+
+  const [currentSeries, setCurrentSeries] = useState(1);
+  const [currentPhase, setCurrentPhase] = useState('warmup'); // 'warmup', 'work', 'rest'
+  const [timeLeft, setTimeLeft] = useState(warmupSeconds); // Initialize with warmup time
 
   useEffect(() => {
     let timerInterval: NodeJS.Timeout | undefined;
     if (isRunning) {
       timerInterval = setInterval(() => {
-        setSeconds(prev => prev + 1);
-      }, 1000);
-    } else if (isResting) {
-      timerInterval = setInterval(() => {
-        setRestSeconds(prev => prev + 1);
+        if (timeLeft > 0) {
+          setTimeLeft(prev => prev - 1);
+        } else {
+          handlePhaseChange();
+        }
       }, 1000);
     }
+
     return () => {
       if (timerInterval) clearInterval(timerInterval);
     };
-  }, [isRunning, isResting]);
+  }, [isRunning, timeLeft]);
+
+  const handlePhaseChange = () => {
+    if (currentPhase === 'warmup') {
+      setCurrentPhase('work');
+      setCurrentSeries(1); // Reset series for new cycle
+      setTimeLeft(workSeconds);
+    } else if (currentPhase === 'work') {
+      if (currentSeries < seriesCount) {
+        setCurrentSeries(prev => prev + 1);
+        setCurrentPhase('rest');
+        setTimeLeft(restSecondsSetting);
+      } else {
+        handleFinish();
+      }
+    } else if (currentPhase === 'rest') {
+      setCurrentPhase('work');
+      setTimeLeft(workSeconds);
+    }
+  };
 
   const handleStart = () => {
     Alert.alert(`Ejercicio: ${exercise}\nRepeticiones: ${reps}`);
     setSeconds(0);
     setIsRunning(true);
-    setIsResting(false);
+    setCurrentPhase('warmup');
+    setTimeLeft(warmupSeconds);
   };
 
   const handlePause = () => {
@@ -78,8 +100,9 @@ const App = () => {
   const handleReset = () => {
     setIsRunning(false);
     setSeconds(0);
-    setRestSeconds(0);
-    setIsResting(false);
+    setTimeLeft(0);
+    setCurrentSeries(1);
+    setCurrentPhase('warmup');
   };
 
   const handleFinish = () => {
@@ -102,55 +125,31 @@ const App = () => {
     setModalVisible(true);
   };
 
-  // Función para crear botones numéricos
   const renderNumberButtons = (
-    start: number,
-    end: number,
+    options: number[],
     onPress: (num: number) => void
   ) => {
-    const buttons = [];
-    const buttonsPerRow = 10;
-
-    for (let i = start; i <= end; i++) {
-      buttons.push(i);
-    }
-
-    const rows = [];
-    for (let i = 0; i < buttons.length; i += buttonsPerRow) {
-      rows.push(buttons.slice(i, i + buttonsPerRow));
-    }
-
     return (
       <ScrollView style={{ maxHeight: 200 }}>
-        {rows.map((row, idx) => (
-          <View
-            key={idx}
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'flex-start',
-              flexWrap: 'nowrap',
-              marginVertical: 2,
-            }}
-          >
-            {row.map(num => (
-              <TouchableOpacity
-                key={num}
-                onPress={() => onPress(num)}
-                style={{
-                  backgroundColor: '#4A5568',
-                  paddingVertical: 8,
-                  paddingHorizontal: 12,
-                  marginRight: 6,
-                  borderRadius: 5,
-                  minWidth: 30,
-                  alignItems: 'center',
-                }}
-              >
-                <Text className="text-white">{num}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        ))}
+        <View style={{ flexDirection: 'row', justifyContent: 'flex-start', flexWrap: 'nowrap', marginVertical: 2 }}>
+          {options.map(num => (
+            <TouchableOpacity
+              key={num}
+              onPress={() => onPress(num)}
+              style={{
+                backgroundColor: '#4A5568',
+                paddingVertical: 8,
+                paddingHorizontal: 12,
+                marginRight: 6,
+                borderRadius: 5,
+                minWidth: 30,
+                alignItems: 'center',
+              }}
+            >
+              <Text className="text-white">{num}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
       </ScrollView>
     );
   };
@@ -160,51 +159,30 @@ const App = () => {
       return (
         <>
           <Text style={{ fontWeight: 'bold', marginBottom: 8 }}>
-            Seleccionar Número de Series (1-99):
+            Seleccionar Número de Series (3, 4, 5):
           </Text>
-          {renderNumberButtons(1, 99, num => setSeriesCount(num))}
+          {renderNumberButtons([3, 4, 5], num => setSeriesCount(num))}
         </>
       );
-    } else if (
-      selectedTimeType === 'Tiempo de Calentamiento' ||
-      selectedTimeType === 'Tiempo de Trabajo' ||
-      selectedTimeType === 'Tiempo de Descanso'
-    ) {
-      let curMin = 0;
-      let curSec = 0;
-      let setMin: (val: number) => void = () => {};
-      let setSec: (val: number) => void = () => {};
-
-      if (selectedTimeType === 'Tiempo de Calentamiento') {
-        curMin = warmupMinutes;
-        curSec = warmupSeconds;
-        setMin = setWarmupMinutes;
-        setSec = setWarmupSeconds;
-      } else if (selectedTimeType === 'Tiempo de Trabajo') {
-        curMin = workMinutes;
-        curSec = workSeconds;
-        setMin = setWorkMinutes;
-        setSec = setWorkSeconds;
-      } else if (selectedTimeType === 'Tiempo de Descanso') {
-        curMin = restMinutes;
-        curSec = restSecondsSetting;
-        setMin = setRestMinutes;
-        setSec = setRestSecondsSetting;
-      }
-
+    } else if (selectedTimeType === 'Tiempo de Calentamiento') {
       return (
         <>
-          <Text style={{ fontWeight: 'bold', marginBottom: 8 }}>Minutos (0-59):</Text>
-          {renderNumberButtons(0, 59, num => setMin(num))}
-          <Text
-            style={{ fontWeight: 'bold', marginBottom: 8, marginTop: 12 }}
-          >
-            Segundos (0-59):
-          </Text>
-          {renderNumberButtons(0, 59, num => setSec(num))}
-          <Text style={{ marginTop: 8 }}>
-            Seleccionado: {curMin} min {curSec} s
-          </Text>
+          <Text style={{ fontWeight: 'bold', marginBottom: 8 }}>Selecciona tiempo (30, 60 s):</Text>
+          {renderNumberButtons([30, 60], num => setWarmupSeconds(num))}
+        </>
+      );
+    } else if (selectedTimeType === 'Tiempo de Trabajo') {
+      return (
+        <>
+          <Text style={{ fontWeight: 'bold', marginBottom: 8 }}>Selecciona tiempo (30, 45, 60 s):</Text>
+          {renderNumberButtons([30, 45, 60], num => setWorkSeconds(num))}
+        </>
+      );
+    } else if (selectedTimeType === 'Tiempo de Descanso') {
+      return (
+        <>
+          <Text style={{ fontWeight: 'bold', marginBottom: 8 }}>Selecciona tiempo (60, 90 s):</Text>
+          {renderNumberButtons([60, 90], num => setRestSecondsSetting(num))}
         </>
       );
     } else {
@@ -274,9 +252,9 @@ const App = () => {
       </Modal>
 
       <View className="w-36 h-36 border-8 border-green-500 rounded-full flex items-center justify-center mb-6">
-        <Text className="text-white text-4xl">
-          {isResting ? restSeconds : seconds} s
-        </Text>
+        <Text className="text-white text-4xl">{timeLeft}</Text>
+        <Text className="text-white text-lg">{currentPhase === 'work' ? 'Trabajo' : currentPhase === 'rest' ? 'Descanso' : 'Calentamiento'}</Text>
+        <Text className="text-white text-lg">{currentSeries} / {seriesCount}</Text>
       </View>
 
       <View className="flex-row justify-between w-full px-8">
