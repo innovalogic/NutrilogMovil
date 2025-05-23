@@ -10,7 +10,7 @@ type RootStackParamList = {
   Habitos: undefined;
   Entrenamiento: undefined;
   Yoga: undefined;
-  Cardio: undefined;
+  RegistroCardioLevel: undefined;
   RegistroYogaLevel: undefined;
 };
 
@@ -46,7 +46,7 @@ export default function HabitosScreen() {
     } else if (habit === 'Entrenamiento') {
       navigation.navigate('Entrenamiento');
     } else if (habit === 'Cardio') {
-      navigation.navigate('Cardio');
+      navigation.navigate('RegistroCardioLevel');
     }
   };
 
@@ -59,7 +59,7 @@ export default function HabitosScreen() {
   };
 
   return (
-    <View className="flex-1 bg-gray-700">
+    <View className="flex-1 bg-gray-900">
       <View className="items-center mt-12 mb-6 px-4">
         <Text className="text-2xl font-bold text-white">Tus Hábitos Físicos</Text>
       </View>

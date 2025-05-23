@@ -13,6 +13,7 @@ type RootStackParamList = {
   Registro: undefined;
   InicioSesion: undefined;
   HomePerfil: undefined;
+  CategoriasEjercicioFisico: undefined;
 };
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;

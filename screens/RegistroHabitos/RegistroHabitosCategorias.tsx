@@ -5,6 +5,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 type RootStackParamList = {
   CategoriasEjercicioFisico: undefined;
+  CategoriasAlimentacion: undefined;
 };
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -13,7 +14,7 @@ export default function RegistroHabitosCategorias() {
   const navigation = useNavigation<NavigationProp>();
 
   return (
-    <View className="flex-1 bg-gray-700 relative">
+    <View className="flex-1 bg-gray-900 relative">
       <View className="items-center p-20">
         <Text className="text-white text-4xl font-bold">HÁBITOS</Text>
         <Text className="text-white text-3xl font-medium mt-5">¿Qué hábito deseas adquirir?</Text>
@@ -22,7 +23,7 @@ export default function RegistroHabitosCategorias() {
         <View className="flex-row justify-around mb-8">
           <TouchableOpacity
             className="items-center"
-            onPress={() => navigation.navigate('CategoriasEjercicioFisico')} // Navigate on press
+            onPress={() => navigation.navigate('CategoriasEjercicioFisico')}
           >
             <Image
               source={require('../../assets/EjercicioFisico.png')}
@@ -31,7 +32,10 @@ export default function RegistroHabitosCategorias() {
             />
             <Text className="text-white text-lg font-extrabold mt-7">Ejercicio Físico</Text>
           </TouchableOpacity>
-          <TouchableOpacity className="items-center">
+          <TouchableOpacity 
+            className="items-center"
+            onPress={() => navigation.navigate('CategoriasAlimentacion')}
+          >
             <Image
               source={require('../../assets/Alimentacion.png')}
               className="w-40 h-40 rounded-full"

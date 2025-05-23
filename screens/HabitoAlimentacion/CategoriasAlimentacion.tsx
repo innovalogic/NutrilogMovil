@@ -1,25 +1,22 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Image, Modal, Pressable,Alert } from 'react-native';
+import { View, Text, TouchableOpacity, Image, Modal, Pressable, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { auth, firestore } from '../../firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
-type RootStackParamList = { 
-  Yoga: undefined;
-  Entrenamiento: undefined;
-  Cardio: undefined;
-  Habitos: { selectedHabit: 'Yoga' | 'Entrenamiento' | 'Cardio' }; // Define selectedHabit as a literal union type
+type RootStackParamList = {
+  Habitos: { selectedHabit: 'Dieta Para Bajar de Peso' | 'Dieta Para Mantener el Peso' | 'Dieta Para Subir de Peso' };
 };
 
 type HabitScreenNavigationProp = StackNavigationProp<RootStackParamList>;
 
-export default function CategoriasEjercicioFisico() {
+export default function CategoriasAlimentacion() {
   const navigation = useNavigation<HabitScreenNavigationProp>();
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedRoute, setSelectedRoute] = useState<'Yoga' | 'Entrenamiento' | 'Cardio' | null>(null);
+  const [selectedRoute, setSelectedRoute] = useState<'Dieta Para Bajar de Peso' | 'Dieta Para Mantener el Peso' | 'Dieta Para Subir de Peso' | null>(null);
 
-  const handleNavigation = (route: 'Yoga' | 'Entrenamiento' | 'Cardio') => {
+  const handleNavigation = (route: 'Dieta Para Bajar de Peso' | 'Dieta Para Mantener el Peso' | 'Dieta Para Subir de Peso') => {
     setSelectedRoute(route);
     setModalVisible(true);
   };
@@ -31,16 +28,16 @@ export default function CategoriasEjercicioFisico() {
       const user = auth.currentUser;
       if (user) {
         try {
-          // Referencia a la subcolección de hábitos físicos dentro del usuario actual
-          const habitosFisicosRef = collection(firestore, 'habitosUsuarios', user.uid, 'habitosFisicos');
+          // Referencia a la subcolección de hábitos alimenticios dentro del usuario actual
+          const habitosAlimenticiosRef = collection(firestore, 'habitosUsuarios', user.uid, 'habitosAlimenticios');
           
           // Agregar un nuevo documento con el hábito seleccionado
-          await addDoc(habitosFisicosRef, {
+          await addDoc(habitosAlimenticiosRef, {
             habitoSeleccionado: selectedRoute,
             timestamp: serverTimestamp()
           });
 
-          console.log('Hábito registrado correctamente');
+          console.log('Hábito alimenticio registrado correctamente');
         } catch (error) {
           console.error('Error al registrar el hábito:', error);
           Alert.alert('Error', 'Hubo un problema al registrar tu hábito.');
@@ -52,7 +49,6 @@ export default function CategoriasEjercicioFisico() {
       navigation.navigate('Habitos', { selectedHabit: selectedRoute });
     }
   };
-
 
   return (
     <View className="flex-1 bg-gray-900">
@@ -78,58 +74,58 @@ export default function CategoriasEjercicioFisico() {
       </Modal>
 
       <View className="items-center pt-24">
-        <Text className="text-4xl font-bold text-white">Hábito de Actividad Física</Text>
+        <Text className="text-4xl font-bold text-white">Hábito de Alimentación</Text>
         <Text className="text-2xl font-medium text-white mt-1">Selecciona tus Hábitos</Text>
       </View>
 
       <View className="flex-1 justify-center items-center">
         <TouchableOpacity
           className="bg-black rounded-lg py-6 px-14 mb-10 w-3/4"
-          onPress={() => handleNavigation('Yoga')}
+          onPress={() => handleNavigation('Dieta Para Bajar de Peso')}
         >
           <View className="flex-row items-center">
             <Image
-              source={require('../../assets/Yoga.png')}
+              source={require('../../assets/DietaBajarPeso.png')}
               className="w-16 h-28 mr-4 ml-[-24px]"
             />
             <View>
-              <Text className="text-white text-2xl font-bold">Yoga</Text>
+              <Text className="text-white text-2xl font-bold">Dieta Para Bajar de Peso</Text>
               <Text className="text-white font-medium text-left mt-7">
-                Alivio del estrés, flexibilidad, fuerza
+                Control calórico, pérdida de grasa
               </Text>
             </View>
           </View>
         </TouchableOpacity>
         <TouchableOpacity
           className="bg-black rounded-lg py-6 px-14 mb-10 w-3/4"
-          onPress={() => handleNavigation('Entrenamiento')}
+          onPress={() => handleNavigation('Dieta Para Mantener el Peso')}
         >
           <View className="flex-row items-center">
             <Image
-              source={require('../../assets/Entrenamiento.png')}
-              className="w-20 h-28 mr-4 ml-[-34px]"
+              source={require('../../assets/DietaMantenerPeso.png')}
+              className="w-16 h-28 mr-4 ml-[-24px]"
             />
             <View>
-              <Text className="text-white text-2xl font-bold">Entrenamiento</Text>
+              <Text className="text-white text-2xl font-bold">Dieta Para Mantener el Peso</Text>
               <Text className="text-white font-medium text-left mt-7">
-                Desarrollo muscular, aumento del metabolismo
+                Equilibrio nutricional, estabilidad
               </Text>
             </View>
           </View>
         </TouchableOpacity>
         <TouchableOpacity
           className="bg-black rounded-lg py-6 px-14 w-3/4"
-          onPress={() => handleNavigation('Cardio')}
+          onPress={() => handleNavigation('Dieta Para Subir de Peso')}
         >
           <View className="flex-row items-center">
             <Image
-              source={require('../../assets/Cardio.png')}
-              className="w-20 h-28 mr-4 ml-[-34px]"
+              source={require('../../assets/DietaSubirPeso.png')}
+              className="w-16 h-28 mr-4 ml-[-24px]"
             />
             <View>
-              <Text className="text-white text-2xl font-bold">Cardio</Text>
+              <Text className="text-white text-2xl font-bold">Dieta Para Subir de Peso</Text>
               <Text className="text-white font-medium text-left mt-7">
-                Salud cardiovascular, pérdida de peso
+                Aumento muscular, ganancia calórica
               </Text>
             </View>
           </View>

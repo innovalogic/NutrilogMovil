@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
+import { Audio } from 'expo-av';
 
-const Timer = ({ tiempoObjetivo = 30, onTimeUp = () => {} }) => {
+const Timer = ({ tiempoObjetivo = 30, onTimeUp = () => { } }) => {
     const [segundos, setSegundos] = useState(0);
     const [corriendo, setCorriendo] = useState(false);
 
@@ -15,7 +16,17 @@ const Timer = ({ tiempoObjetivo = 30, onTimeUp = () => {} }) => {
     };
 
     useEffect(() => {
-        let intervalo:  ReturnType<typeof setInterval> | null = null;
+        let intervalo: ReturnType<typeof setInterval> | null = null;
+        const reproducirSonido = async () => {
+            try {
+                const { sound } = await Audio.Sound.createAsync(
+                    require('../assets/complet.mp3')
+                );
+                await sound.playAsync();
+            } catch (error) {
+                console.error('Error al reproducir sonido:', error);
+            }
+        }
         if (corriendo) {
             intervalo = setInterval(() => {
                 setSegundos((prev) => prev + 1);
@@ -26,6 +37,7 @@ const Timer = ({ tiempoObjetivo = 30, onTimeUp = () => {} }) => {
             if (onTimeUp) {
                 onTimeUp();
             }
+            reproducirSonido();
             reiniciarTemporizador();
         }
 
@@ -41,23 +53,23 @@ const Timer = ({ tiempoObjetivo = 30, onTimeUp = () => {} }) => {
     };
 
     return (
-        <View className="items-center justify-center rounded-3xl w-[250px] p-5 bg-black">
+        <View className="items-center justify-center rounded-3xl w-[250px] p-2 bg-black">
             {/* Botones */}
             <View className="flex-row justify-around w-full mb-6">
                 <TouchableOpacity
                     onPress={activarTemporizador}
-                    className="bg-white py-2 px-5 rounded-lg mx-2"
+                    className="bg-green-300/60 py-2 px-5 rounded-lg mx-2"
                 >
-                    <Text className="text-black text-lg font-semibold">
+                    <Text className="text-white text-extralight">
                         {corriendo ? 'Detener' : 'Iniciar'}
                     </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                     onPress={reiniciarTemporizador}
-                    className="bg-white py-2 px-5 rounded-lg mx-2"
+                    className="bg-green-300/60 py-2 px-5 rounded-lg mx-2"
                 >
-                    <Text className="text-black text-lg font-semibold">Reiniciar</Text>
+                    <Text className="text-white text-extralight">Reiniciar</Text>
                 </TouchableOpacity>
             </View>
 

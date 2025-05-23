@@ -6,6 +6,7 @@ import { getAuth } from 'firebase/auth';
 import { getFirestore, doc, getDoc, updateDoc, setDoc, arrayUnion } from 'firebase/firestore';
 import { auth, firestore } from '../../firebase'; // Asegúrate de que la importación sea correcta
 import { StackNavigationProp } from '@react-navigation/stack';
+import { LinearGradient } from 'expo-linear-gradient';
 
 type RootStackParamList = {
   RegistroEjercicios: undefined;
@@ -52,71 +53,79 @@ const RegisterYogaLevelScreen = () => {
   };
 
   // const handleSave = async () => {
-    // if (!selectedLevel) {
-    //   Alert.alert('Selecciona un nivel antes de guardar.');
-    //   return;
-    // }
+  // if (!selectedLevel) {
+  //   Alert.alert('Selecciona un nivel antes de guardar.');
+  //   return;
+  // }
 
-    // try {
-    //   const user = auth.currentUser;
+  // try {
+  //   const user = auth.currentUser;
 
-    //   if (!user) {
-    //     Alert.alert('No se encontró un usuario autenticado.');
-    //     return;
-    //   }
+  //   if (!user) {
+  //     Alert.alert('No se encontró un usuario autenticado.');
+  //     return;
+  //   }
 
-    //   const userRef = doc(firestore, 'usuariohabitosactividadfisica', user.uid);
-    //   const userDoc = await getDoc(userRef);
+  //   const userRef = doc(firestore, 'usuariohabitosactividadfisica', user.uid);
+  //   const userDoc = await getDoc(userRef);
 
-    //   if (!userDoc.exists()) {
-    //     // Si el documento no existe, crearlo
-    //     await setDoc(userRef, {
-    //       niveles: arrayUnion({ nivel: selectedLevel, actividad: 'Yoga', timestamp: new Date() }),
-    //     });
-    //   } else {
-    //     // Si el documento existe, actualizarlo
-    //     await updateDoc(userRef, {
-    //       niveles: arrayUnion({ nivel: selectedLevel, actividad: 'Yoga', timestamp: new Date() }),
-    //     });
-    //   }
+  //   if (!userDoc.exists()) {
+  //     // Si el documento no existe, crearlo
+  //     await setDoc(userRef, {
+  //       niveles: arrayUnion({ nivel: selectedLevel, actividad: 'Yoga', timestamp: new Date() }),
+  //     });
+  //   } else {
+  //     // Si el documento existe, actualizarlo
+  //     await updateDoc(userRef, {
+  //       niveles: arrayUnion({ nivel: selectedLevel, actividad: 'Yoga', timestamp: new Date() }),
+  //     });
+  //   }
 
-    //   Alert.alert('Nivel guardado exitosamente!');
-    //   navigation.navigate('RegistroEjercicios');
-    // } catch (error) {
-    //   console.error(error);
-    //   Alert.alert('Error al guardar el nivel.');
-    // }
+  //   Alert.alert('Nivel guardado exitosamente!');
+  //   navigation.navigate('RegistroEjercicios');
+  // } catch (error) {
+  //   console.error(error);
+  //   Alert.alert('Error al guardar el nivel.');
+  // }
   // };
 
   return (
-    <View className="flex-1 justify-center items-center bg-gray-700">
+    <View className="flex-1 justify-center items-center bg-black">
 
-      <View className="mt-12">
+      <View className="mt-14">
         <Text className="text-white text-3xl font-extralight mb-5">Selecciona tu nivel</Text>
         {/* <Text className="text-white text-lg mb-10">Actividad: Yoga</Text> */}
       </View>
 
-      <View>
+      <View className=''>
         <Image
           source={require('../../assets/menuYoga.jpg')}
-          className="rounded-2xl w-[363] h-[222]"
+          className="w-[363] h-[222] mt-5 rounded-tl-2xl rounded-tr-2xl"
         />
       </View>
 
-      <View className="flex-1 items-center justify-center mt-[-20] rounded-t-3xl px-5 bg-white">
+      <LinearGradient
+        colors={['#5B627C', '#D9CAC9']}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        className="flex-1 items-center justify-center">
+
+      <View className="flex-1 items-center justify-center mt-[-20] rounded-t-3xl px-5">
         {niveles.map((level, index) => (
           <TouchableOpacity
             key={index}
-            className={`flex-row items-center p-3 my-3 rounded-3x1 w-full rounded-2xl bg-gray-500 shadow-2xl shadow-black`}
-            onPress={() => {setSelectedLevel(level.nombre);
-              handleNavigation(level.route as keyof RootStackParamList);  }
-            } 
+            className={`flex-row items-center p-3 my-3 w-full rounded-2xl bg-black/2 border border-gray-300`}
+            onPress={() => {
+              setSelectedLevel(level.nombre);
+              handleNavigation(level.route as keyof RootStackParamList);
+            }
+            }
           >
             <View className='flex-1'>
-              <Text className={`text-3xl font-extralight text-white mb-1`}>
+              <Text className={`text-2xl font-extralight text-white mb-1`}>
                 {level.nombre}
               </Text>
-              <Text className={`text-base text-gray-300`}>
+              <Text className={`text-base text-white`}>
                 {level.descripcion}
               </Text>
             </View>
@@ -130,6 +139,7 @@ const RegisterYogaLevelScreen = () => {
           <Text className="text-white text-lg font-extralight">Guardar y Volver</Text>
         </TouchableOpacity> */}
       </View>
+      </LinearGradient>
     </View>
   );
 };

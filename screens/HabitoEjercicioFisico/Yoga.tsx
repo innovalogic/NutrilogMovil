@@ -2,6 +2,15 @@ import React, { useState } from 'react';
 import { Text, View, TouchableOpacity } from 'react-native';
 import { WebView } from 'react-native-webview';
 import Timer from '../../Componentes/Cronometro'
+import { LinearGradient } from 'expo-linear-gradient';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+
+type RootStackParamList = {
+    Yoga2: { minutos: number;  segundos: number};
+};
+
+type siguienteYoga = StackNavigationProp<RootStackParamList>;
 
 const PantallaSesionYoga = () => {
     const [tiempo, setTiempo] = useState(30);
@@ -12,68 +21,91 @@ const PantallaSesionYoga = () => {
     const disminuirTiempo = () => {
         if (tiempo > 10) setTiempo(tiempo - 10);
     };
+
+    const navigation = useNavigation<siguienteYoga>();
+
     return (
-        <View className="flex-1 items-center justify-center bg-[#595959]">
+        <View className="flex-1 items-center justify-center bg-black">
             <View className='mt-12'>
-                <Text className="text-white font-extralight text-3xl mb-5">
+                <Text className="text-white font-extralight text-3xl mb-2">
                     YOGA: Principiante
                 </Text>
             </View>
-            
-            <View className="w-[90%] h-52 mb-5">
+
+            <View className="w-[90%] h-52 mb-5 rounded-xl overflow-hidden">
                 <WebView
-                    source={{ uri: 'https://www.youtube.com/embed/v7AYKMP6rOE' }}
+                    source={{ uri: 'https://www.youtube.com/embed/yAgjjEOEveY' }}
                     style={{ flex: 1, borderRadius: 10, overflow: 'hidden' }}
                 />
             </View>
+            <View className="flex-1 overflow-hidden">
+                <LinearGradient
+                    colors={['#00353f', '#006d5b']}
+                    start={{ x: 0.5, y: 0 }}
+                    end={{ x: 0.5, y: 1 }}
+                    className="items-center justify-center"
+                >
+                    <View className="flex-1 items-center w-full p-4">
+                        <View className='mt-5'>
+                            <Text className="text-center text-3xl font-light text-green-200">
+                                Temporizador de Ejercicio
+                            </Text>
+                        </View>
 
-            <View className="flex-1 items-center  bg-white rounded-t-2xl w-full p-4">
-                <View className='mt-12'>
-                    <Text className="text-center text-2xl font-semibold mb-2">
-                        Temporizador de Ejercicio
-                    </Text>
-                </View>
-                
+                        <View className="flex-row justify-center my-10">
+                            <TouchableOpacity
+                                onPress={disminuirTiempo}
+                                className="px-14 py-2 rounded-full bg-green-300/50 shadow-lg shadow-black mr-4"
+                            >
+                                <Text className="text-white text-xl text-center">-10s</Text>
+                            </TouchableOpacity>
 
-                <View className="flex-row justify-center my-10">
-                    <TouchableOpacity
-                        onPress={disminuirTiempo}
-                        className="bg-white px-16 py-2 rounded-full shadow-lg shadow-black mr-8"
+                            <TouchableOpacity
+                                onPress={incrementarTiempo}
+                                className="bg-green-300/50 px-14 py-2 rounded-full shadow-lg shadow-black ml-4"
+                            >
+                                <Text className="text-white text-xl text-center">+10s</Text>
+                            </TouchableOpacity>
+                        </View>
 
-                    >
-                        <Text className="text-black text-lg text-center">-10s</Text>
-                    </TouchableOpacity>
+                        <View className="flex-row justify-center mt-4 space-x-5">
+                            <View className="items-center mx-2">
+                                <Text className="bg-black text-white text-5xl text-center px-5 py-3 rounded-2xl min-w-[80px]">
+                                    {String(minutos).padStart(2, '0')}
+                                </Text>
+                                <Text className="text-lg text-white text-light">Minutos</Text>
+                            </View>
 
-                    <TouchableOpacity
-                        onPress={incrementarTiempo}
-                        className="bg-white px-16 py-2 rounded-full shadow-lg shadow-black"
-                    >
-                        <Text className="text-black text-lg text-center">+10s</Text>
-                    </TouchableOpacity>
-                </View>
+                            <View className="items-center mx-2">
+                                <Text className="bg-black text-white text-5xl text-light text-center px-5 py-3 rounded-2xl min-w-[80px]">
+                                    {String(segundos).padStart(2, '0')}
+                                </Text>
+                                <Text className="text-lg text-white text-light">Segundos</Text>
+                            </View>
+                        </View>
 
-                <View className="flex-row justify-center mt-4 space-x-5">
-                    <View className="items-center mx-2">
-                        <Text className="bg-black text-white text-5xl font-thin text-center px-5 py-3 rounded-2xl min-w-[80px]">
-                            {String(minutos).padStart(2, '0')}
-                        </Text>
-                        <Text className="mt-1 text-lg text-black">Minutos</Text>
+                        <View className="p-2 shadow-2xl shadow-gray">
+                            <Timer
+                                tiempoObjetivo={tiempo}
+                                onTimeUp={() => {
+                                        alert('¡El tiempo de Yoga ha finalizado!')
+                                    }
+                                }
+                            />
+                        </View>
                     </View>
-
-                    <View className="items-center mx-2">
-                        <Text className="bg-black text-white text-5xl font-thin text-center px-5 py-3 border-black rounded-2xl min-w-[80px]">
-                            {String(segundos).padStart(2, '0')}
-                        </Text>
-                        <Text className="mt-1 text-lg text-black">Segundos</Text>
+                    <View className='mb-10'>
+                        <TouchableOpacity
+                            onPress={() => navigation.navigate('Yoga2', {
+                                minutos,
+                                segundos
+                                })}
+                            className="bg-green-300/30 px-5 py-2 rounded-lg ">
+                            <Text className="text-white text-lg">Siguiente Ejercicio</Text>
+                        </TouchableOpacity>
                     </View>
-                </View>
+                </LinearGradient>
 
-                <View className="p-2 shadow-2xl shadow-gray">
-                    <Timer
-                        tiempoObjetivo={tiempo}
-                        onTimeUp={() => alert('¡El tiempo ha finalizado!')}
-                    />
-                </View>
             </View>
         </View>
     );

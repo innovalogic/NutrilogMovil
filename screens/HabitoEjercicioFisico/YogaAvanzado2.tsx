@@ -5,14 +5,20 @@ import Timer from '../../Componentes/Cronometro'
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { useRoute } from '@react-navigation/native';
+import type { RouteProp } from '@react-navigation/native';
 
 type RootStackParamList = {
-    YogaAvanzado2: { minutos: number;  segundos: number};
+    YogaAvanzado2: { minutos: number; segundos: number };
+    YogaAvanzado3: { minutos: number; segundos: number };
 };
 
 type siguienteYoga = StackNavigationProp<RootStackParamList>;
+type YogaAvanzado2RouteProp = RouteProp<RootStackParamList, 'YogaAvanzado2'>;
 
 const PantallaSesionYoga = () => {
+    const route = useRoute<YogaAvanzado2RouteProp>();
+    const { minutos: minutosRecibidos, segundos: segundosRecibidos } = route.params;
     const [tiempo, setTiempo] = useState(30);
     const minutos = Math.floor(tiempo / 60);
     const segundos = tiempo % 60;
@@ -34,7 +40,7 @@ const PantallaSesionYoga = () => {
             
             <View className="w-[90%] h-52 mb-5 rounded-xl overflow-hidden">
                 <WebView
-                    source={{ uri: 'https://www.youtube.com/embed/59BofGqrqHc' }}
+                    source={{ uri: 'https://www.youtube.com/embed/tJYU42NJPlY'}}
                     style={{ flex: 1, borderRadius: 10, overflow: 'hidden' }}
                 />
             </View>
@@ -87,17 +93,24 @@ const PantallaSesionYoga = () => {
                         <View className="p-2 shadow-2xl shadow-gray">
                             <Timer
                                 tiempoObjetivo={tiempo}
-                                onTimeUp={() => alert('¡El tiempo de Yoga ha finalizado!')}
+                                onTimeUp={() => alert('¡El tiempo ha finalizado!')}
                             />
                         </View>
                     </View>
                     <View className='mb-10'>
                         <TouchableOpacity
-                            onPress={() => navigation.navigate('YogaAvanzado2', {
-                                minutos,
-                                segundos
-                                })}
-                            className="bg-green-300/30 px-5 py-2 rounded-lg ">
+                            onPress={() => {
+                                const totalSegundos = minutosRecibidos * 60 + segundosRecibidos + tiempo;
+                                const minutosTotales = Math.floor(totalSegundos / 60);
+                                const segundosTotales = totalSegundos % 60;
+
+                                navigation.navigate('YogaAvanzado3', {
+                                    minutos: minutosTotales,
+                                    segundos: segundosTotales,
+                                });
+                            }}
+                            className="bg-green-300/30 px-5 py-2 rounded-lg"
+                        >
                             <Text className="text-white text-lg">Siguiente Ejercicio</Text>
                         </TouchableOpacity>
                     </View>

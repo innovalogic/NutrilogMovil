@@ -22,9 +22,20 @@ import CronometroS from 'screens/HabitoEjercicioFisico/CronometroS';
 import CronometroM from 'screens/HabitoEjercicioFisico/CronometroM';
 import CronometroI from 'screens/HabitoEjercicioFisico/CronometroI';
 import RegistroHabitosCategorias from 'screens/RegistroHabitos/RegistroHabitosCategorias';
-import Yoga from 'screens/HabitoEjercicioFisico/Yoga'
-import YogaAvanzado from 'screens/HabitoEjercicioFisico/YogaAvanzado1'
-import YogaIntermedio from 'screens/HabitoEjercicioFisico/YogaIntermedio1'
+import Cardiocaminar from 'screens/HabitoEjercicioFisico/Cardiocaminar';
+import CardioTrotar from 'screens/HabitoEjercicioFisico/CardioTrotar';
+import CardioCorrer from 'screens/HabitoEjercicioFisico/CardioCorrer';
+import Yoga from 'screens/HabitoEjercicioFisico/Yoga';
+import YogaAvanzado from 'screens/HabitoEjercicioFisico/YogaAvanzado1';
+import YogaIntermedio from 'screens/HabitoEjercicioFisico/YogaIntermedio1';
+import Yoga2 from 'screens/HabitoEjercicioFisico/Yoga2';
+import Yoga3 from 'screens/HabitoEjercicioFisico/Yoga3';
+import YogaIntermedio2 from 'screens/HabitoEjercicioFisico/YogaIntermedio2';
+import YogaIntermedio3 from 'screens/HabitoEjercicioFisico/YogaIntermedio3';
+import YogaAvanzado2 from 'screens/HabitoEjercicioFisico/YogaAvanzado2';
+import YogaAvanzado3 from 'screens/HabitoEjercicioFisico/YogaAvanzado3';
+import FelicitacionView from "Componentes/mensajeYoga";
+import CategoriasAlimentacion from 'screens/HabitoAlimentacion/CategoriasAlimentacion';
 
 const Stack = createNativeStackNavigator();
 
@@ -59,9 +70,20 @@ export default function App() {
         <Stack.Screen name="CronometroM" component={CronometroM} />
         <Stack.Screen name="CronometroI" component={CronometroI} />
         <Stack.Screen name="RegistroHabitosCategorias" component={RegistroHabitosCategorias} />
+        <Stack.Screen name="Cardiocaminar" component={Cardiocaminar} />
+        <Stack.Screen name="CardioTrotar" component={CardioTrotar} />
+        <Stack.Screen name="CardioCorrer" component={CardioCorrer} />
         <Stack.Screen name="Yoga" component={Yoga} />
         <Stack.Screen name="YogaIntermedio" component={YogaIntermedio} />
         <Stack.Screen name="YogaAvanzado" component={YogaAvanzado} />
+        <Stack.Screen name="Yoga2" component={Yoga2} />
+        <Stack.Screen name="Yoga3" component={Yoga3} />
+        <Stack.Screen name="YogaIntermedio2" component={YogaIntermedio2} />
+        <Stack.Screen name="YogaIntermedio3" component={YogaIntermedio3} />
+        <Stack.Screen name="YogaAvanzado2" component={YogaAvanzado2} />
+        <Stack.Screen name="YogaAvanzado3" component={YogaAvanzado3} />
+        <Stack.Screen name="mensaje" component={FelicitacionView} />
+        <Stack.Screen name="CategoriasAlimentacion" component={CategoriasAlimentacion} />
       </Stack.Navigator>
     </NavigationContainer>
   );

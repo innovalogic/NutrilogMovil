@@ -1,82 +1,90 @@
 import React, { useState } from 'react';
-import { Text, TouchableOpacity, View, Alert } from 'react-native';
+import { Text, TouchableOpacity, View, Image, Animated, SafeAreaView, Platform, StatusBar} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { getAuth } from 'firebase/auth';
-import { getFirestore, doc, getDoc, updateDoc, setDoc, arrayUnion } from 'firebase/firestore';
-import { auth, firestore } from '../../firebase'; // Asegúrate de que la importación sea correcta
 
 type RootStackParamList = {
   RegistroEjercicios: undefined;
+  Cardiocaminar: undefined;
+  CardioTrotar: undefined;
+  CardioCorrer: undefined;
 };
-
-const levels = ['Principiante', 'Intermedio', 'Avanzado'];
 
 const RegisterCardioLevelScreen = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
 
-  const handleSave = async () => {
-    if (!selectedLevel) {
-      Alert.alert('Selecciona un nivel antes de guardar.');
-      return;
-    }
-
-    try {
-      const user = auth.currentUser;
-
-      if (!user) {
-        Alert.alert('No se encontró un usuario autenticado.');
-        return;
-      }
-
-      const userRef = doc(firestore, 'usuariohabitosactividadfisica', user.uid);
-      const userDoc = await getDoc(userRef);
-
-      if (!userDoc.exists()) {
-        // Si el documento no existe, crearlo
-        await setDoc(userRef, {
-          niveles: arrayUnion({ nivel: selectedLevel, actividad: 'Cardio', timestamp: new Date() }),
-        });
-      } else {
-        // Si el documento existe, actualizarlo
-        await updateDoc(userRef, {
-          niveles: arrayUnion({ nivel: selectedLevel, actividad: 'Cardio', timestamp: new Date() }),
-        });
-      }
-
-      Alert.alert('Nivel guardado exitosamente!');
-      navigation.navigate('RegistroEjercicios');
-    } catch (error) {
-      console.error(error);
-      Alert.alert('Error al guardar el nivel.');
-    }
-  };
-
   return (
-    <View className="flex-1 justify-center items-center bg-blue-500">
-      <Text className="text-white text-3xl font-bold mb-5">Selecciona tu nivel de inicio</Text>
-      <Text className="text-white text-lg mb-10">Actividad: Cardio</Text>
-
-      {levels.map((level) => (
-        <TouchableOpacity
-          key={level}
-          className={`py-3 px-8 rounded-md mb-5 w-64 items-center ${
-            selectedLevel === level ? 'bg-yellow-400' : 'bg-orange-600'
-          }`}
-          onPress={() => setSelectedLevel(level)}
+    <SafeAreaView
+          style={{
+            flex: 1,
+            paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+            backgroundColor: 'white',
+          }}
         >
-          <Text className="text-white text-lg font-bold">{level}</Text>
-        </TouchableOpacity>
-      ))}
+    <View className="flex-1 justify-center items-center bg-black">
+      <View className="mt-20">
+        <Text className="text-white text-3xl font-mono mb-5">Selecciona tu nivel de inicio</Text>
+        <Text className="text-white text-3xl font-mono mb-5">Actividad: Cardio</Text>
+      </View>
 
-      <TouchableOpacity
-        className="bg-green-600 py-3 px-8 rounded-md w-64 items-center"
-        onPress={handleSave}
-      >
-        <Text className="text-white text-lg font-bold">Guardar y Volver</Text>
-      </TouchableOpacity>
+      <View>
+        <Image
+          source={require('../../assets/cardioMenuuu.png')}
+          className="rounded-2xl w-[363] h-[222]"
+        />
+      </View>
+
+      <View className="flex-1 items-center justify-center mt-[-20] rounded-t-3xl px-5 bg-blue">
+
+        {/* Botón: Quemador Principiante */}
+        <TouchableOpacity
+          className={`flex-row items-center p-3 my-3 rounded-lg w-full border-2 border-black/30 rounded-2xl bg-[#202938] ${selectedLevel === 'Quemador Principiante' ? 'bg-[#fc6059]' : ''}`}
+          onPress={() => {
+            navigation.navigate('Cardiocaminar');
+          }}
+        >
+          <View className="flex-1">
+            <Text className="text-3xl font-bold text-white mb-1">
+              Quemador Principiante
+            </Text>
+          </View>
+          <Image source={require('../../assets/cardioCaminar.png')} className="w-16 h-16 ml-2 rounded-full" />
+        </TouchableOpacity>
+
+        {/* Botón: Cardio Fuego */}
+        <TouchableOpacity
+          className={`flex-row items-center p-3 my-3 rounded-lg w-full border-2 border-black/30 rounded-2xl bg-[#202938] ${selectedLevel === 'Cardio Fuego' ? 'bg-[#fc6059]' : ''}`}
+          onPress={() => {
+            navigation.navigate('CardioTrotar');
+          }}
+        >
+          <View className="flex-1">
+            <Text className="text-3xl font-bold text-white mb-1">
+              Cardio Fuego
+            </Text>
+          </View>
+          <Image source={require('../../assets/cardioTrotar.png')} className="w-16 h-16 ml-2 rounded-full" />
+        </TouchableOpacity>
+
+        {/* Botón: Cardio Extremo */}
+        <TouchableOpacity
+          className={`flex-row items-center p-3 my-3 rounded-lg w-full border-2 border-black/30 rounded-2xl bg-[#202938] ${selectedLevel === 'Cardio Extremo' ? 'bg-[#fc6059]' : ''}`}
+          onPress={() => {
+            navigation.navigate('CardioCorrer');
+          }}
+        >
+          <View className="flex-1">
+            <Text className="text-3xl font-bold text-white mb-1">
+              Cardio Extremo
+            </Text>
+          </View>
+          <Image source={require('../../assets/cardioCorrer.png')} className="w-16 h-16 ml-2 rounded-full" />
+        </TouchableOpacity>
+
+      </View>
     </View>
+    </SafeAreaView>
   );
 };
 
