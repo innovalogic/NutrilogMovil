@@ -13,7 +13,7 @@ type RootStackParamList = {
   RegistroCardioLevel: undefined;
   RegistroYogaLevel: undefined;
   RegistroDietaBajarPeso: undefined;
-  RegistroDietaMantenerPeso: undefined;
+  DietaMantenerPeso: undefined;
   RegistroDietaSubirPeso: undefined;
   RegistroLecturaDiaria: undefined;
   RegistroVideoInspira: undefined;
@@ -74,7 +74,7 @@ export default function HabitosScreen() {
     else if (habit === 'Dieta Para Bajar de Peso') {
       navigation.navigate('RegistroDietaBajarPeso');
     } else if (habit === 'Dieta Para Mantener el Peso') {
-      navigation.navigate('RegistroDietaMantenerPeso');
+      navigation.navigate('DietaMantenerPeso');
     } else if (habit === 'Dieta Para Subir de Peso') {
       navigation.navigate('RegistroDietaSubirPeso');
     }
