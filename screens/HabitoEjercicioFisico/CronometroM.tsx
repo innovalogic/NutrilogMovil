@@ -2,95 +2,86 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Alert, FlatList, Modal, Button, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { auth, firestore } from '../../firebase';
+import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 
 type RootStackParamList = {
-  RutinaMedio: {
-    exercise: string;
-    reps: string;
-    totalTime: number;
-    restTime: number;
+  RutinaMedia: {
+    ejercicio: string;
+    repeticiones: string;
+    tiempoTotal: number;
+    tiempoDescanso: number;
   };
-  CronometroS: undefined;
+  CronometroM: undefined;
 };
 
-type CronometroNavigationProp = StackNavigationProp<RootStackParamList, 'CronometroS'>;
+type CronometroNavigationProp = StackNavigationProp<RootStackParamList, 'CronometroM'>;
 
 const App = () => {
   const navigation = useNavigation<CronometroNavigationProp>();
-  const [seconds, setSeconds] = useState(0);
+  const [segundos, setSegundos] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
-  const [exercise, setExercise] = useState('Plancha');
-  const [reps, setReps] = useState('');
-  const [restSeconds, setRestSeconds] = useState(0);
-  const [isResting, setIsResting] = useState(false);
+  const [ejercicio, setEjercicio] = useState('Plancha');
+  const [repeticiones, setRepeticiones] = useState('');
   const [expanded, setExpanded] = useState(false);
-
-  // Estados para los modales
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedTimeType, setSelectedTimeType] = useState('');
+  const [tipoTiempoSeleccionado, setTipoTiempoSeleccionado] = useState('');
+  const [numeroDeSeries, setNumeroDeSeries] = useState(3);
+  const [tiempoCalentamiento, setTiempoCalentamiento] = useState(30);
+  const [tiempoTrabajo, setTiempoTrabajo] = useState(30);
+  const [tiempoDescansoConfigurado, setTiempoDescansoConfigurado] = useState(60);
 
-  // Estados para los valores
-  const [seriesCount, setSeriesCount] = useState(3); // Ajustado a 3
-  const [warmupSeconds, setWarmupSeconds] = useState(30); // Ajustado a 30
-  const [workSeconds, setWorkSeconds] = useState(30); // Ajustado a 30
-  const [restSecondsSetting, setRestSecondsSetting] = useState(60); // Ajustado a 60
-
-  const exercises = ['Plancha', 'Giro ruso', 'Abdominales con peso', 'Levantamiento de piernas'];
-
-  // Datos para la estructura del entrenamiento
-  const structureData = [
-    { id: '1', title: 'Número de Series', value: seriesCount.toString() },
-    { id: '2', title: 'Tiempo de Calentamiento', value: `${warmupSeconds} s` },
-    { id: '3', title: 'Tiempo de Trabajo', value: `${workSeconds} s` },
-    { id: '4', title: 'Tiempo de Descanso', value: `${restSecondsSetting} s` },
+  const ejercicios = ['Plancha', 'Giro ruso', 'Abdominales con peso', 'Levantamiento de piernas'];
+  const estructuraDatos = [
+    { id: '1', title: 'Número de Series', value: numeroDeSeries.toString() },
+    { id: '2', title: 'Tiempo de Calentamiento', value: `${tiempoCalentamiento} s` },
+    { id: '3', title: 'Tiempo de Trabajo', value: `${tiempoTrabajo} s` },
+    { id: '4', title: 'Tiempo de Descanso', value: `${tiempoDescansoConfigurado} s` },
   ];
 
-  const [currentSeries, setCurrentSeries] = useState(1);
-  const [currentPhase, setCurrentPhase] = useState('warmup'); // 'warmup', 'work', 'rest'
-  const [timeLeft, setTimeLeft] = useState(warmupSeconds); // Initialize with warmup time
+  const [serieActual, setSerieActual] = useState(1);
+  const [faseActual, setFaseActual] = useState('calentamiento');
+  const [tiempoRestante, setTiempoRestante] = useState(tiempoCalentamiento);
 
   useEffect(() => {
     let timerInterval: NodeJS.Timeout | undefined;
     if (isRunning) {
       timerInterval = setInterval(() => {
-        if (timeLeft > 0) {
-          setTimeLeft(prev => prev - 1);
+        if (tiempoRestante > 0) {
+          setTiempoRestante(prev => prev - 1);
         } else {
           handlePhaseChange();
         }
       }, 1000);
     }
-
     return () => {
       if (timerInterval) clearInterval(timerInterval);
     };
-  }, [isRunning, timeLeft]);
+  }, [isRunning, tiempoRestante]);
 
   const handlePhaseChange = () => {
-    if (currentPhase === 'warmup') {
-      setCurrentPhase('work');
-      setCurrentSeries(1); // Reset series for new cycle
-      setTimeLeft(workSeconds);
-    } else if (currentPhase === 'work') {
-      if (currentSeries < seriesCount) {
-        setCurrentSeries(prev => prev + 1);
-        setCurrentPhase('rest');
-        setTimeLeft(restSecondsSetting);
+    if (faseActual === 'calentamiento') {
+      setFaseActual('trabajo');
+      setTiempoRestante(tiempoTrabajo);
+    } else if (faseActual === 'trabajo') {
+      if (serieActual < numeroDeSeries) {
+        setSerieActual(prev => prev + 1);
+        setFaseActual('descanso');
+        setTiempoRestante(tiempoDescansoConfigurado);
       } else {
         handleFinish();
       }
-    } else if (currentPhase === 'rest') {
-      setCurrentPhase('work');
-      setTimeLeft(workSeconds);
+    } else if (faseActual === 'descanso') {
+      setFaseActual('trabajo');
+      setTiempoRestante(tiempoTrabajo);
     }
   };
 
   const handleStart = () => {
-    Alert.alert(`Ejercicio: ${exercise}\nRepeticiones: ${reps}`);
-    setSeconds(0);
+    Alert.alert(`Ejercicio: ${ejercicio}\nRepeticiones: ${repeticiones}`);
     setIsRunning(true);
-    setCurrentPhase('warmup');
-    setTimeLeft(warmupSeconds);
+    setFaseActual('calentamiento');
+    setTiempoRestante(tiempoCalentamiento);
   };
 
   const handlePause = () => {
@@ -99,36 +90,90 @@ const App = () => {
 
   const handleReset = () => {
     setIsRunning(false);
-    setSeconds(0);
-    setTimeLeft(0);
-    setCurrentSeries(1);
-    setCurrentPhase('warmup');
+    setTiempoRestante(0);
+    setSerieActual(1);
+    setFaseActual('calentamiento');
   };
 
-  const handleFinish = () => {
-    navigation.navigate('RutinaMedio', {
-      exercise,
-      reps,
-      totalTime: seconds,
-      restTime: restSeconds,
-    });
-    handleReset();
+  const handleFinish = async () => {
+    const user = auth.currentUser;
+    if (!user) {
+      console.log('Usuario no autenticado');
+      return;
+    }
+    
+    try {
+      const userRef = doc(firestore, 'users', user.uid);
+      onSnapshot(userRef, async (userSnap) => {
+        if (!userSnap.exists()) {
+          console.log('No se encontró perfil de usuario');
+          return;
+        }
+        
+        const userData = userSnap.data();
+        const peso = parseFloat(userData.weight);
+        if (isNaN(peso)) {
+          console.log('Peso inválido en perfil de usuario');
+          return;
+        }
+        
+        const tiempoTotalTrabajo = numeroDeSeries * tiempoTrabajo;
+        const calorias = calcularCalorias(peso, tiempoTotalTrabajo);
+        
+        await guardarProgresoRutina('tren_medio', ejercicio, tiempoTotalTrabajo, calorias);
+        
+        navigation.navigate('RutinaMedia', {
+          ejercicio,
+          repeticiones,
+          tiempoTotal: 0,
+          tiempoDescanso: 0,
+        });
+        
+        handleReset();
+      });
+    } catch (error) {
+      console.error('Error guardando progreso:', error);
+    }
+  };
+
+  const calcularCalorias = (pesoKg: number, tiempoSegundos: number, MET: number = 3): number => {
+    const tiempoMinutos = tiempoSegundos / 60;
+    return (MET * 3.5 * pesoKg * tiempoMinutos) / 200;
+  };
+
+  const guardarProgresoRutina = async (routineId: string, tipoEjercicio: string, tiempoTrabajoSegundos: number, caloriasQuemadas: number) => {
+    const user = auth.currentUser;
+    if (!user) {
+      console.log('Usuario no autenticado');
+      return;
+    }
+    
+    try {
+      const sessionId = Date.now().toString();
+      const sessionRef = doc(firestore, 'users', user.uid, 'ejercicioRutinas', routineId, 'sesiones', sessionId);
+      await setDoc(sessionRef, {
+        tipoEjercicio,
+        fechaSesion: new Date().toISOString(), // Cambiado a fecha actual
+        tiempoTrabajoSegundos,
+        caloriasQuemadas,
+      });
+      console.log('Progreso guardado correctamente');
+    } catch (error) {
+      console.error('Error guardando progreso:', error);
+    }
   };
 
   const selectExercise = (item: string) => {
-    setExercise(item);
+    setEjercicio(item);
     setExpanded(false);
   };
 
   const showModal = (type: string) => {
-    setSelectedTimeType(type);
+    setTipoTiempoSeleccionado(type);
     setModalVisible(true);
   };
 
-  const renderNumberButtons = (
-    options: number[],
-    onPress: (num: number) => void
-  ) => {
+  const renderNumberButtons = (options: number[], onPress: (num: number) => void) => {
     return (
       <ScrollView style={{ maxHeight: 200 }}>
         <View style={{ flexDirection: 'row', justifyContent: 'flex-start', flexWrap: 'nowrap', marginVertical: 2 }}>
@@ -155,34 +200,34 @@ const App = () => {
   };
 
   const renderModalContent = () => {
-    if (selectedTimeType === 'Número de Series') {
+    if (tipoTiempoSeleccionado === 'Número de Series') {
       return (
         <>
           <Text style={{ fontWeight: 'bold', marginBottom: 8 }}>
             Seleccionar Número de Series (3, 4, 5):
           </Text>
-          {renderNumberButtons([3, 4, 5], num => setSeriesCount(num))}
+          {renderNumberButtons([3, 4, 5], num => setNumeroDeSeries(num))}
         </>
       );
-    } else if (selectedTimeType === 'Tiempo de Calentamiento') {
+    } else if (tipoTiempoSeleccionado === 'Tiempo de Calentamiento') {
       return (
         <>
           <Text style={{ fontWeight: 'bold', marginBottom: 8 }}>Selecciona tiempo (30, 60 s):</Text>
-          {renderNumberButtons([30, 60], num => setWarmupSeconds(num))}
+          {renderNumberButtons([30, 60], num => setTiempoCalentamiento(num))}
         </>
       );
-    } else if (selectedTimeType === 'Tiempo de Trabajo') {
+    } else if (tipoTiempoSeleccionado === 'Tiempo de Trabajo') {
       return (
         <>
           <Text style={{ fontWeight: 'bold', marginBottom: 8 }}>Selecciona tiempo (30, 45, 60 s):</Text>
-          {renderNumberButtons([30, 45, 60], num => setWorkSeconds(num))}
+          {renderNumberButtons([30, 45, 60], num => setTiempoTrabajo(num))}
         </>
       );
-    } else if (selectedTimeType === 'Tiempo de Descanso') {
+    } else if (tipoTiempoSeleccionado === 'Tiempo de Descanso') {
       return (
         <>
           <Text style={{ fontWeight: 'bold', marginBottom: 8 }}>Selecciona tiempo (60, 90 s):</Text>
-          {renderNumberButtons([60, 90], num => setRestSecondsSetting(num))}
+          {renderNumberButtons([60, 90], num => setTiempoDescansoConfigurado(num))}
         </>
       );
     } else {
@@ -192,22 +237,19 @@ const App = () => {
 
   return (
     <View className="flex-1 bg-black items-center justify-center p-5">
-      <Text className="text-white text-2xl font-bold mb-6">
-        Cronómetro de Ejercicios
-      </Text>
-
+      <Text className="text-white text-2xl font-bold mb-6">Cronómetro de Ejercicios</Text>
       <Text className="text-white mb-2">Selecciona el ejercicio:</Text>
       <TouchableOpacity
         onPress={() => setExpanded(!expanded)}
         className="w-80 p-3 border border-gray-500 rounded-md bg-gray-800 mb-6"
       >
-        <Text className="text-white">{exercise}</Text>
+        <Text className="text-white">{ejercicio}</Text>
       </TouchableOpacity>
 
       {expanded && (
         <View className="w-80 bg-gray-800 rounded-md p-2">
           <FlatList
-            data={exercises}
+            data={ejercicios}
             keyExtractor={item => item}
             renderItem={({ item }) => (
               <TouchableOpacity
@@ -222,7 +264,7 @@ const App = () => {
       )}
 
       {/* Estructura del Entrenamiento */}
-      {structureData.map(item => (
+      {estructuraDatos.map(item => (
         <TouchableOpacity
           key={item.id}
           onPress={() => showModal(item.title)}
@@ -242,9 +284,7 @@ const App = () => {
       >
         <View className="flex-1 justify-center items-center bg-black bg-opacity-50">
           <View className="bg-white p-5 rounded-md max-h-[80%] w-11/12">
-            <Text className="text-lg font-bold mb-4">
-              Seleccionar {selectedTimeType}
-            </Text>
+            <Text className="text-lg font-bold mb-4">Seleccionar {tipoTiempoSeleccionado}</Text>
             <ScrollView>{renderModalContent()}</ScrollView>
             <Button title="Guardar" onPress={() => setModalVisible(false)} />
           </View>
@@ -252,9 +292,9 @@ const App = () => {
       </Modal>
 
       <View className="w-36 h-36 border-8 border-green-500 rounded-full flex items-center justify-center mb-6">
-        <Text className="text-white text-4xl">{timeLeft}</Text>
-        <Text className="text-white text-lg">{currentPhase === 'work' ? 'Trabajo' : currentPhase === 'rest' ? 'Descanso' : 'Calentamiento'}</Text>
-        <Text className="text-white text-lg">{currentSeries} / {seriesCount}</Text>
+        <Text className="text-white text-4xl">{tiempoRestante}</Text>
+        <Text className="text-white text-lg">{faseActual === 'trabajo' ? 'Trabajo' : faseActual === 'descanso' ? 'Descanso' : 'Calentamiento'}</Text>
+        <Text className="text-white text-lg">{serieActual} / {numeroDeSeries}</Text>
       </View>
 
       <View className="flex-row justify-between w-full px-8">

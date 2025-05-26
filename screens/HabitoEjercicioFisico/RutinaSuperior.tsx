@@ -1,28 +1,18 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Image, StatusBar } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { RouteProp } from '@react-navigation/native';
 import { WebView } from 'react-native-webview';
 
 type RootStackParamList = {
-    UpperBodyWorkout: { 
-        exercise: string; 
-        reps: string; 
-        totalTime: number; 
-        restTime: number; 
-    };
-    CronometroS: undefined; 
+    UpperBodyWorkout: undefined;
+    CronometroS: undefined;
 };
 
-type UpperBodyWorkoutNavigationProp = StackNavigationProp<RootStackParamList, 'UpperBodyWorkout'>; 
-type UpperBodyWorkoutRouteProp = RouteProp<RootStackParamList, 'UpperBodyWorkout'>;
+type UpperBodyWorkoutNavigationProp = StackNavigationProp<RootStackParamList, 'UpperBodyWorkout'>;
 
-export default function RutinaSuperior() { 
-    const navigation = useNavigation<UpperBodyWorkoutNavigationProp>(); 
-    const route = useRoute<UpperBodyWorkoutRouteProp>(); // Obtener los parámetros de la ruta
-
-    const { exercise, reps, totalTime, restTime } = route.params || {}; // Usa el tipo correcto
+export default function RutinaSuperior() {
+    const navigation = useNavigation<UpperBodyWorkoutNavigationProp>();
 
     return (
         <View className="flex-1 bg-black">
@@ -33,13 +23,15 @@ export default function RutinaSuperior() {
 
             {/* Main Content */}
             <ScrollView className="flex-1">
-                {/* Hero Image */}
+                {/* Back Button */}
                 <TouchableOpacity
                     onPress={() => navigation.goBack()}
                     className="text-white size-12 shrink-0 items-center"
-                                    >
+                >
                     <Text className="text-white text-2xl">←</Text>
                 </TouchableOpacity>
+
+                {/* Hero Image */}
                 <View className="h-64 w-full bg-gray-700 rounded-lg overflow-hidden">
                     <Image source={require('../../assets/pull_up.jpg')} className="w-full h-full object-cover" />
                 </View>
@@ -67,27 +59,12 @@ export default function RutinaSuperior() {
                         ))}
                     </View>
 
-                    {/* Mostrar los datos del cronómetro */}
-                    {exercise && (
-                        <Text className="text-white">Ejercicio: {exercise}</Text>
-                    )}
-                    {reps && (
-                        <Text className="text-white">Repeticiones: {reps}</Text>
-                    )}
-                    {totalTime !== undefined && (
-                        <Text className="text-white">Tiempo total: {totalTime} s</Text>
-                    )}
-                    {restTime !== undefined && (
-                        <Text className="text-white">Tiempo de descanso: {restTime} s</Text>
-                    )}
-
                     {/* Tips Section with WebView */}
                     <Text className="text-xl font-bold text-white mb-2">Consejos</Text>
                     <View className="w-full h-64 mb-5 rounded-xl overflow-hidden border border-gray-600">
                         <WebView 
                             source={{ uri: 'https://youtu.be/H_e0t3iwyrM?si=hcvvdmsKlQlVNTbe' }} 
                             style={{ flex: 1, borderRadius: 10, overflow: 'hidden' }}
-
                         />
                     </View>
 
@@ -96,7 +73,6 @@ export default function RutinaSuperior() {
                         <WebView 
                             source={{ uri: 'https://www.youtube.com/shorts/m4baLYJPFs4' }} 
                             style={{ flex: 1, borderRadius: 10, overflow: 'hidden' }}
-
                         />
                     </View>
                 </View>
@@ -111,3 +87,4 @@ export default function RutinaSuperior() {
         </View>
     );
 }
+
