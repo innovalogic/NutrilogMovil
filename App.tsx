@@ -36,6 +36,8 @@ import YogaAvanzado2 from 'screens/HabitoEjercicioFisico/YogaAvanzado2';
 import YogaAvanzado3 from 'screens/HabitoEjercicioFisico/YogaAvanzado3';
 import FelicitacionView from "Componentes/mensajeYoga";
 import CategoriasAlimentacion from 'screens/HabitoAlimentacion/CategoriasAlimentacion';
+import CategoriasSaludMental from 'screens/HabitoSaludMental/CategoriasSaludMental';
+import BajarDePeso from 'screens/HabitoAlimentacion/BajarDePeso';
 
 const Stack = createNativeStackNavigator();
 
@@ -84,6 +86,8 @@ export default function App() {
         <Stack.Screen name="YogaAvanzado3" component={YogaAvanzado3} />
         <Stack.Screen name="mensaje" component={FelicitacionView} />
         <Stack.Screen name="CategoriasAlimentacion" component={CategoriasAlimentacion} />
+        <Stack.Screen name="CategoriasSaludMental" component={CategoriasSaludMental} />
+        <Stack.Screen name="BajarDePeso" component={BajarDePeso} />
       </Stack.Navigator>
     </NavigationContainer>
   );

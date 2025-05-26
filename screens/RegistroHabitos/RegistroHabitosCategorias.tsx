@@ -6,6 +6,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 type RootStackParamList = {
   CategoriasEjercicioFisico: undefined;
   CategoriasAlimentacion: undefined;
+  CategoriasSaludMental: undefined;
 };
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -45,7 +46,10 @@ export default function RegistroHabitosCategorias() {
           </TouchableOpacity>
         </View>
         <View className="items-center">
-          <TouchableOpacity className="items-center">
+          <TouchableOpacity 
+            className="items-center"
+            onPress={() => navigation.navigate('CategoriasSaludMental')}
+          >
             <Image
               source={require('../../assets/SaludMental.png')}
               className="w-40 h-40 rounded-full"
