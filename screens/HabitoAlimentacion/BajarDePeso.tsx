@@ -3,11 +3,10 @@ import { View, Text, TouchableOpacity, SafeAreaView, ActivityIndicator, Modal, T
 import { auth, firestore } from '../../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, onSnapshot, setDoc } from 'firebase/firestore';
-import BajarDePesoComponent from './BajarDePesoComponent';
 
 interface UserData {
   weightGoal?: number;
-  weight?: string;  // Cambiado a string para coincidir con HomePerfilScreen
+  weight?: string;
 }
 
 export default function BajarDePeso() {
@@ -44,6 +43,10 @@ export default function BajarDePeso() {
         alert('Ingrese un número válido');
         return;
       }
+      if (weightGoal <= 0) {
+        alert('La meta debe ser un número positivo mayor a 0');
+        return;
+      }
 
       await setDoc(doc(firestore, 'users', auth.currentUser.uid), 
         { weightGoal }, 
@@ -66,11 +69,11 @@ export default function BajarDePeso() {
 
   return (
     <SafeAreaView className="flex-1 bg-gray-900 px-6">
-      <View className="py-14 items-center">
-        <Text className="text-white text-3xl font-bold">Control de Peso</Text>
+      <View className="py-24 items-center">
+        <Text className="text-white text-3xl font-bold">Habito Para Bajar de Peso</Text>
       </View>
 
-      <View className="bg-gray-800 rounded-2xl p-6 mb-6">
+      <View className="bg-gray-800 rounded-2xl p-8 mb-6">
         <Text className="text-white text-xl font-semibold mb-2">Tu progreso</Text>
         <Text className="text-white mb-1">
           Peso actual: {userData?.weight ? `${userData.weight} kg` : 'No disponible'}
@@ -89,6 +92,29 @@ export default function BajarDePeso() {
         </TouchableOpacity>
       </View>
 
+      {userData?.weightGoal && (
+        <View className="mb-6">
+          <TouchableOpacity
+            className="bg-green-500 py-3 px-4 rounded-lg w-full mb-4"
+            onPress={() => console.log('Desayuno pressed')}
+          >
+            <Text className="text-white text-center font-semibold">Desayuno</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            className="bg-yellow-500 py-3 px-4 rounded-lg w-full mb-4"
+            onPress={() => console.log('Almuerzo pressed')}
+          >
+            <Text className="text-white text-center font-semibold">Almuerzo</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            className="bg-red-500 py-3 px-4 rounded-lg w-full"
+            onPress={() => console.log('Cena pressed')}
+          >
+            <Text className="text-white text-center font-semibold">Cena</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
       <Modal
         animationType="slide"
         transparent={true}
@@ -99,7 +125,6 @@ export default function BajarDePeso() {
           <View className="bg-gray-800 rounded-xl p-6 w-4/5">
             <Text className="text-white text-xl font-semibold mb-4">Nueva meta de peso</Text>
             
-            {/* Muestra el peso actual (recuperado de Firestore) */}
             <Text className="text-white mb-2">
               Peso actual: {userData?.weight ? `${userData.weight} kg` : 'No disponible'}
             </Text>
@@ -131,8 +156,6 @@ export default function BajarDePeso() {
           </View>
         </View>
       </Modal>
-
-      <BajarDePesoComponent userData={userData} />
     </SafeAreaView>
   );
 }
