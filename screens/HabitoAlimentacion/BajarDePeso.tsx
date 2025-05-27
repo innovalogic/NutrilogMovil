@@ -1,8 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, SafeAreaView, ActivityIndicator, Modal, TextInput } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { auth, firestore } from '../../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, onSnapshot, setDoc } from 'firebase/firestore';
+
+// Define the navigation stack's param list
+type RootStackParamList = {
+  DesayunoBajarDePeso: undefined;
+  AlmuerzoBajarDePeso: undefined;
+  CenaBajarDePeso: undefined;
+};
+
+// Define navigation prop type
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 interface UserData {
   weightGoal?: number;
@@ -14,6 +26,7 @@ export default function BajarDePeso() {
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
   const [weightGoalInput, setWeightGoalInput] = useState('');
+  const navigation = useNavigation<NavigationProp>();
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
@@ -96,19 +109,19 @@ export default function BajarDePeso() {
         <View className="mb-6">
           <TouchableOpacity
             className="bg-green-500 py-3 px-4 rounded-lg w-full mb-4"
-            onPress={() => console.log('Desayuno pressed')}
+            onPress={() => navigation.navigate('DesayunoBajarDePeso')}
           >
             <Text className="text-white text-center font-semibold">Desayuno</Text>
           </TouchableOpacity>
           <TouchableOpacity
             className="bg-yellow-500 py-3 px-4 rounded-lg w-full mb-4"
-            onPress={() => console.log('Almuerzo pressed')}
+            onPress={() => navigation.navigate('AlmuerzoBajarDePeso')}
           >
             <Text className="text-white text-center font-semibold">Almuerzo</Text>
           </TouchableOpacity>
           <TouchableOpacity
             className="bg-red-500 py-3 px-4 rounded-lg w-full"
-            onPress={() => console.log('Cena pressed')}
+            onPress={() => navigation.navigate('CenaBajarDePeso')}
           >
             <Text className="text-white text-center font-semibold">Cena</Text>
           </TouchableOpacity>
