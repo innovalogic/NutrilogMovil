@@ -16,8 +16,8 @@ type RootStackParamList = {
   RegistroDietaMantenerPeso: undefined;
   RegistroDietaSubirPeso: undefined;
   RegistroLecturaDiaria: undefined;
-  RegistroVideoInspira: undefined;
-  RegistroOrigamiDiario: undefined;
+  AudioInspira: undefined;
+  Origami: undefined;
   RegistroHabitosCategorias:undefined;
 };
 
@@ -81,10 +81,10 @@ export default function HabitosScreen() {
     // Hábitos de salud mental
     else if (habit === 'Lectura diaria') {
       navigation.navigate('RegistroLecturaDiaria');
-    } else if (habit === 'Video-Inspira') {
-      navigation.navigate('RegistroVideoInspira');
+    } else if (habit === 'Audio-Inspira') {
+      navigation.navigate('AudioInspira');
     } else if (habit === 'Origami Diario') {
-      navigation.navigate('RegistroOrigamiDiario');
+      navigation.navigate('Origami');
     }
   };
 

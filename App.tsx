@@ -38,6 +38,9 @@ import FelicitacionView from "Componentes/mensajeYoga";
 import CategoriasAlimentacion from 'screens/HabitoAlimentacion/CategoriasAlimentacion';
 import CategoriasSaludMental from 'screens/HabitoSaludMental/CategoriasSaludMental';
 import BajarDePeso from 'screens/HabitoAlimentacion/BajarDePeso';
+import AudioInspira from 'screens/HabitoSaludMental/AudioInspira';
+import Origami from 'screens/HabitoSaludMental/Origami';
+
 
 const Stack = createNativeStackNavigator();
 
@@ -88,6 +91,8 @@ export default function App() {
         <Stack.Screen name="CategoriasAlimentacion" component={CategoriasAlimentacion} />
         <Stack.Screen name="CategoriasSaludMental" component={CategoriasSaludMental} />
         <Stack.Screen name="BajarDePeso" component={BajarDePeso} />
+        <Stack.Screen name="AudioInspira" component={AudioInspira} />
+        <Stack.Screen name="Origami" component={Origami} />
       </Stack.Navigator>
     </NavigationContainer>
   );
