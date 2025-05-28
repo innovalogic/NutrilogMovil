@@ -9,6 +9,7 @@ import ReminderButton from 'Componentes/ReminderButton';
 
 // Define the navigation stack's param list
 type RootStackParamList = {
+  BajarDePeso: undefined;
   DesayunoBajarDePeso: undefined;
   AlmuerzoBajarDePeso: undefined;
   CenaBajarDePeso: undefined;
@@ -64,6 +65,10 @@ export default function BajarDePeso() {
         alert('La meta debe ser un número positivo mayor a 0');
         return;
       }
+      if (weightGoal > 20) {
+        alert('La meta no puede ser mayor a 20 kg');
+        return;
+      }
 
       await setDoc(doc(firestore, 'users', auth.currentUser.uid), 
         { weightGoal }, 
@@ -74,6 +79,11 @@ export default function BajarDePeso() {
     } catch (error) {
       console.error('Error al guardar:', error);
     }
+  };
+
+  const handleDesayunoPress = () => {
+    console.log('Botón Desayuno presionado');
+    navigation.navigate('DesayunoBajarDePeso');
   };
 
   if (loading) {
@@ -87,7 +97,7 @@ export default function BajarDePeso() {
   return (
     <SafeAreaView className="flex-1 bg-gray-900 px-6">
       <View className="py-24 items-center">
-        <Text className="text-white text-3xl font-bold">Habito Para Bajar de Peso</Text>
+        <Text className="text-white text-3xl font-bold">Hábito Para Bajar de Peso</Text>
       </View>
 
       <View className="bg-gray-800 rounded-2xl p-8 mb-6">
@@ -114,7 +124,7 @@ export default function BajarDePeso() {
           <View className="flex-row justify-between mb-4">
             <TouchableOpacity
               className="bg-green-500 py-3 px-4 rounded-lg flex-1 mr-2"
-              onPress={() => navigation.navigate('DesayunoBajarDePeso')}
+              onPress={handleDesayunoPress}
             >
               <Text className="text-white text-center font-semibold">Desayuno</Text>
             </TouchableOpacity>
@@ -169,7 +179,7 @@ export default function BajarDePeso() {
             
             <TextInput
               className="bg-gray-700 text-white p-3 rounded-lg mb-6"
-              placeholder="¿Cuántos kg quieres bajar?"
+              placeholder="¿Cuántos kg quieres bajar? (Máx. 20)"
               placeholderTextColor="#A0A0A0"
               keyboardType="numeric"
               value={weightGoalInput}
