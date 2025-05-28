@@ -5,6 +5,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { auth, firestore } from '../../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, onSnapshot, setDoc } from 'firebase/firestore';
+import ReminderButton from 'Componentes/ReminderButton';
 
 // Define the navigation stack's param list
 type RootStackParamList = {
@@ -19,6 +20,9 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 interface UserData {
   weightGoal?: number;
   weight?: string;
+  breakfastReminder?: string;
+  lunchReminder?: string;
+  dinnerReminder?: string;
 }
 
 export default function BajarDePeso() {
@@ -107,24 +111,45 @@ export default function BajarDePeso() {
 
       {userData?.weightGoal && (
         <View className="mb-6">
-          <TouchableOpacity
-            className="bg-green-500 py-3 px-4 rounded-lg w-full mb-4"
-            onPress={() => navigation.navigate('DesayunoBajarDePeso')}
-          >
-            <Text className="text-white text-center font-semibold">Desayuno</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            className="bg-yellow-500 py-3 px-4 rounded-lg w-full mb-4"
-            onPress={() => navigation.navigate('AlmuerzoBajarDePeso')}
-          >
-            <Text className="text-white text-center font-semibold">Almuerzo</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            className="bg-red-500 py-3 px-4 rounded-lg w-full"
-            onPress={() => navigation.navigate('CenaBajarDePeso')}
-          >
-            <Text className="text-white text-center font-semibold">Cena</Text>
-          </TouchableOpacity>
+          <View className="flex-row justify-between mb-4">
+            <TouchableOpacity
+              className="bg-green-500 py-3 px-4 rounded-lg flex-1 mr-2"
+              onPress={() => navigation.navigate('DesayunoBajarDePeso')}
+            >
+              <Text className="text-white text-center font-semibold">Desayuno</Text>
+            </TouchableOpacity>
+            <ReminderButton 
+              reminderTime={userData?.breakfastReminder} 
+              fieldName="breakfastReminder" 
+              label="Recordatorio Desayuno" 
+            />
+          </View>
+          <View className="flex-row justify-between mb-4">
+            <TouchableOpacity
+              className="bg-yellow-500 py-3 px-4 rounded-lg flex-1 mr-2"
+              onPress={() => navigation.navigate('AlmuerzoBajarDePeso')}
+            >
+              <Text className="text-white text-center font-semibold">Almuerzo</Text>
+            </TouchableOpacity>
+            <ReminderButton 
+              reminderTime={userData?.lunchReminder} 
+              fieldName="lunchReminder" 
+              label="Recordatorio Almuerzo" 
+            />
+          </View>
+          <View className="flex-row justify-between mb-4">
+            <TouchableOpacity
+              className="bg-red-500 py-3 px-4 rounded-lg flex-1 mr-2"
+              onPress={() => navigation.navigate('CenaBajarDePeso')}
+            >
+              <Text className="text-white text-center font-semibold">Cena</Text>
+            </TouchableOpacity>
+            <ReminderButton 
+              reminderTime={userData?.dinnerReminder} 
+              fieldName="dinnerReminder" 
+              label="Recordatorio Cena" 
+            />
+          </View>
         </View>
       )}
 
