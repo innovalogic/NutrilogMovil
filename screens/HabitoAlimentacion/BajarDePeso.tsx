@@ -1,12 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, SafeAreaView, ActivityIndicator, Modal, TextInput } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { auth, firestore } from '../../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, onSnapshot, setDoc } from 'firebase/firestore';
+import ReminderButton from 'Componentes/ReminderButton';
+
+// Define the navigation stack's param list
+type RootStackParamList = {
+  BajarDePeso: undefined;
+  DesayunoBajarDePeso: undefined;
+  AlmuerzoBajarDePeso: undefined;
+  CenaBajarDePeso: undefined;
+};
+
+// Define navigation prop type
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 interface UserData {
   weightGoal?: number;
   weight?: string;
+  breakfastReminder?: string;
+  lunchReminder?: string;
+  dinnerReminder?: string;
 }
 
 export default function BajarDePeso() {
@@ -14,6 +31,7 @@ export default function BajarDePeso() {
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
   const [weightGoalInput, setWeightGoalInput] = useState('');
+  const navigation = useNavigation<NavigationProp>();
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
@@ -47,6 +65,10 @@ export default function BajarDePeso() {
         alert('La meta debe ser un número positivo mayor a 0');
         return;
       }
+      if (weightGoal > 20) {
+        alert('La meta no puede ser mayor a 20 kg');
+        return;
+      }
 
       await setDoc(doc(firestore, 'users', auth.currentUser.uid), 
         { weightGoal }, 
@@ -57,6 +79,11 @@ export default function BajarDePeso() {
     } catch (error) {
       console.error('Error al guardar:', error);
     }
+  };
+
+  const handleDesayunoPress = () => {
+    console.log('Botón Desayuno presionado');
+    navigation.navigate('DesayunoBajarDePeso');
   };
 
   if (loading) {
@@ -70,7 +97,7 @@ export default function BajarDePeso() {
   return (
     <SafeAreaView className="flex-1 bg-gray-900 px-6">
       <View className="py-24 items-center">
-        <Text className="text-white text-3xl font-bold">Habito Para Bajar de Peso</Text>
+        <Text className="text-white text-3xl font-bold">Hábito Para Bajar de Peso</Text>
       </View>
 
       <View className="bg-gray-800 rounded-2xl p-8 mb-6">
@@ -94,24 +121,45 @@ export default function BajarDePeso() {
 
       {userData?.weightGoal && (
         <View className="mb-6">
-          <TouchableOpacity
-            className="bg-green-500 py-3 px-4 rounded-lg w-full mb-4"
-            onPress={() => console.log('Desayuno pressed')}
-          >
-            <Text className="text-white text-center font-semibold">Desayuno</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            className="bg-yellow-500 py-3 px-4 rounded-lg w-full mb-4"
-            onPress={() => console.log('Almuerzo pressed')}
-          >
-            <Text className="text-white text-center font-semibold">Almuerzo</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            className="bg-red-500 py-3 px-4 rounded-lg w-full"
-            onPress={() => console.log('Cena pressed')}
-          >
-            <Text className="text-white text-center font-semibold">Cena</Text>
-          </TouchableOpacity>
+          <View className="flex-row justify-between mb-4">
+            <TouchableOpacity
+              className="bg-green-500 py-3 px-4 rounded-lg flex-1 mr-2"
+              onPress={handleDesayunoPress}
+            >
+              <Text className="text-white text-center font-semibold">Desayuno</Text>
+            </TouchableOpacity>
+            <ReminderButton 
+              reminderTime={userData?.breakfastReminder} 
+              fieldName="breakfastReminder" 
+              label="Recordatorio Desayuno" 
+            />
+          </View>
+          <View className="flex-row justify-between mb-4">
+            <TouchableOpacity
+              className="bg-yellow-500 py-3 px-4 rounded-lg flex-1 mr-2"
+              onPress={() => navigation.navigate('AlmuerzoBajarDePeso')}
+            >
+              <Text className="text-white text-center font-semibold">Almuerzo</Text>
+            </TouchableOpacity>
+            <ReminderButton 
+              reminderTime={userData?.lunchReminder} 
+              fieldName="lunchReminder" 
+              label="Recordatorio Almuerzo" 
+            />
+          </View>
+          <View className="flex-row justify-between mb-4">
+            <TouchableOpacity
+              className="bg-red-500 py-3 px-4 rounded-lg flex-1 mr-2"
+              onPress={() => navigation.navigate('CenaBajarDePeso')}
+            >
+              <Text className="text-white text-center font-semibold">Cena</Text>
+            </TouchableOpacity>
+            <ReminderButton 
+              reminderTime={userData?.dinnerReminder} 
+              fieldName="dinnerReminder" 
+              label="Recordatorio Cena" 
+            />
+          </View>
         </View>
       )}
 
@@ -131,7 +179,7 @@ export default function BajarDePeso() {
             
             <TextInput
               className="bg-gray-700 text-white p-3 rounded-lg mb-6"
-              placeholder="¿Cuántos kg quieres bajar?"
+              placeholder="¿Cuántos kg quieres bajar? (Máx. 20)"
               placeholderTextColor="#A0A0A0"
               keyboardType="numeric"
               value={weightGoalInput}
