@@ -38,6 +38,18 @@ import FelicitacionView from "Componentes/mensajeYoga";
 import CategoriasAlimentacion from 'screens/HabitoAlimentacion/CategoriasAlimentacion';
 import CategoriasSaludMental from 'screens/HabitoSaludMental/CategoriasSaludMental';
 import BajarDePeso from 'screens/HabitoAlimentacion/BajarDePeso';
+import MenuLectura from 'screens/HabitoSaludMental/menuLecturaDiaria'
+import registroLibro from 'screens/HabitoSaludMental/registroLibro'
+import DetalleLibro from 'screens/HabitoSaludMental/DetalleLibro'
+import * as Notifications from 'expo-notifications'
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
 
 const Stack = createNativeStackNavigator();
 
@@ -88,6 +100,9 @@ export default function App() {
         <Stack.Screen name="CategoriasAlimentacion" component={CategoriasAlimentacion} />
         <Stack.Screen name="CategoriasSaludMental" component={CategoriasSaludMental} />
         <Stack.Screen name="BajarDePeso" component={BajarDePeso} />
+        <Stack.Screen name="RegistroLecturaDiaria" component={MenuLectura} />
+        <Stack.Screen name="RegistroLibro" component={registroLibro} />
+        <Stack.Screen name="DetalleLibro" component={DetalleLibro} />
       </Stack.Navigator>
     </NavigationContainer>
   );
