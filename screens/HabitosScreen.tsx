@@ -12,12 +12,14 @@ type RootStackParamList = {
   Yoga: undefined;
   RegistroCardioLevel: undefined;
   RegistroYogaLevel: undefined;
+  RegistroDietaBajarPeso: undefined;
+  DietaMantenerPeso: undefined;
   BajarDePeso: undefined;
   RegistroDietaMantenerPeso: undefined;
   SubirDePeso: undefined;
   RegistroLecturaDiaria: undefined;
-  RegistroVideoInspira: undefined;
-  RegistroOrigamiDiario: undefined;
+  AudioInspira: undefined;
+  Origami: undefined;
   RegistroHabitosCategorias:undefined;
 };
 
@@ -74,17 +76,17 @@ export default function HabitosScreen() {
     else if (habit === 'Dieta Para Bajar de Peso') {
       navigation.navigate('BajarDePeso');
     } else if (habit === 'Dieta Para Mantener el Peso') {
-      navigation.navigate('RegistroDietaMantenerPeso');
+      navigation.navigate('DietaMantenerPeso');
     } else if (habit === 'Dieta Para Subir de Peso') {
       navigation.navigate('SubirDePeso');
     }
     // Hábitos de salud mental
     else if (habit === 'Lectura diaria') {
       navigation.navigate('RegistroLecturaDiaria');
-    } else if (habit === 'Video-Inspira') {
-      navigation.navigate('RegistroVideoInspira');
+    } else if (habit === 'Audio-Inspira') {
+      navigation.navigate('AudioInspira');
     } else if (habit === 'Origami Diario') {
-      navigation.navigate('RegistroOrigamiDiario');
+      navigation.navigate('Origami');
     }
   };
 
@@ -97,7 +99,7 @@ export default function HabitosScreen() {
     'Dieta Para Mantener el Peso': require('../assets/DietaMantenerPeso.png'),
     'Dieta Para Subir de Peso': require('../assets/DietaSubirPeso.png'),
     'Lectura diaria': require('../assets/LecturaDiaria.png'),
-    'Video-Inspira': require('../assets/VideoInspira.png'),
+    'Audio-Inspira': require('../assets/AudioInspira.png'),
     'Origami Diario': require('../assets/Origami.png'),
   };
 
