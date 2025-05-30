@@ -1,9 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Text, TouchableOpacity, View, Image, Animated, SafeAreaView, Platform, StatusBar, ScrollView } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useIsFocused } from '@react-navigation/native';
 import { Picker } from '@react-native-picker/picker';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Accelerometer } from 'expo-sensors';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { auth, firestore } from '../../firebase';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 
 type RootStackParamList = {
   RegistroEjercicios: undefined;
@@ -12,22 +15,69 @@ type RootStackParamList = {
   CardioCorrer: undefined;
 };
 
+// Función para guardar pasos en Firebase
+const guardarPasosDiarios = async (pasosHoy: number) => {
+  const user = auth.currentUser;
+  if (!user) {
+    console.log('Usuario no autenticado');
+    return;
+  }
+
+  try {
+    const hoy = new Date();
+    const fechaId = hoy.toISOString().split('T')[0];
+    const pasosRef = doc(
+      firestore,
+      'users',
+      user.uid,
+      'pasosDiarios',
+      fechaId
+    );
+
+    const docSnap = await getDoc(pasosRef);
+    
+    if (docSnap.exists()) {
+      const pasosActuales = docSnap.data().totalPasos || 0;
+      await updateDoc(pasosRef, {
+        totalPasos: pasosActuales + pasosHoy,
+        ultimaActualizacion: new Date().toISOString()
+      });
+    } else {
+      await setDoc(pasosRef, {
+        totalPasos: pasosHoy,
+        fecha: fechaId,
+        fechaCompleta: new Date().toISOString(),
+        creadoEl: new Date().toISOString(),
+        ultimaActualizacion: new Date().toISOString()
+      });
+    }
+    
+    console.log('Pasos guardados correctamente');
+    return true;
+  } catch (error) {
+    console.error('Error guardando pasos:', error);
+    return false;
+  }
+};
+
 const Cardiocaminar = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const isFocused = useIsFocused();
   const [pasosMeta, setPasosMeta] = useState(10000);
   const [stepCount, setStepCount] = useState(0);
   const [progress] = useState(new Animated.Value(0));
   const [subscription, setSubscription] = useState<any>(null);
   const [isActive, setIsActive] = useState(false);
   const [time, setTime] = useState(0);
+  const [guardadoHoy, setGuardadoHoy] = useState(false);
   const lastMagnitudeRef = useRef(0);
   const lastStepTimeRef = useRef(Date.now());
   
-  // Longitud promedio de zancada en metros (ajustable según la persona)
-  const strideLength = 0.762; // ~0.762m para un adulto promedio
+  // Longitud promedio de zancada en metros
+  const strideLength = 0.762;
   const stepsPerKm = 1000 / strideLength;
 
-  // Actualizar la animación cuando cambien los pasos actuales o la meta
+  // Actualizar animación de progreso
   useEffect(() => {
     const porcentaje = Math.min(stepCount / pasosMeta, 1);
     Animated.timing(progress, {
@@ -37,7 +87,7 @@ const Cardiocaminar = () => {
     }).start();
   }, [stepCount, pasosMeta]);
 
-  // Efecto para el cronómetro
+  // Cronómetro
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
     
@@ -54,12 +104,46 @@ const Cardiocaminar = () => {
     };
   }, [isActive]);
 
+  // Verificar si ya se guardaron pasos hoy
   useEffect(() => {
-    return () => {
-      unsubscribe(); // limpiar suscripción al desmontar
+    const verificarGuardadoHoy = async () => {
+      const hoy = new Date().toISOString().split('T')[0];
+      const guardado = await AsyncStorage.getItem(`pasosGuardados_${hoy}`);
+      setGuardadoHoy(guardado === 'true');
     };
+    
+    verificarGuardadoHoy();
   }, []);
 
+  // Cargar estado previo al entrar
+  useEffect(() => {
+    const cargarEstado = async () => {
+      const savedSteps = await AsyncStorage.getItem('currentSteps');
+      const savedTime = await AsyncStorage.getItem('currentTime');
+      
+      if (savedSteps) setStepCount(parseInt(savedSteps, 10));
+      if (savedTime) setTime(parseInt(savedTime, 10));
+      
+      // Iniciar automáticamente el conteo
+      setIsActive(true);
+      subscribe();
+    };
+    
+    if (isFocused) {
+      cargarEstado();
+    } else {
+      // Guardar estado al salir
+      AsyncStorage.setItem('currentSteps', stepCount.toString());
+      AsyncStorage.setItem('currentTime', time.toString());
+      unsubscribe();
+    }
+    
+    return () => {
+      unsubscribe();
+    };
+  }, [isFocused]);
+
+  // Suscripción al acelerómetro
   const subscribe = () => {
     Accelerometer.setUpdateInterval(100);
     const sub = Accelerometer.addListener(accel => {
@@ -78,44 +162,41 @@ const Cardiocaminar = () => {
   };
 
   const unsubscribe = () => {
-    subscription && subscription.remove();
-    setSubscription(null);
-  };
-
-  const handleGuardarYVolver = () => {
-    unsubscribe();
-    setIsActive(false);
-    navigation.goBack();
-  };
-
-  const iniciarConteo = () => {
-    if (!isActive) {
-      setStepCount(0);
-      setTime(0);
-      setIsActive(true);
-      subscribe();
+    if (subscription) {
+      subscription.remove();
+      setSubscription(null);
     }
   };
 
-  const pausarConteo = () => {
-    setIsActive(false);
-    unsubscribe();
+  // Manejar guardado y salida
+  const handleGuardarYVolver = async () => {
+    if (guardadoHoy) return;
+    
+    const hoy = new Date().toISOString().split('T')[0];
+    const success = await guardarPasosDiarios(stepCount);
+    
+    if (success) {
+      // Marcar como guardado hoy
+      await AsyncStorage.setItem(`pasosGuardados_${hoy}`, 'true');
+      setGuardadoHoy(true);
+      
+      // Reiniciar estado local
+      setStepCount(0);
+      setTime(0);
+      await AsyncStorage.removeItem('currentSteps');
+      await AsyncStorage.removeItem('currentTime');
+    }
+    
+    navigation.goBack();
   };
 
-  const resetConteo = () => {
-    setIsActive(false);
-    setStepCount(0);
-    setTime(0);
-    unsubscribe();
-  };
-
-  // Calcular distancia en km
+  // Calcular distancia
   const distance = stepCount / stepsPerKm;
   
-  // Calcular velocidad en km/h (solo si hay tiempo transcurrido)
+  // Calcular velocidad
   const speed = time > 0 ? (distance / (time / 3600)) : 0;
   
-  // Formatear tiempo a HH:MM:SS
+  // Formatear tiempo
   const formatTime = (totalSeconds: number) => {
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
@@ -215,37 +296,21 @@ const Cardiocaminar = () => {
               </Text>
             </View>
 
-            <View className="flex-row justify-between w-full mb-4">
-              {!isActive ? (
-                <TouchableOpacity
-                  className="bg-green-600 py-3 px-6 rounded-full flex-1 mr-2"
-                  onPress={iniciarConteo}
-                >
-                  <Text className="text-white font-bold text-center">Iniciar</Text>
-                </TouchableOpacity>
-              ) : (
-                <TouchableOpacity
-                  className="bg-yellow-600 py-3 px-6 rounded-full flex-1 mr-2"
-                  onPress={pausarConteo}
-                >
-                  <Text className="text-white font-bold text-center">Pausar</Text>
-                </TouchableOpacity>
-              )}
-              
-              <TouchableOpacity
-                className="bg-red-600 py-3 px-6 rounded-full flex-1 ml-2"
-                onPress={resetConteo}
-              >
-                <Text className="text-white font-bold text-center">Reiniciar</Text>
-              </TouchableOpacity>
-            </View>
-
             <TouchableOpacity
-              className="bg-[#2563ea] py-3 px-6 rounded-full w-full"
+              className={`py-3 px-6 rounded-full w-full ${guardadoHoy ? 'bg-gray-600' : 'bg-[#2563ea]'}`}
               onPress={handleGuardarYVolver}
+              disabled={guardadoHoy}
             >
-              <Text className="text-white font-bold text-center">Guardar y Volver</Text>
+              <Text className="text-white font-bold text-center">
+                {guardadoHoy ? 'Guardado hoy ✓' : 'Guardar y Volver'}
+              </Text>
             </TouchableOpacity>
+            
+            {guardadoHoy && (
+              <Text className="text-green-400 mt-2 text-center">
+                Ya has guardado tus pasos hoy. Puedes continuar caminando, pero no se guardarán nuevamente hasta mañana.
+              </Text>
+            )}
           </View>
         </View>
       </ScrollView>
@@ -253,4 +318,4 @@ const Cardiocaminar = () => {
   );
 };
 
-export default Cardiocaminar ;
+export default Cardiocaminar;
