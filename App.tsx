@@ -37,6 +37,7 @@ import YogaAvanzado3 from 'screens/HabitoEjercicioFisico/YogaAvanzado3';
 import FelicitacionView from "Componentes/mensajeYoga";
 import CategoriasAlimentacion from 'screens/HabitoAlimentacion/CategoriasAlimentacion';
 import CategoriasSaludMental from 'screens/HabitoSaludMental/CategoriasSaludMental';
+import DietaMantenerPeso from "screens/HabitoAlimentacion/DietaMantenerPeso";
 import BajarDePeso from 'screens/HabitoAlimentacion/BajarDePeso';
 import DesayunoBajarDePeso from 'screens/HabitoAlimentacion/DesayunoBajarDePeso';
 import AlmuerzoBajarDePeso from 'screens/HabitoAlimentacion/AlmuerzoBajarDePeso';
@@ -93,6 +94,7 @@ export default function App() {
         <Stack.Screen name="mensaje" component={FelicitacionView} />
         <Stack.Screen name="CategoriasAlimentacion" component={CategoriasAlimentacion} />
         <Stack.Screen name="CategoriasSaludMental" component={CategoriasSaludMental} />
+        <Stack.Screen name="DietaMantenerPeso" component={DietaMantenerPeso} />
         <Stack.Screen name="BajarDePeso" component={BajarDePeso} />
         <Stack.Screen name="DesayunoBajarDePeso" component={DesayunoBajarDePeso} />
         <Stack.Screen name="AlmuerzoBajarDePeso" component={AlmuerzoBajarDePeso} />
