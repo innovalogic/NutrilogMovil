@@ -12,24 +12,28 @@ type RootStackParamList = {
 
 type DetalleLibroRouteProp = RouteProp<RootStackParamList, 'DetalleLibro'>;
 
-const diasLeidos = {
-    '2025-05-24': { selected: true, marked: true, selectedColor: '#00B0FF' },
-    '2025-05-25': { selected: true, marked: true, selectedColor: '#00B0FF' },
-    '2025-05-27': { selected: true, marked: true, selectedColor: '#00B0FF' },
-};
-
 const DetalleLibro = () => {
+    const [diasLeidos, setDiasLeidos] = useState<string[]>([]);
     const route = useRoute<DetalleLibroRouteProp>();
     const { libroId } = route.params;
     const [paginasLeidas, setPaginasLeidas] = useState<number>(0);
     const [hora, setHora] = useState(0);
     const [minutos, setMinutos] = useState(0);
+    const [fechasMarcadas, setFechasMarcadas] = useState<{ [date: string]: any }>({});
 
     const [libro, setLibro] = useState<null | {
         titulo: string;
         paginas: number;
         paginasLeidas: number;
     }>(null);
+
+    const obtenerFechaActual = (): string => {
+        const diaActual = new Date();
+        const anio = diaActual.getFullYear();
+        const mes = diaActual.getMonth() < 10 ? '0' + (diaActual.getMonth()+1) : diaActual.getMonth();
+        const dia = diaActual.getDate();
+        return `${anio}-${mes}-${dia}`;
+    };
 
     const disminuirPagina = () => {
         if (paginasLeidas > 0) {
@@ -40,6 +44,14 @@ const DetalleLibro = () => {
     const aumentarPagina = () => {
         if (libro && paginasLeidas < libro.paginas) {
             setPaginasLeidas(paginasLeidas + 1);
+            const fecha = obtenerFechaActual();
+            console.log(fecha)
+            setDiasLeidos(prev => {
+                if (!prev.includes(fecha)) {
+                    return [...prev, fecha];
+                }
+                return prev;
+            });
         }
     };
 
@@ -50,10 +62,10 @@ const DetalleLibro = () => {
         const libroRef = doc(firestore, 'users', user.uid, 'Libros', libroId);
         await updateDoc(libroRef, {
             paginasLeidas: paginasLeidas,
+            diasLeidos: diasLeidos,
         });
-
         alert('Cambios guardados');
-    }
+    };
 
     useEffect(() => {
         const fetchLibro = async () => {
@@ -67,11 +79,24 @@ const DetalleLibro = () => {
                 const libroData = docSnap.data() as any;
                 setLibro(libroData);
                 setPaginasLeidas(libroData.paginasLeidas);
+
+                if (libroData.diasLeidos) {
+                    // setDiasLeidos(libroData.diasLeidos);
+                    const fechasMarcadas: { [date: string]: any } = {};
+                    libroData.diasLeidos.forEach((fecha: string) => {
+                        fechasMarcadas[fecha] = {
+                            selected: true,
+                            marked: true,
+                            selectedColor: '#00B0FF',
+                        };
+                    });
+                    setDiasLeidos(libroData.diasLeidos);
+                    setFechasMarcadas(fechasMarcadas);
+                }
             } else {
                 console.log('Libro no encontrado');
             }
         };
-
         fetchLibro();
     }, [libroId]);
 
@@ -105,7 +130,7 @@ const DetalleLibro = () => {
             <View className='bg-blue-200'>
                 <Text>Dias de lectura</Text>
                 <Calendar
-                    markedDates={diasLeidos}
+                    markedDates={fechasMarcadas}
                     theme={{
                         selectedDayBackgroundColor: '#00B0FF',
                         todayTextColor: '#FF5722',
