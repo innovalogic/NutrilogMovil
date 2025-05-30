@@ -20,6 +20,7 @@
     "@react-navigation/native-stack": "^6.11.0",
     "@react-navigation/stack": "^6.4.1",
     "expo": "^52.0.46",
+    "expo-av": "~15.0.2",
     "expo-constants": "~17.0.8",
     "expo-linear-gradient": "~14.0.2",
     "expo-sensors": "~14.0.2",
@@ -29,6 +30,7 @@
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "react-native": "0.76.9",
+    "react-native-calendars": "^1.1312.1",
     "react-native-gesture-handler": "^2.25.0",
     "react-native-paper": "^5.14.0",
     "react-native-pedometer": "^0.0.7",
@@ -38,7 +40,7 @@
     "react-native-vector-icons": "^10.2.0",
     "react-native-web": "~0.19.13",
     "react-native-webview": "13.12.5",
-    "expo-av": "~15.0.2"
+    "expo-notifications": "~0.29.14"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
