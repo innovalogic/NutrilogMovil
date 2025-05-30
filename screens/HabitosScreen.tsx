@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, FlatList, Alert, Image, Modal } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native'; // Import useFocusEffect
 import { StackNavigationProp } from '@react-navigation/stack';
 import { auth, firestore } from '../firebase';
 import { collection, getDocs, doc, deleteDoc } from 'firebase/firestore';
@@ -33,46 +33,49 @@ export default function HabitosScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedHabit, setSelectedHabit] = useState<{ id: string; habito: string; category: string } | null>(null);
 
-  useEffect(() => {
-    const fetchHabitos = async () => {
-      const user = auth.currentUser;
-      if (user) {
-        try {
-          // Recuperar hábitos físicos
-          const habitosFisicosRef = collection(firestore, 'habitosUsuarios', user.uid, 'habitosFisicos');
-          const fisicosSnapshot = await getDocs(habitosFisicosRef);
-          const habitosFisicos = fisicosSnapshot.docs.map(doc => ({
-            id: doc.id,
-            habito: doc.data().habitoSeleccionado,
-          }));
-          setHabitosFisicos(habitosFisicos);
+  const fetchHabitos = async () => {
+    const user = auth.currentUser;
+    if (user) {
+      try {
+        // Recuperar hábitos físicos
+        const habitosFisicosRef = collection(firestore, 'habitosUsuarios', user.uid, 'habitosFisicos');
+        const fisicosSnapshot = await getDocs(habitosFisicosRef);
+        const habitosFisicos = fisicosSnapshot.docs.map(doc => ({
+          id: doc.id,
+          habito: doc.data().habitoSeleccionado,
+        }));
+        setHabitosFisicos(habitosFisicos);
 
-          // Recuperar hábitos alimenticios
-          const habitosAlimenticiosRef = collection(firestore, 'habitosUsuarios', user.uid, 'habitosAlimenticios');
-          const alimenticiosSnapshot = await getDocs(habitosAlimenticiosRef);
-          const habitosAlimenticios = alimenticiosSnapshot.docs.map(doc => ({
-            id: doc.id,
-            habito: doc.data().habitoSeleccionado,
-          }));
-          setHabitosAlimenticios(habitosAlimenticios);
+        // Recuperar hábitos alimenticios
+        const habitosAlimenticiosRef = collection(firestore, 'habitosUsuarios', user.uid, 'habitosAlimenticios');
+        const alimenticiosSnapshot = await getDocs(habitosAlimenticiosRef);
+        const habitosAlimenticios = alimenticiosSnapshot.docs.map(doc => ({
+          id: doc.id,
+          habito: doc.data().habitoSeleccionado,
+        }));
+        setHabitosAlimenticios(habitosAlimenticios);
 
-          // Recuperar hábitos de salud mental
-          const habitosSaludMentalRef = collection(firestore, 'habitosUsuarios', user.uid, 'habitosSaludMental');
-          const saludMentalSnapshot = await getDocs(habitosSaludMentalRef);
-          const habitosSaludMental = saludMentalSnapshot.docs.map(doc => ({
-            id: doc.id,
-            habito: doc.data().habitoSeleccionado,
-          }));
-          setHabitosSaludMental(habitosSaludMental);
-        } catch (error) {
-          console.error('Error al obtener los hábitos:', error);
-          Alert.alert('Error', 'No se pudieron cargar tus hábitos.');
-        }
+        // Recuperar hábitos de salud mental
+        const habitosSaludMentalRef = collection(firestore, 'habitosUsuarios', user.uid, 'habitosSaludMental');
+        const saludMentalSnapshot = await getDocs(habitosSaludMentalRef);
+        const habitosSaludMental = saludMentalSnapshot.docs.map(doc => ({
+          id: doc.id,
+          habito: doc.data().habitoSeleccionado,
+        }));
+        setHabitosSaludMental(habitosSaludMental);
+      } catch (error) {
+        console.error('Error al obtener los hábitos:', error);
+        Alert.alert('Error', 'No se pudieron cargar tus hábitos.');
       }
-    };
+    }
+  };
 
-    fetchHabitos();
-  }, []);
+  // Use useFocusEffect to fetch habits when the screen is focused
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchHabitos();
+    }, [])
+  );
 
   const handleHabitPress = (habit: string) => {
     // Hábitos físicos
@@ -165,7 +168,7 @@ export default function HabitosScreen() {
             {/* Hábitos físicos */}
             {habitosFisicos.length > 0 && (
               <>
-                <Text className="text-xl font-semibold text-white mb-4">Hábitos Físicos</Text>
+                <Text className="text-xl font-semibold text-white Family mb-4">Hábitos Físicos</Text>
                 <FlatList
                   data={habitosFisicos}
                   keyExtractor={item => `fisico-${item.id}`}
