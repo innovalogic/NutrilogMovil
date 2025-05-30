@@ -49,7 +49,7 @@ const RegistroLibro = () => {
                     minutos: minutos,
                 });
                 console.log('guardado');
-                // ✅ Programar la notificación aquí
+                
                 const ahora = new Date();
                 const horaNotificacion = new Date(ahora);
                 horaNotificacion.setHours(hora);
@@ -60,9 +60,6 @@ const RegistroLibro = () => {
                     horaNotificacion.setDate(horaNotificacion.getDate() + 1);
                     console.log('hora pasada')
                 }
-                
-                const now = new Date();
-                const triggerDate = new Date(now.getTime() + 30 * 1000);
 
                 await Notifications.cancelAllScheduledNotificationsAsync();
 
@@ -73,11 +70,11 @@ const RegistroLibro = () => {
                         sound: true,
                     },
                     trigger: {
-                        channelId: 'default', // Necesario en Android si usas canales
-                        hour: 12,
-                        minute: 0,
+                        channelId: 'default',
+                        hour: hora,
+                        minute: minutos,
                         repeats: true,
-                    } as Notifications.CalendarTriggerInput,
+                    },
                 });
                 menuRegistroLibro()
             }
