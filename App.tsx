@@ -42,6 +42,12 @@ import BajarDePeso from 'screens/HabitoAlimentacion/BajarDePeso';
 import DesayunoBajarDePeso from 'screens/HabitoAlimentacion/DesayunoBajarDePeso';
 import AlmuerzoBajarDePeso from 'screens/HabitoAlimentacion/AlmuerzoBajarDePeso';
 import CenaBajarDePeso from 'screens/HabitoAlimentacion/CenaBajarDePeso';
+import AudioInspira from 'screens/HabitoSaludMental/AudioInspira';
+import Origami from 'screens/HabitoSaludMental/Origami';
+import SubirDePeso from 'screens/HabitoAlimentacion/SubirDePeso';
+import DesayunoSubirDePeso from 'screens/HabitoAlimentacion/DesayunoSubirDePeso';
+import AlmuerzoSubirDePeso from 'screens/HabitoAlimentacion/AlmuerzoSubirDePeso';
+import CenaSubirDePeso from 'screens/HabitoAlimentacion/CenaSubirDePeso';
 import MenuLectura from 'screens/HabitoSaludMental/menuLecturaDiaria'
 import registroLibro from 'screens/HabitoSaludMental/registroLibro'
 import DetalleLibro from 'screens/HabitoSaludMental/DetalleLibro'
@@ -108,7 +114,13 @@ export default function App() {
         <Stack.Screen name="DesayunoBajarDePeso" component={DesayunoBajarDePeso} />
         <Stack.Screen name="AlmuerzoBajarDePeso" component={AlmuerzoBajarDePeso} />
         <Stack.Screen name="CenaBajarDePeso" component={CenaBajarDePeso} />
-        
+        <Stack.Screen name="SubirDePeso" component={SubirDePeso} />
+        <Stack.Screen name="DesayunoSubirDePeso" component={DesayunoSubirDePeso} />
+        <Stack.Screen name="AlmuerzoSubirDePeso" component={AlmuerzoSubirDePeso} />
+        <Stack.Screen name="CenaSubirDePeso" component={CenaSubirDePeso} />
+
+        <Stack.Screen name="AudioInspira" component={AudioInspira} />
+        <Stack.Screen name="Origami" component={Origami} />
         <Stack.Screen name="RegistroLecturaDiaria" component={MenuLectura} />
         <Stack.Screen name="RegistroLibro" component={registroLibro} />
         <Stack.Screen name="DetalleLibro" component={DetalleLibro} />
