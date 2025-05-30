@@ -44,7 +44,10 @@ import AlmuerzoBajarDePeso from 'screens/HabitoAlimentacion/AlmuerzoBajarDePeso'
 import CenaBajarDePeso from 'screens/HabitoAlimentacion/CenaBajarDePeso';
 import AudioInspira from 'screens/HabitoSaludMental/AudioInspira';
 import Origami from 'screens/HabitoSaludMental/Origami';
-
+import SubirDePeso from 'screens/HabitoAlimentacion/SubirDePeso';
+import DesayunoSubirDePeso from 'screens/HabitoAlimentacion/DesayunoSubirDePeso';
+import AlmuerzoSubirDePeso from 'screens/HabitoAlimentacion/AlmuerzoSubirDePeso';
+import CenaSubirDePeso from 'screens/HabitoAlimentacion/CenaSubirDePeso';
 
 const Stack = createNativeStackNavigator();
 
@@ -99,7 +102,11 @@ export default function App() {
         <Stack.Screen name="DesayunoBajarDePeso" component={DesayunoBajarDePeso} />
         <Stack.Screen name="AlmuerzoBajarDePeso" component={AlmuerzoBajarDePeso} />
         <Stack.Screen name="CenaBajarDePeso" component={CenaBajarDePeso} />
-        
+        <Stack.Screen name="SubirDePeso" component={SubirDePeso} />
+        <Stack.Screen name="DesayunoSubirDePeso" component={DesayunoSubirDePeso} />
+        <Stack.Screen name="AlmuerzoSubirDePeso" component={AlmuerzoSubirDePeso} />
+        <Stack.Screen name="CenaSubirDePeso" component={CenaSubirDePeso} />
+
         <Stack.Screen name="AudioInspira" component={AudioInspira} />
         <Stack.Screen name="Origami" component={Origami} />
       </Stack.Navigator>

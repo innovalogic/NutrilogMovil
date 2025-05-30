@@ -16,7 +16,7 @@ type RootStackParamList = {
   DietaMantenerPeso: undefined;
   BajarDePeso: undefined;
   RegistroDietaMantenerPeso: undefined;
-  RegistroDietaSubirPeso: undefined;
+  SubirDePeso: undefined;
   RegistroLecturaDiaria: undefined;
   AudioInspira: undefined;
   Origami: undefined;
@@ -89,7 +89,7 @@ export default function HabitosScreen() {
     } else if (habit === 'Dieta Para Mantener el Peso') {
       navigation.navigate('DietaMantenerPeso');
     } else if (habit === 'Dieta Para Subir de Peso') {
-      navigation.navigate('RegistroDietaSubirPeso');
+      navigation.navigate('SubirDePeso');
     }
     // Hábitos de salud mental
     else if (habit === 'Lectura diaria') {
