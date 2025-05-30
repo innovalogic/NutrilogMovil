@@ -1,35 +1,18 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Image, StatusBar, Linking } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
+import React from 'react';
+import { View, Text, TouchableOpacity, ScrollView, Image, StatusBar } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { RouteProp } from '@react-navigation/native';
+import { WebView } from 'react-native-webview';
 
 type RootStackParamList = {
-    UpperBodyWorkout: { 
-        exercise: string; 
-        reps: string; 
-        totalTime: number; 
-        restTime: number; 
-    };
-    CronometroS: undefined; 
+    UpperBodyWorkout: undefined;
+    CronometroS: undefined;
 };
 
 type UpperBodyWorkoutNavigationProp = StackNavigationProp<RootStackParamList, 'UpperBodyWorkout'>;
-type UpperBodyWorkoutRouteProp = RouteProp<RootStackParamList, 'UpperBodyWorkout'>;
 
 export default function RutinaSuperior() {
     const navigation = useNavigation<UpperBodyWorkoutNavigationProp>();
-    const route = useRoute<UpperBodyWorkoutRouteProp>(); // Obtener los parámetros de la ruta
-
-    const { exercise, reps, totalTime, restTime } = route.params || {}; // Usa el tipo correcto
-    const [expanded, setExpanded] = useState(false); // Estado para controlar el despliegue
-
-    // Lista de consejos con enlaces
-    const tips = [
-        { title: 'Tips para mejorar la técnica', url: 'https://www.youtube.com/watch?v=H_e0t3iwyrM' },
-        { title: 'Errores comunes', url: 'https://www.youtube.com/shorts/m4baLYJPFs4' }
-    ];
 
     return (
         <View className="flex-1 bg-black">
@@ -40,6 +23,14 @@ export default function RutinaSuperior() {
 
             {/* Main Content */}
             <ScrollView className="flex-1">
+                {/* Back Button */}
+                <TouchableOpacity
+                    onPress={() => navigation.goBack()}
+                    className="text-white size-12 shrink-0 items-center"
+                >
+                    <Text className="text-white text-2xl">←</Text>
+                </TouchableOpacity>
+
                 {/* Hero Image */}
                 <View className="h-64 w-full bg-gray-700 rounded-lg overflow-hidden">
                     <Image source={require('../../assets/pull_up.jpg')} className="w-full h-full object-cover" />
@@ -68,36 +59,22 @@ export default function RutinaSuperior() {
                         ))}
                     </View>
 
-                    {/* Mostrar los datos del cronómetro */}
-                    {exercise && (
-                        <Text className="text-white">Ejercicio: {exercise}</Text>
-                    )}
-                    {reps && (
-                        <Text className="text-white">Repeticiones: {reps}</Text>
-                    )}
-                    {totalTime !== undefined && (
-                        <Text className="text-white">Tiempo total: {totalTime} s</Text>
-                    )}
-                    {restTime !== undefined && (
-                        <Text className="text-white">Tiempo de descanso: {restTime} s</Text>
-                    )}
-
-                    {/* Tips Section */}
+                    {/* Tips Section with WebView */}
                     <Text className="text-xl font-bold text-white mb-2">Consejos</Text>
-                    <TouchableOpacity onPress={() => setExpanded(!expanded)} className="flex-row justify-between bg-gray-800 p-4 rounded-lg mb-2">
-                        <Text className="text-white">Ver Consejos</Text>
-                        <Ionicons name={expanded ? "chevron-up" : "chevron-down"} size={20} color="#fff" />
-                    </TouchableOpacity>
-                    {expanded && (
-                        <View className="bg-gray-700 rounded-lg p-4 mb-4">
-                            {tips.map((tip, index) => (
-                                <TouchableOpacity key={index} onPress={() => Linking.openURL(tip.url)} className="flex-row items-center mb-2">
-                                    <Ionicons name="logo-youtube" size={20} color="#FF0000" />
-                                    <Text className="text-blue-400 underline ml-2">{tip.title}</Text>
-                                </TouchableOpacity>
-                            ))}
-                        </View>
-                    )}
+                    <View className="w-full h-64 mb-5 rounded-xl overflow-hidden border border-gray-600">
+                        <WebView 
+                            source={{ uri: 'https://youtu.be/H_e0t3iwyrM?si=hcvvdmsKlQlVNTbe' }} 
+                            style={{ flex: 1, borderRadius: 10, overflow: 'hidden' }}
+                        />
+                    </View>
+
+                    <Text className="text-xl font-bold text-white mb-2">Errores</Text>
+                    <View className="w-full h-64 mb-5 rounded-xl overflow-hidden border border-gray-600">
+                        <WebView 
+                            source={{ uri: 'https://www.youtube.com/shorts/m4baLYJPFs4' }} 
+                            style={{ flex: 1, borderRadius: 10, overflow: 'hidden' }}
+                        />
+                    </View>
                 </View>
             </ScrollView>
 
@@ -110,3 +87,4 @@ export default function RutinaSuperior() {
         </View>
     );
 }
+
