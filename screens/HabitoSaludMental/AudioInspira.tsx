@@ -4,6 +4,8 @@ import { Audio } from 'expo-av';
 import { AntDesign } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
 import { useFocusEffect } from '@react-navigation/native';
+import { auth, firestore } from '../../firebase';
+import { doc, setDoc } from 'firebase/firestore';
 
 const audioList = [
   {
@@ -95,11 +97,32 @@ export default function AudioInspira({ navigation }) {
     if (sound) {
       await sound.unloadAsync();
     }
+
     const { sound: newSound } = await Audio.Sound.createAsync({ uri: audio.file });
     setSound(newSound);
     await newSound.playAsync();
     setSelectedAudio(audio);
     setIsPlaying(true);
+
+    const user = auth.currentUser;
+    if (user) {
+      const audioDocRef = doc(
+        firestore,
+        'users',
+        user.uid,
+        'audioInspira',
+        audio.category,
+        'audios',
+        audio.id.toString()
+      );
+      await setDoc(audioDocRef, {
+        titulo: audio.title,
+        categoria: audio.category,
+        descripcion: audio.description,
+        duracion: audio.duration,
+        escuchadoEn: new Date().toISOString(),
+      });
+    }
   };
 
   const handlePause = async () => {
@@ -140,76 +163,75 @@ export default function AudioInspira({ navigation }) {
   };
 
   return (
-  <SafeAreaView
-    style={{
-      flex: 1,
-      paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
-      backgroundColor: 'white',
-    }}
-  >
-    {selectedAudio ? (
-      <View className="flex-1 justify-center items-center bg-black p-4">
-        <TouchableOpacity onPress={handleBack} className="absolute top-10 left-4">
-          <AntDesign name="arrowleft" size={30} color="white" />
-        </TouchableOpacity>
-        <Text className="text-white text-2xl mb-2">{selectedAudio.title}</Text>
-        <Text className="text-gray-300 text-base mb-4 italic">{selectedAudio.category}</Text>
-        <Image source={{ uri: selectedAudio.image }} className="w-64 h-64 rounded-xl mb-4" />
-        <Text className="text-white text-center px-4 mb-6">{selectedAudio.description}</Text>
-
-        <Slider
-          style={{ width: '90%', height: 40 }}
-          minimumValue={0}
-          maximumValue={duration}
-          value={position}
-          minimumTrackTintColor="#90cdf4"
-          maximumTrackTintColor="#ccc"
-          thumbTintColor="#fff"
-          onSlidingComplete={handleSeek}
-        />
-        <View className="flex-row justify-between w-11/12 mb-4">
-          <Text className="text-white">{formatTime(position)}</Text>
-          <Text className="text-white">{formatTime(duration)}</Text>
-        </View>
-
-        {isPlaying ? (
-          <TouchableOpacity onPress={handlePause} className="bg-white px-6 py-3 rounded-full">
-            <Text className="text-black text-lg">Pausar</Text>
+    <SafeAreaView
+      style={{
+        flex: 1,
+        paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+        backgroundColor: 'white',
+      }}
+    >
+      {selectedAudio ? (
+        <View className="flex-1 justify-center items-center bg-black p-4">
+          <TouchableOpacity onPress={handleBack} className="absolute top-10 left-4">
+            <AntDesign name="arrowleft" size={30} color="white" />
           </TouchableOpacity>
-        ) : (
-          <TouchableOpacity onPress={handleResume} className="bg-white px-6 py-3 rounded-full">
-            <Text className="text-black text-lg">Reproducir</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-    ) : (
-      <ScrollView contentContainerStyle={{ paddingBottom: 20 }} className="bg-black">
-        <View className="items-center pb-6">
-          <Text className="text-white text-3xl font-mono mt-8">Audio Inspira</Text>
-          <Image
-            source={{ uri: 'https://res.cloudinary.com/dynoxftwk/image/upload/v1748562419/menuAudio_dprp9w.png' }}
-            className="rounded-2xl w-48 h-48 mt-4"
+          <Text className="text-white text-2xl mb-2">{selectedAudio.title}</Text>
+          <Text className="text-gray-300 text-base mb-4 italic">{selectedAudio.category}</Text>
+          <Image source={{ uri: selectedAudio.image }} className="w-64 h-64 rounded-xl mb-4" />
+          <Text className="text-white text-center px-4 mb-6">{selectedAudio.description}</Text>
+
+          <Slider
+            style={{ width: '90%', height: 40 }}
+            minimumValue={0}
+            maximumValue={duration}
+            value={position}
+            minimumTrackTintColor="#90cdf4"
+            maximumTrackTintColor="#ccc"
+            thumbTintColor="#fff"
+            onSlidingComplete={handleSeek}
           />
+          <View className="flex-row justify-between w-11/12 mb-4">
+            <Text className="text-white">{formatTime(position)}</Text>
+            <Text className="text-white">{formatTime(duration)}</Text>
+          </View>
+
+          {isPlaying ? (
+            <TouchableOpacity onPress={handlePause} className="bg-white px-6 py-3 rounded-full">
+              <Text className="text-black text-lg">Pausar</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity onPress={handleResume} className="bg-white px-6 py-3 rounded-full">
+              <Text className="text-black text-lg">Reproducir</Text>
+            </TouchableOpacity>
+          )}
         </View>
+      ) : (
+        <ScrollView contentContainerStyle={{ paddingBottom: 20 }} className="bg-black">
+          <View className="items-center pb-6">
+            <Text className="text-white text-3xl font-mono mt-8">Audio Inspira</Text>
+            <Image
+              source={{ uri: 'https://res.cloudinary.com/dynoxftwk/image/upload/v1748562419/menuAudio_dprp9w.png' }}
+              className="rounded-2xl w-48 h-48 mt-4"
+            />
+          </View>
 
-        {audioList.map(audio => (
-          <TouchableOpacity
-            key={audio.id}
-            onPress={() => handlePlayAudio(audio)}
-            className="flex-row bg-[#202938] m-4 p-3 rounded-xl items-center shadow-md"
-          >
-            <Image source={{ uri: audio.image }} className="w-16 h-16 rounded-md" />
-            <View className="flex-1 ml-4">
-              <Text className="text-white text-lg font-semibold">{audio.title}</Text>
-              <Text className="text-gray-300">{audio.format.toUpperCase()} - {audio.category}</Text>
-              <Text className="text-gray-400">{audio.duration}</Text>
-            </View>
-            <AntDesign name="right" size={24} color="white" />
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-    )}
-  </SafeAreaView>
-);
-
+          {audioList.map(audio => (
+            <TouchableOpacity
+              key={audio.id}
+              onPress={() => handlePlayAudio(audio)}
+              className="flex-row bg-[#202938] m-4 p-3 rounded-xl items-center shadow-md"
+            >
+              <Image source={{ uri: audio.image }} className="w-16 h-16 rounded-md" />
+              <View className="flex-1 ml-4">
+                <Text className="text-white text-lg font-semibold">{audio.title}</Text>
+                <Text className="text-gray-300">{audio.format.toUpperCase()} - {audio.category}</Text>
+                <Text className="text-gray-400">{audio.duration}</Text>
+              </View>
+              <AntDesign name="right" size={24} color="white" />
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      )}
+    </SafeAreaView>
+  );
 }

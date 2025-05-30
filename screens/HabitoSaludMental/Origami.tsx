@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { SafeAreaView, View, Text, TouchableOpacity, Image, ScrollView } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
+import { auth, firestore } from '../../firebase';
+import { doc, setDoc } from 'firebase/firestore';
 
 const origamiExamples = {
   'Avion': {
@@ -80,12 +82,49 @@ export default function OrigamiApp() {
   };
 
   const openCamera = async () => {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== 'granted') return;
-    const result = await ImagePicker.launchCameraAsync({ quality: 0.5 });
-    if (!result.cancelled) saveGallery(result.uri, selected);
-    setView('gallery');
-  };
+  const { status } = await ImagePicker.requestCameraPermissionsAsync();
+  if (status !== 'granted') return;
+  const result = await ImagePicker.launchCameraAsync({ quality: 0.5 });
+  if (!result.cancelled) {
+    saveGallery(result.uri, selected);
+    // Guardamos en Firebase
+    const dificultad = origamiExamples[selected].difficulty;
+    await guardarOrigamiCompletado(selected, dificultad);
+  }
+  setView('gallery');
+};
+
+const guardarOrigamiCompletado = async (
+  nombreOrigami: string,    // Nombre del origami completado (ej: 'Avion', 'Rana')
+  dificultad: string        // Dificultad del origami (ej: 'Fácil', 'Intermedio')
+) => {
+  const user = auth.currentUser;
+  if (!user) {
+    console.log('Usuario no autenticado');
+    return;
+  }
+  
+  try {
+    const sessionId = Date.now().toString();
+    const origamiRef = doc(
+      firestore, 
+      'users', 
+      user.uid, 
+      'origamisCompletados',  // Cambiamos a una sola colección para simplificar
+      sessionId
+    );
+    
+    await setDoc(origamiRef, {
+      nombreOrigami,
+      dificultad,
+      fechaCompletado: new Date().toISOString(),
+    });
+    
+    console.log('Origami guardado correctamente en Firebase');
+  } catch (error) {
+    console.error('Error guardando origami:', error);
+  }
+};
 
   if (view === 'list') {
   return (
