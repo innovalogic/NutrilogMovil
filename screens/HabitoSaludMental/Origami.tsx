@@ -11,7 +11,7 @@ const origamiExamples = {
       'https://res.cloudinary.com/dynoxftwk/image/upload/v1748464173/3_pyfpva.png',
       'https://res.cloudinary.com/dynoxftwk/image/upload/v1748464172/4_gf0yom.png',
       'https://res.cloudinary.com/dynoxftwk/image/upload/v1748464173/5_edwr6m.png',
-      'https://res.cloudinary.com/dynoxftwk/image/upload/v1748464173/6_edwr6m.png',
+      'https://res.cloudinary.com/dynoxftwk/image/upload/v1748464172/6_ssp8wt.png',
       'https://res.cloudinary.com/dynoxftwk/image/upload/v1748464173/7_i1knu6.png',
       'https://res.cloudinary.com/dynoxftwk/image/upload/v1748464173/8_uar8jz.png',
     ],
@@ -88,18 +88,24 @@ export default function OrigamiApp() {
   };
 
   if (view === 'list') {
-    return (
-      <SafeAreaView className="flex-1 bg-white p-4">
-        <Text className="text-2xl font-bold mb-4">Origami Diario</Text>
+  return (
+    <SafeAreaView className="flex-1 bg-white pt-10">
+      <View className="flex-1 bg-black p-4">
+        <Text className="text-2xl font-bold mb-4 text-white">Origami Diario</Text>
         <ScrollView>
           {Object.keys(origamiExamples).map((item) => (
             <TouchableOpacity
               key={item}
-              className="p-3 bg-gray-200 mb-2 rounded-lg"
+              className="p-3 bg-[#202938] mb-2 rounded-lg"
               onPress={() => { setSelected(item); setStepIndex(0); setView('detail'); }}
             >
-              <Text className="text-lg font-semibold">{item}</Text>
-              <Text>dificultad: {origamiExamples[item].difficulty}</Text>
+              <Text className="text-lg font-semibold text-white">{item}</Text>
+              <Text className="text-white">Dificultad: {origamiExamples[item].difficulty}</Text>
+              <Image
+                source={{ uri: origamiExamples[item].finalImage }}
+                className="w-full h-40 mt-2 rounded-lg"
+                resizeMode="contain"
+              />
             </TouchableOpacity>
           ))}
         </ScrollView>
@@ -109,20 +115,26 @@ export default function OrigamiApp() {
         >
           <Text className="text-center text-white">Galería</Text>
         </TouchableOpacity>
-      </SafeAreaView>
-    );
-  }
+      </View>
+    </SafeAreaView>
+  );
+}
 
-  if (view === 'detail') {
-    const data = origamiExamples[selected];
-    return (
-      <SafeAreaView className="flex-1 bg-white p-4">
-        <Text className="text-2xl font-bold mb-4">{selected} - Paso {stepIndex + 1}/{data.steps.length}</Text>
-        <Image source={{ uri: data.steps[stepIndex] }} className="w-full h-64 resize-contain mb-4" />
+if (view === 'detail') {
+  const data = origamiExamples[selected];
+  return (
+    <SafeAreaView className="flex-1 bg-white pt-10">
+      <View className="flex-1 bg-black p-4">
+        <Text className="text-2xl font-bold mb-4 text-white">{selected} - Paso {stepIndex + 1}/{data.steps.length}</Text>
+        <Image
+          source={{ uri: data.steps[stepIndex] }}
+          className="w-full h-72 mb-4 rounded-lg"
+          resizeMode="contain"
+        />
         <View className="flex-row justify-between mb-4">
           <TouchableOpacity
             disabled={stepIndex === 0}
-            className={`px-4 py-2 rounded-lg ${stepIndex===0?'bg-gray-300':'bg-blue-500'}`}
+            className={`px-4 py-2 rounded-lg ${stepIndex === 0 ? 'bg-gray-300' : 'bg-blue-500'}`}
             onPress={() => setStepIndex((i) => i - 1)}
           >
             <Text className="text-white">Anterior</Text>
@@ -143,18 +155,20 @@ export default function OrigamiApp() {
             </TouchableOpacity>
           )}
         </View>
-        <TouchableOpacity onPress={() => setView('list')}>  
-          <Text className="text-blue-500">Volver</Text>
+        <TouchableOpacity onPress={() => setView('list')}>
+          <Text className="text-blue-400">Volver</Text>
         </TouchableOpacity>
-      </SafeAreaView>
-    );
-  }
+      </View>
+    </SafeAreaView>
+  );
+}
 
-  if (view === 'camera') {
-    const final = origamiExamples[selected].finalImage;
-    return (
-      <SafeAreaView className="flex-1 bg-white p-4 justify-center items-center">
-        <Text className="text-2xl font-bold mb-4">¡Completado!</Text>
+if (view === 'camera') {
+  const final = origamiExamples[selected].finalImage;
+  return (
+    <SafeAreaView className="flex-1 bg-white">
+      <View className="flex-1 bg-black p-4 justify-center items-center">
+        <Text className="text-2xl font-bold mb-4 text-white">¡Completado!</Text>
         <Image source={{ uri: final }} className="w-full h-64 resize-contain mb-4" />
         <TouchableOpacity className="bg-blue-500 py-2 px-4 rounded-lg mb-2" onPress={openCamera}>
           <Text className="text-white">Tomar Foto</Text>
@@ -162,28 +176,35 @@ export default function OrigamiApp() {
         <TouchableOpacity className="bg-gray-200 py-2 px-4 rounded-lg" onPress={() => setView('gallery')}>
           <Text className="text-center">Ver Galería</Text>
         </TouchableOpacity>
-      </SafeAreaView>
-    );
-  }
+      </View>
+    </SafeAreaView>
+  );
+}
 
-  if (view === 'gallery') {
-    return (
-      <SafeAreaView className="flex-1 bg-white p-4">
-        <Text className="text-2xl font-bold mb-4">Galería de Origamis</Text>
+if (view === 'gallery') {
+  return (
+    <SafeAreaView className="flex-1 bg-white pt-10">
+      <View className="flex-1 bg-black p-4">
+        <Text className="text-2xl font-bold mb-4 text-white">Galería de Origamis</Text>
         <ScrollView>
           {gallery.map((item, idx) => (
             <View key={idx} className="mb-4 items-center">
-              <Text className="font-semibold">{item.name}</Text>
-              <Image source={{ uri: item.uri }} className="w-40 h-40 resize-cover mt-2 rounded" />
+              <Text className="font-semibold text-white">{item.name}</Text>
+              <View className="flex-row space-x-4 items-center">
+                <Image source={{ uri: origamiExamples[item.name]?.finalImage }} className="w-24 h-24 rounded" />
+                <Image source={{ uri: item.uri }} className="w-24 h-24 rounded" />
+              </View>
             </View>
           ))}
         </ScrollView>
         <TouchableOpacity className="mt-4" onPress={() => setView('list')}>
-          <Text className="text-blue-500">Volver</Text>
+          <Text className="text-blue-400">Volver</Text>
         </TouchableOpacity>
-      </SafeAreaView>
-    );
-  }
+      </View>
+    </SafeAreaView>
+  );
+}
 
-  return null;
+return null;
+
 }

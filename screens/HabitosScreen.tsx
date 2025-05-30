@@ -97,7 +97,7 @@ export default function HabitosScreen() {
     'Dieta Para Mantener el Peso': require('../assets/DietaMantenerPeso.png'),
     'Dieta Para Subir de Peso': require('../assets/DietaSubirPeso.png'),
     'Lectura diaria': require('../assets/LecturaDiaria.png'),
-    'Video-Inspira': require('../assets/VideoInspira.png'),
+    'Audio-Inspira': require('../assets/AudioInspira.png'),
     'Origami Diario': require('../assets/Origami.png'),
   };
 

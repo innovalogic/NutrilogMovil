@@ -14,9 +14,9 @@ type HabitScreenNavigationProp = StackNavigationProp<RootStackParamList>;
 export default function CategoriasSaludMental() {
   const navigation = useNavigation<HabitScreenNavigationProp>();
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedRoute, setSelectedRoute] = useState<'Lectura diaria' | 'Video-Inspira' | 'Origami Diario' | null>(null);
+  const [selectedRoute, setSelectedRoute] = useState<'Lectura diaria' | 'Audio-Inspira' | 'Origami Diario' | null>(null);
 
-  const handleNavigation = (route: 'Lectura diaria' | 'Video-Inspira' | 'Origami Diario') => {
+  const handleNavigation = (route: 'Lectura diaria' | 'Audio-Inspira' | 'Origami Diario') => {
     setSelectedRoute(route);
     setModalVisible(true);
   };
@@ -98,15 +98,15 @@ export default function CategoriasSaludMental() {
         </TouchableOpacity>
         <TouchableOpacity
           className="bg-black rounded-lg py-6 px-14 mb-10 w-3/4"
-          onPress={() => handleNavigation('Video-Inspira')}
+          onPress={() => handleNavigation('Audio-Inspira')}
         >
           <View className="flex-row items-center">
             <Image
-              source={require('../../assets/VideoInspira.png')}
+              source={require('../../assets/AudioInspira.png')}
               className="w-16 h-28 mr-4 ml-[-24px]"
             />
             <View>
-              <Text className="text-white text-2xl font-bold">Video-Inspira</Text>
+              <Text className="text-white text-2xl font-bold">Audio-Inspira</Text>
               <Text className="text-white font-medium text-left mt-7">
                 Motivación y bienestar emocional
               </Text>
