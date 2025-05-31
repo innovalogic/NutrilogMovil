@@ -1,5 +1,6 @@
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { useEffect, useState } from 'react';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRoute, RouteProp } from '@react-navigation/native';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { auth, firestore } from '../../firebase';
@@ -30,7 +31,7 @@ const DetalleLibro = () => {
     const obtenerFechaActual = (): string => {
         const diaActual = new Date();
         const anio = diaActual.getFullYear();
-        const mes = diaActual.getMonth() < 10 ? '0' + (diaActual.getMonth()+1) : diaActual.getMonth();
+        const mes = diaActual.getMonth() < 10 ? '0' + (diaActual.getMonth() + 1) : diaActual.getMonth();
         const dia = diaActual.getDate();
         return `${anio}-${mes}-${dia}`;
     };
@@ -102,59 +103,110 @@ const DetalleLibro = () => {
 
     if (!libro) {
         return (
-            <View className="flex-1 justify-center items-center bg-white">
-                <Text>Cargando libro...</Text>
-            </View>
+            <LinearGradient
+                colors={['#000000', '#0f1828']}
+                start={{ x: 1, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                className="flex-1 justify-center items-center"
+            >
+                <View>
+                    <Text className='text-white text-2xl'>Cargando libro...</Text>
+                </View>
+            </LinearGradient>
         );
     }
 
     return (
-        <View className="flex-1 justify-center items-center bg-white">
-            <View className='bg-red-300'>
-                <Text className="text-2xl font-bold">{libro.titulo}</Text>
-            </View>
-            <View className='bg-green-200'>
-                <Text className="text-lg">Páginas en la que estoy: {paginasLeidas}</Text>
-                <TouchableOpacity
-                    onPress={disminuirPagina}
+        <LinearGradient
+            colors={['#000000', '#0f1828']}
+            start={{ x: 1, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            className="flex-1 justify-center items-center"
+        >
+            <View className="flex-1 justify-center items-center">
+
+                <View className=''>
+                    <Text className="text-4xl font-extralight text-white">{libro.titulo}</Text>
+                </View>
+
+                <View className='mt-3 mb-3 p-3 bg-[#202938] rounded-2xl'>
+                    <Text className="text-lg text-white">Páginas en la que estoy</Text>
+
+                    <View className='flex-row justify-between'>
+                        <View>
+                            <TouchableOpacity
+                                onPress={disminuirPagina}
+                            >
+                                <Text className='text-white text-4xl'>{'<'}</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        <View>
+                            <Text className='text-white text-3xl'>
+                                {paginasLeidas}
+                            </Text>
+                        </View>
+
+                        <View>
+                            <TouchableOpacity
+                                onPress={aumentarPagina}
+                            >
+                                <Text className='text-white text-4xl'>{'>'}</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+
+                <View className=''>
+                    <Text className='text-white text-2xl'>Dias de lectura</Text>
+                </View>
+
+                <View className="m-4 rounded-2xl overflow-hidden border border border-gray-200/25">
+                    <Calendar
+                        markedDates={fechasMarcadas}
+                        theme={{
+                            backgroundColor: '#101622',
+                            calendarBackground: '#101622',
+                            textSectionTitleColor: '#ffffffaa',
+                            selectedDayBackgroundColor: '#00B0FF',
+                            selectedDayTextColor: '#ffffff',
+                            todayTextColor: '#FF5722',
+                            dayTextColor: '#ffffff',
+                            textDisabledColor: '#444c5c',
+                            monthTextColor: '#ffffff',
+                            arrowColor: '#ffffff',
+                            textDayFontFamily: 'System',
+                            textMonthFontFamily: 'System',
+                            textDayHeaderFontFamily: 'System',
+                            textDayFontSize: 16,
+                            textMonthFontSize: 20,
+                            textDayHeaderFontSize: 14,
+                        }}
+                        style={{
+                            borderRadius: 16,
+                            padding: 10,
+                        }}
+                        headerStyle={{
+                            backgroundColor: '#19253b',
+                            borderBottomWidth: 1,
+                            borderBottomColor: '#303b50',
+                        }}
+                    />
+                </View>
+
+                <CambiarHora onHoraSeleccionada={(h, m) => {
+                    setHora(h);
+                    setMinutos(m);
+                }} />
+
+                <TouchableOpacity className='bg-orange-500'
+                    onPress={guardarCambios}
                 >
-                    <Text>{'<'}</Text>
+                    <Text>Guardar Cambios</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity
-                    onPress={aumentarPagina}
-                >
-                    <Text>{'>'}</Text>
-                </TouchableOpacity>
             </View>
-            <View className='bg-blue-200'>
-                <Text>Dias de lectura</Text>
-                <Calendar
-                    markedDates={fechasMarcadas}
-                    theme={{
-                        selectedDayBackgroundColor: '#00B0FF',
-                        todayTextColor: '#FF5722',
-                    }}
-                />
-            </View>
-
-            <View>
-                <Text>Recordatorio Diario</Text>
-            </View>
-
-            <CambiarHora onHoraSeleccionada={(h, m) => {
-                setHora(h);
-                setMinutos(m);
-            }} />
-
-            <TouchableOpacity className='bg-orange-500'
-                onPress={guardarCambios}
-            >
-                <Text>Guardar Cambios</Text>
-            </TouchableOpacity>
-
-            {/* <Text className="text-lg">Páginas leídas: {libro.paginasLeidas}</Text> */}
-        </View>
+        </LinearGradient>
     );
 };
 export default DetalleLibro;
