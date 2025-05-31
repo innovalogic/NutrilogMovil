@@ -1,10 +1,10 @@
 import { useEffect, useState, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { auth, firestore } from '../../firebase';
-import { doc, getDocs, collection } from 'firebase/firestore';
+import { getDocs, collection } from 'firebase/firestore';
 import BarraProgreso from '../../Componentes/BarraProgreso';
 
 type RootStackParamList = {
@@ -43,15 +43,13 @@ const LecturaDiaria = () => {
         }, [])
     );
 
-
     return (
         <LinearGradient
-            colors={['#0f1829', '#305bab']}
-            start={{ x: 0.5, y: 0 }}
-            end={{ x: 0.5, y: 1 }}
+            colors={['#000000', '#0f1828']}
+            start={{ x: 1, y: 0 }}
+            end={{ x: 1, y: 1 }}
             className="flex-1 justify-center items-center"
         >
-            {/* <View className="flex-1 bg-white"> */}
             <View className="mt-16 items-center">
                 <Text className="text-4xl text-white">Mis Libros de Lectura Diaria</Text>
             </View>
@@ -62,26 +60,42 @@ const LecturaDiaria = () => {
             >
                 {libros.map((libro) => (
                     <TouchableOpacity
-                    key={libro.id}
-                    className="mb-4 p-4 bg-white rounded-xl shadow-md"
-                    onPress={() => navigation.navigate('DetalleLibro', { libroId: libro.id })}
+                        key={libro.id}
+                        className="mb-4 p-4 bg-[#202938] rounded-3xl border border-gray-500/25"
+                        onPress={() => navigation.navigate('DetalleLibro', { libroId: libro.id })}
                     >
-                            <Text className="text-lg text-black">{libro.titulo}</Text>
+                        <View className="flex-row justify-between items-center">
                             <View>
-                                <Text className="text-sm text-black">Páginas: {libro.paginas}</Text>
+                                <Text className="text-2xl text-white font-normal">{libro.titulo}</Text>
+                                <Text className="text-base text-white font-light">Páginas: {libro.paginas}</Text>
+                                <Text className="text-base text-white font-light">Páginas Leidas: {libro.paginasLeidas}</Text>
                             </View>
-                            <Text className="text-sm text-black">Páginas Leidas: {libro.paginasLeidas}</Text>
-                            <BarraProgreso paginasTotales={libro.paginas} paginasLeidas={libro.paginasLeidas} />
+
+                            <Image
+                                source={require('../../assets/iconoLibro.png')}
+                                className="w-16 h-16"
+                            />
+                        </View>
+                        <BarraProgreso paginasTotales={libro.paginas} paginasLeidas={libro.paginasLeidas} />
                     </TouchableOpacity>
                 ))}
             </ScrollView>
-            {/* <View className="items-center p-4 bg-white"> */}
-            <TouchableOpacity
-                onPress={() => navigation.navigate('RegistroLibro')}
-                className="bg-black px-6 py-3 rounded-full"
-            >
-                <Text className="text-white">Agregar Nuevo Libro</Text>
-            </TouchableOpacity>
+            <View className='mt-2 mb-2'>
+                <TouchableOpacity
+                    onPress={() => navigation.navigate('RegistroLibro')}
+                    className="bg-sky-300/75 px-6 py-3 rounded-full items-center"
+                >
+                    <View className='flex-row justify-between items-center'>
+                        <View>
+                            <Text className="text-white text-2xl">+</Text>
+                        </View>
+
+                        <View>
+                            <Text className="text-white text-base"> Agregar Nuevo Libro</Text>
+                        </View>
+                    </View>
+                </TouchableOpacity>
+            </View>
         </LinearGradient>
     );
 };
