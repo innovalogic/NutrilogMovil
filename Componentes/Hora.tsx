@@ -35,23 +35,31 @@ const CambiarHora = ({ onHoraSeleccionada }: CambiarHoraProps) => {
 
     return (
         <View>
-            <Text>
-                Hora seleccionada:
-            </Text>
-
-            <Text>
-                {hora.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
-            </Text>
-
-            <TouchableOpacity
-                onPress={
-                    () => setMostrarPicker(true)
-                }
-            >
-                <Text>
-                    Cambiar hora
+            <View className='items-center'>
+                <Text className='text-white text-lg'>
+                    Notificacion diaria:
                 </Text>
-            </TouchableOpacity>
+            </View>
+
+            <View className='items-center bg-black rounded-2xl mx-16 mb-4'>
+                <Text className='text-white text-2xl'>
+                    {hora.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
+                </Text>
+            </View>
+
+            {/* <View className='items-center border border-white rounded-2xl'> */}
+                <TouchableOpacity
+                    onPress={
+                        () => setMostrarPicker(true)
+                    }
+                className='items-center rounded-2xl mx-16 mb-4 border border-sky-300/25'
+                // style={{ elevation: 10 }}
+                >
+                    <Text className='text-white text-lg'>
+                        Cambiar hora
+                    </Text>
+                </TouchableOpacity>
+            {/* </View> */}
 
             {mostrarPicker && (
                 <DateTimePicker
