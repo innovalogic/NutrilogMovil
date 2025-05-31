@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Text, TouchableOpacity, View, Image, Animated, SafeAreaView, Platform, StatusBar, ScrollView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { Text, TouchableOpacity, View, Image, Animated, SafeAreaView, Platform, StatusBar, ScrollView, Alert } from 'react-native';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
 import { Picker } from '@react-native-picker/picker';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Accelerometer } from 'expo-sensors';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { auth, firestore } from '../../firebase';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { useStepCounter } from 'useStepCounter'; 
 
 type RootStackParamList = {
   RegistroEjercicios: undefined;
@@ -15,94 +15,55 @@ type RootStackParamList = {
   CardioCorrer: undefined;
 };
 
-// Función para guardar pasos en Firebase
-const guardarPasosDiarios = async (pasosHoy: number) => {
-  const user = auth.currentUser;
-  if (!user) {
-    console.log('Usuario no autenticado');
-    return;
-  }
-
-  try {
-    const hoy = new Date();
-    const fechaId = hoy.toISOString().split('T')[0];
-    const pasosRef = doc(
-      firestore,
-      'users',
-      user.uid,
-      'pasosDiarios',
-      fechaId
-    );
-
-    const docSnap = await getDoc(pasosRef);
-    
-    if (docSnap.exists()) {
-      const pasosActuales = docSnap.data().totalPasos || 0;
-      await updateDoc(pasosRef, {
-        totalPasos: pasosActuales + pasosHoy,
-        ultimaActualizacion: new Date().toISOString()
-      });
-    } else {
-      await setDoc(pasosRef, {
-        totalPasos: pasosHoy,
-        fecha: fechaId,
-        fechaCompleta: new Date().toISOString(),
-        creadoEl: new Date().toISOString(),
-        ultimaActualizacion: new Date().toISOString()
-      });
-    }
-    
-    console.log('Pasos guardados correctamente');
-    return true;
-  } catch (error) {
-    console.error('Error guardando pasos:', error);
-    return false;
-  }
-};
-
 const Cardiocaminar = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const isFocused = useIsFocused();
-  const [pasosMeta, setPasosMeta] = useState(10000);
-  const [stepCount, setStepCount] = useState(0);
-  const [progress] = useState(new Animated.Value(0));
-  const [subscription, setSubscription] = useState<any>(null);
-  const [isActive, setIsActive] = useState(false);
-  const [time, setTime] = useState(0);
-  const [guardadoHoy, setGuardadoHoy] = useState(false);
-  const lastMagnitudeRef = useRef(0);
-  const lastStepTimeRef = useRef(Date.now());
   
-  // Longitud promedio de zancada en metros
-  const strideLength = 0.762;
-  const stepsPerKm = 1000 / strideLength;
+  // Usar el hook personalizado
+  const { steps, isActive, dailyStats, startCounting, stopCounting } = useStepCounter();
+  
+  const [pasosMeta, setPasosMeta] = useState(10000);
+  const [progress] = useState(new Animated.Value(0));
+  const [guardadoHoy, setGuardadoHoy] = useState(false);
+  const [time, setTime] = useState(0);
+
+  // Iniciar contador automáticamente cuando entra a la pantalla
+  useEffect(() => {
+    if (isFocused && !isActive) {
+      const iniciarContador = async () => {
+        try {
+          await startCounting();
+          Alert.alert(
+            '🚶‍♂️ Contador Iniciado',
+            'El contador de pasos está activo y funcionará en segundo plano',
+            [{ text: 'OK' }]
+          );
+        } catch (error) {
+          Alert.alert(
+            '❌ Error',
+            'No se pudo iniciar el contador de pasos. Verifica los permisos.',
+            [{ text: 'OK' }]
+          );
+        }
+      };
+      iniciarContador();
+    }
+  }, [isFocused, startCounting, isActive]);
 
   // Actualizar animación de progreso
   useEffect(() => {
-    const porcentaje = Math.min(stepCount / pasosMeta, 1);
+    const porcentaje = Math.min(steps / pasosMeta, 1);
     Animated.timing(progress, {
       toValue: porcentaje,
       duration: 1000,
       useNativeDriver: false,
     }).start();
-  }, [stepCount, pasosMeta]);
+  }, [steps, pasosMeta]);
 
-  // Cronómetro
+  // Cronómetro basado en estadísticas diarias
   useEffect(() => {
-    let interval: NodeJS.Timeout | null = null;
-    
-    if (isActive) {
-      interval = setInterval(() => {
-        setTime((prevTime) => prevTime + 1);
-      }, 1000);
-    } else if (!isActive && interval) {
-      clearInterval(interval);
-    }
-    
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [isActive]);
+    setTime(dailyStats.activeTime);
+  }, [dailyStats.activeTime]);
 
   // Verificar si ya se guardaron pasos hoy
   useEffect(() => {
@@ -111,91 +72,82 @@ const Cardiocaminar = () => {
       const guardado = await AsyncStorage.getItem(`pasosGuardados_${hoy}`);
       setGuardadoHoy(guardado === 'true');
     };
-    
     verificarGuardadoHoy();
   }, []);
 
-  // Cargar estado previo al entrar
-  useEffect(() => {
-    const cargarEstado = async () => {
-      const savedSteps = await AsyncStorage.getItem('currentSteps');
-      const savedTime = await AsyncStorage.getItem('currentTime');
-      
-      if (savedSteps) setStepCount(parseInt(savedSteps, 10));
-      if (savedTime) setTime(parseInt(savedTime, 10));
-      
-      // Iniciar automáticamente el conteo
-      setIsActive(true);
-      subscribe();
-    };
-    
-    if (isFocused) {
-      cargarEstado();
-    } else {
-      // Guardar estado al salir
-      AsyncStorage.setItem('currentSteps', stepCount.toString());
-      AsyncStorage.setItem('currentTime', time.toString());
-      unsubscribe();
+  // Función para guardar pasos en Firebase (actualizada)
+  const guardarPasosDiarios = async (pasosHoy: number) => {
+    const user = auth.currentUser;
+    if (!user) {
+      console.log('Usuario no autenticado');
+      return false;
     }
-    
-    return () => {
-      unsubscribe();
-    };
-  }, [isFocused]);
 
-  // Suscripción al acelerómetro
-  const subscribe = () => {
-    Accelerometer.setUpdateInterval(100);
-    const sub = Accelerometer.addListener(accel => {
-      const { x, y, z } = accel;
-      const magnitude = Math.sqrt(x * x + y * y + z * z);
-      const delta = magnitude - lastMagnitudeRef.current;
-      const now = Date.now();
+    try {
+      const hoy = new Date();
+      const fechaId = hoy.toISOString().split('T')[0];
+      const pasosRef = doc(firestore, 'users', user.uid, 'pasosDiarios', fechaId);
 
-      if (delta > 0.4 && now - lastStepTimeRef.current > 250) {
-        setStepCount(prev => prev + 1);
-        lastStepTimeRef.current = now;
+      const docSnap = await getDoc(pasosRef);
+      
+      if (docSnap.exists()) {
+        await updateDoc(pasosRef, {
+          totalPasos: pasosHoy,
+          distancia: dailyStats.distance,
+          calorias: dailyStats.calories,
+          tiempoActivo: dailyStats.activeTime,
+          ultimaActualizacion: new Date().toISOString()
+        });
+      } else {
+        await setDoc(pasosRef, {
+          totalPasos: pasosHoy,
+          distancia: dailyStats.distance,
+          calorias: dailyStats.calories,
+          tiempoActivo: dailyStats.activeTime,
+          fecha: fechaId,
+          fechaCompleta: new Date().toISOString(),
+          creadoEl: new Date().toISOString(),
+          ultimaActualizacion: new Date().toISOString()
+        });
       }
-      lastMagnitudeRef.current = magnitude;
-    });
-    setSubscription(sub);
-  };
-
-  const unsubscribe = () => {
-    if (subscription) {
-      subscription.remove();
-      setSubscription(null);
+      
+      console.log('Pasos guardados correctamente');
+      return true;
+    } catch (error) {
+      console.error('Error guardando pasos:', error);
+      return false;
     }
   };
 
   // Manejar guardado y salida
   const handleGuardarYVolver = async () => {
-    if (guardadoHoy) return;
+    if (guardadoHoy) {
+      navigation.goBack();
+      return;
+    }
     
     const hoy = new Date().toISOString().split('T')[0];
-    const success = await guardarPasosDiarios(stepCount);
+    const success = await guardarPasosDiarios(steps);
     
     if (success) {
-      // Marcar como guardado hoy
       await AsyncStorage.setItem(`pasosGuardados_${hoy}`, 'true');
       setGuardadoHoy(true);
       
-      // Reiniciar estado local
-      setStepCount(0);
-      setTime(0);
-      await AsyncStorage.removeItem('currentSteps');
-      await AsyncStorage.removeItem('currentTime');
+      Alert.alert(
+        '✅ Guardado',
+        `Se han guardado ${steps} pasos del día de hoy. El contador seguirá activo en segundo plano.`,
+        [
+          {
+            text: 'OK',
+            onPress: () => navigation.goBack()
+          }
+        ]
+      );
+    } else {
+      Alert.alert('❌ Error', 'No se pudieron guardar los pasos. Intenta de nuevo.');
     }
-    
-    navigation.goBack();
   };
 
-  // Calcular distancia
-  const distance = stepCount / stepsPerKm;
-  
-  // Calcular velocidad
-  const speed = time > 0 ? (distance / (time / 3600)) : 0;
-  
   // Formatear tiempo
   const formatTime = (totalSeconds: number) => {
     const hours = Math.floor(totalSeconds / 3600);
@@ -221,6 +173,11 @@ const Cardiocaminar = () => {
         <View className="flex-1 justify-center items-center bg-black pb-10">
           <View className="mt-10">
             <Text className="text-white text-3xl font-mono mb-5">Caminar</Text>
+            {isActive && (
+              <View className="bg-green-600 px-3 py-1 rounded-full">
+                <Text className="text-white text-sm font-bold">🟢 Activo en segundo plano</Text>
+              </View>
+            )}
           </View>
 
           <View>
@@ -236,12 +193,14 @@ const Cardiocaminar = () => {
             <View className="flex-row flex-wrap justify-between w-full">
               <View className="bg-[#202938] w-[48%] h-36 mb-4 rounded-xl justify-center items-center">
                 <Text className="text-xl font-bold text-white">Velocidad</Text>
-                <Text className="text-3xl font-bold text-white">{speed.toFixed(2)} km/h</Text>
+                <Text className="text-3xl font-bold text-white">
+                  {time > 0 ? (dailyStats.distance / (time / 3600)).toFixed(2) : '0.00'} km/h
+                </Text>
               </View>
 
               <View className="bg-[#202938] w-[48%] h-36 mb-4 rounded-xl justify-center items-center">
                 <Text className="text-xl font-bold text-white">Distancia</Text>
-                <Text className="text-3xl font-bold text-white">{distance.toFixed(2)} km</Text>
+                <Text className="text-3xl font-bold text-white">{dailyStats.distance.toFixed(2)} km</Text>
               </View>
 
               <View className="bg-[#202938] w-[48%] h-36 mb-4 rounded-xl justify-center items-center">
@@ -251,7 +210,13 @@ const Cardiocaminar = () => {
 
               <View className="bg-[#202938] w-[48%] h-36 mb-4 rounded-xl justify-center items-center">
                 <Text className="text-xl font-bold text-white">Pasos</Text>
-                <Text className="text-3xl font-bold text-white">{stepCount}</Text>
+                <Text className="text-3xl font-bold text-white">{steps}</Text>
+              </View>
+
+              {/* Nueva tarjeta de calorías */}
+              <View className="bg-[#202938] w-[48%] h-36 mb-4 rounded-xl justify-center items-center">
+                <Text className="text-xl font-bold text-white">Calorías</Text>
+                <Text className="text-3xl font-bold text-white">{dailyStats.calories}</Text>
               </View>
             </View>
 
@@ -260,10 +225,7 @@ const Cardiocaminar = () => {
               <Picker
                 selectedValue={pasosMeta}
                 style={{ height: 50, width: '100%', color: 'white' }}
-                onValueChange={(itemValue) => {
-                  setPasosMeta(itemValue);
-                  if (stepCount > itemValue) setStepCount(itemValue);
-                }}
+                onValueChange={(itemValue) => setPasosMeta(itemValue)}
               >
                 <Picker.Item label="5000 pasos" value={5000} />
                 <Picker.Item label="8000 pasos" value={8000} />
@@ -276,7 +238,7 @@ const Cardiocaminar = () => {
             <View className="w-full mb-6">
               <View className="flex-row justify-between mb-2">
                 <Text className="text-white font-bold">Progreso de pasos:</Text>
-                <Text className="text-white font-bold">{stepCount} / {pasosMeta}</Text>
+                <Text className="text-white font-bold">{steps} / {pasosMeta}</Text>
               </View>
 
               <View className="h-4 bg-gray-700 rounded-full overflow-hidden">
@@ -292,14 +254,13 @@ const Cardiocaminar = () => {
               </View>
 
               <Text className="text-white text-right mt-1">
-                {Math.round((stepCount / pasosMeta) * 100)}% completado
+                {Math.round((steps / pasosMeta) * 100)}% completado
               </Text>
             </View>
 
             <TouchableOpacity
               className={`py-3 px-6 rounded-full w-full ${guardadoHoy ? 'bg-gray-600' : 'bg-[#2563ea]'}`}
               onPress={handleGuardarYVolver}
-              disabled={guardadoHoy}
             >
               <Text className="text-white font-bold text-center">
                 {guardadoHoy ? 'Guardado hoy ✓' : 'Guardar y Volver'}
@@ -308,7 +269,7 @@ const Cardiocaminar = () => {
             
             {guardadoHoy && (
               <Text className="text-green-400 mt-2 text-center">
-                Ya has guardado tus pasos hoy. Puedes continuar caminando, pero no se guardarán nuevamente hasta mañana.
+                Ya has guardado tus pasos hoy. El contador sigue activo en segundo plano.
               </Text>
             )}
           </View>
