@@ -69,7 +69,7 @@ export default function App() {
       <Stack.Navigator
         initialRouteName="Inicio"
         screenOptions={{
-          headerShown: false, // Desactiva el encabezado en todas las pantallas
+          headerShown: false,
         }}
       >
         <Stack.Screen name="Inicio" component={InicioScreen} options={{ headerShown: false }} />
