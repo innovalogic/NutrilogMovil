@@ -20,7 +20,7 @@ const BarraProgreso = ({ paginasTotales, paginasLeidas }: BarraProgresoProps) =>
             <View style={{
                 height: '100%',
                 width: `${progreso * 100}%`,
-                backgroundColor: 'limegreen',
+                backgroundColor: '#87CEEB',
             }}/>
         </View>
     );
