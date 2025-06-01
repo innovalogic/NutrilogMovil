@@ -7,12 +7,24 @@ import * as Notifications from 'expo-notifications';
 
 type CambiarHoraProps = {
     onHoraSeleccionada: (hora: number, minutos: number) => void;
+    horaInicial?: number,
+    minutosIniciales?: number,
+    tituloLibro?: string,
+    paginaLibro?: number,
 };
 
-const CambiarHora = ({ onHoraSeleccionada }: CambiarHoraProps) => {
-    const [hora, setHora] = useState(new Date())
-    const [mostrarPicker, setMostrarPicker] = useState(false);
+const CambiarHora = ({ onHoraSeleccionada, horaInicial, minutosIniciales, tituloLibro, paginaLibro }: CambiarHoraProps) => {
+    const [hora, setHora] = useState<Date>(() => {
+        if (horaInicial !== undefined && minutosIniciales !== undefined) {
+            const date = new Date();
+            date.setHours(horaInicial);
+            date.setMinutes(minutosIniciales);
+            return date;
+        }
+        return new Date();
+    });
 
+    const [mostrarPicker, setMostrarPicker] = useState(false);
     useEffect(() => {
         const solicitarPermisos = async () => {
             const { status } = await Notifications.requestPermissionsAsync();
@@ -22,14 +34,46 @@ const CambiarHora = ({ onHoraSeleccionada }: CambiarHoraProps) => {
         };
 
         solicitarPermisos();
+
+        if (horaInicial !== undefined && minutosIniciales !== undefined) {
+            onHoraSeleccionada(horaInicial, minutosIniciales);
+        }
     }, []);
+
+    const programarNotificacion = async (hora: number, minutos: number) => {
+
+        const ahora = new Date();
+        const fechaNotificacion = new Date();
+        fechaNotificacion.setHours(hora);
+        fechaNotificacion.setMinutes(minutos);
+        fechaNotificacion.setSeconds(0);
+
+        if (fechaNotificacion <= ahora) {
+            fechaNotificacion.setDate(fechaNotificacion.getDate() + 1);
+        }
+
+        await Notifications.scheduleNotificationAsync({
+            content: {
+                title: `¡Hora de leer ${tituloLibro}!`,
+                body: `Te quedaste en la pagina ${paginaLibro}`,
+                sound: true,
+            },
+            trigger: {
+                hour: fechaNotificacion.getHours(),
+                minute: fechaNotificacion.getMinutes(),
+                repeats: true,
+            },
+        });
+    };
 
     const cambiarHoraPicker = (event: any, selectedDate?: Date) => {
         setMostrarPicker(false);
         if (selectedDate) {
             setHora(selectedDate);
-            onHoraSeleccionada(selectedDate.getHours(), selectedDate.getMinutes());
-            // programarNotificacion(selectedDate);
+            const h = selectedDate.getHours();
+            const m = selectedDate.getMinutes();
+            onHoraSeleccionada(h, m);
+            programarNotificacion(h, m);
         }
     };
 
@@ -47,19 +91,17 @@ const CambiarHora = ({ onHoraSeleccionada }: CambiarHoraProps) => {
                 </Text>
             </View>
 
-            {/* <View className='items-center border border-white rounded-2xl'> */}
-                <TouchableOpacity
-                    onPress={
-                        () => setMostrarPicker(true)
-                    }
+            <TouchableOpacity
+                onPress={
+                    () => setMostrarPicker(true)
+                }
                 className='items-center rounded-2xl mx-16 mb-4 border border-sky-300/25'
-                // style={{ elevation: 10 }}
-                >
-                    <Text className='text-white text-lg'>
-                        Cambiar hora
-                    </Text>
-                </TouchableOpacity>
-            {/* </View> */}
+
+            >
+                <Text className='text-white text-lg'>
+                    Cambiar hora
+                </Text>
+            </TouchableOpacity>
 
             {mostrarPicker && (
                 <DateTimePicker
