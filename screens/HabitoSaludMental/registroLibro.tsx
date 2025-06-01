@@ -77,21 +77,21 @@ const RegistroLibro = () => {
                     console.log('hora pasada')
                 }
 
-                await Notifications.cancelAllScheduledNotificationsAsync();
+                // await Notifications.cancelAllScheduledNotificationsAsync();
 
-                await Notifications.scheduleNotificationAsync({
-                    content: {
-                        title: '¡Hora de leer!',
-                        body: 'No olvides leer tu libro hoy.',
-                        sound: true,
-                    },
-                    trigger: {
-                        channelId: 'default',
-                        hour: hora,
-                        minute: minutos,
-                        repeats: true,
-                    },
-                });
+                // await Notifications.scheduleNotificationAsync({
+                //     content: {
+                //         title: '¡Hora de leer!',
+                //         body: 'No olvides leer tu libro hoy.',
+                //         sound: true,
+                //     },
+                //     trigger: {
+                //         channelId: 'default',
+                //         hour: hora,
+                //         minute: minutos,
+                //         repeats: true,
+                //     },
+                // });
                 menuRegistroLibro()
             }
         } catch (error) {
@@ -155,7 +155,10 @@ const RegistroLibro = () => {
                             />
                         </View>
 
-                        <CambiarHora onHoraSeleccionada={(h, m) => {
+                        <CambiarHora
+                            tituloLibro={titulo}
+                            paginaLibro={0}
+                            onHoraSeleccionada={(h, m,) => {
                             setHora(h);
                             setMinutos(m);
                         }}
