@@ -18,7 +18,6 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 import ReminderButton from 'Componentes/ReminderButton';
 
-
 // Define the navigation stack's param list
 type RootStackParamList = {
   BajarDePeso: undefined;
@@ -281,9 +280,9 @@ export default function BajarDePeso() {
               </Text>
               
               {[
-                { name: 'Desayuno', icon: 'breakfast', color: 'bg-green-500', time: userData?.breakfastReminder },
-                { name: 'Almuerzo', icon: 'lunch', color: 'bg-yellow-500', time: userData?.lunchReminder },
-                { name: 'Cena', icon: 'dinner', color: 'bg-red-500', time: userData?.dinnerReminder }
+                { name: 'Desayuno', icon: 'breakfast', color: 'bg-green-500', time: userData?.breakfastReminder, fieldName: 'breakfastReminder' },
+                { name: 'Almuerzo', icon: 'lunch', color: 'bg-yellow-500', time: userData?.lunchReminder, fieldName: 'lunchReminder' },
+                { name: 'Cena', icon: 'dinner', color: 'bg-red-500', time: userData?.dinnerReminder, fieldName: 'dinnerReminder' }
               ].map((meal, index) => (
                 <View key={meal.name} className="mb-4">
                   <View className="flex-row items-center space-x-3">
@@ -306,7 +305,7 @@ export default function BajarDePeso() {
                     
                     <ReminderButton 
                       reminderTime={meal.time} 
-                      fieldName={`${meal.name.toLowerCase()}Reminder`} 
+                      fieldName={meal.fieldName} 
                       label={`Recordatorio ${meal.name}`} 
                     />
                   </View>
