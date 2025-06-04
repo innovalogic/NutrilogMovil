@@ -1,12 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useStepCounter } from 'StepCounterService';
+import React, { useState, useEffect, useRef } from 'react';
 import { Text, TouchableOpacity, View, Image, Animated, SafeAreaView, Platform, StatusBar, ScrollView, Alert } from 'react-native';
-import { useNavigation, useIsFocused } from '@react-navigation/native';
+import { useNavigation, useIsFocused, useFocusEffect } from '@react-navigation/native';
 import { Picker } from '@react-native-picker/picker';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { auth, firestore } from '../../firebase';
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
-import { useStepCounter } from 'useStepCounter'; 
 
 type RootStackParamList = {
   RegistroEjercicios: undefined;
@@ -19,137 +17,230 @@ const Cardiocaminar = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const isFocused = useIsFocused();
   
-  // Usar el hook personalizado
-  const { steps, isActive, dailyStats, startCounting, stopCounting } = useStepCounter();
+  // Usar el hook personalizado del contador de pasos
+  const { stepCount, isActive, startCounting, stopCounting, syncSteps, getStatistics } = useStepCounter();
   
+  // Estados locales
   const [pasosMeta, setPasosMeta] = useState(10000);
   const [progress] = useState(new Animated.Value(0));
-  const [guardadoHoy, setGuardadoHoy] = useState(false);
   const [time, setTime] = useState(0);
+  const [isTimerActive, setIsTimerActive] = useState(false);
+  const [sessionStartSteps, setSessionStartSteps] = useState(0);
+  const [statistics, setStatistics] = useState(null);
+  const [lastSyncTime, setLastSyncTime] = useState(null);
+  
+  // Referencias
+  const timerRef = useRef(null);
+  
+  // Configuraciones
+  const strideLength = 0.762; // metros
+  const stepsPerKm = 1000 / strideLength;
 
-  // Iniciar contador automáticamente cuando entra a la pantalla
+  // Cargar configuraciones guardadas
   useEffect(() => {
-    if (isFocused && !isActive) {
-      const iniciarContador = async () => {
-        try {
-          await startCounting();
-          Alert.alert(
-            '🚶‍♂️ Contador Iniciado',
-            'El contador de pasos está activo y funcionará en segundo plano',
-            [{ text: 'OK' }]
-          );
-        } catch (error) {
-          Alert.alert(
-            '❌ Error',
-            'No se pudo iniciar el contador de pasos. Verifica los permisos.',
-            [{ text: 'OK' }]
-          );
+    const loadSettings = async () => {
+      try {
+        const savedMeta = await AsyncStorage.getItem('pasos_meta');
+        if (savedMeta) {
+          setPasosMeta(parseInt(savedMeta, 10));
+        }
+        
+        const savedTime = await AsyncStorage.getItem('session_time');
+        if (savedTime) {
+          setTime(parseInt(savedTime, 10));
+        }
+        
+        const startSteps = await AsyncStorage.getItem('session_start_steps');
+        if (startSteps) {
+          setSessionStartSteps(parseInt(startSteps, 10));
+        }
+        
+        // Cargar estadísticas
+        const stats = await getStatistics(7);
+        setStatistics(stats);
+        
+      } catch (error) {
+        console.error('Error cargando configuraciones:', error);
+      }
+    };
+    
+    loadSettings();
+  }, []);
+
+  // Manejar enfoque de pantalla
+  useFocusEffect(
+    React.useCallback(() => {
+      if (isFocused) {
+        // Iniciar conteo automáticamente al entrar
+        handleStartSession();
+      } else {
+        // Guardar estado al salir
+        saveSessionState();
+      }
+      
+      return () => {
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
         }
       };
-      iniciarContador();
-    }
-  }, [isFocused, startCounting, isActive]);
+    }, [isFocused])
+  );
 
   // Actualizar animación de progreso
   useEffect(() => {
-    const porcentaje = Math.min(steps / pasosMeta, 1);
+    const sessionSteps = stepCount - sessionStartSteps;
+    const porcentaje = Math.min(sessionSteps / pasosMeta, 1);
+    
     Animated.timing(progress, {
       toValue: porcentaje,
-      duration: 1000,
+      duration: 500,
       useNativeDriver: false,
     }).start();
-  }, [steps, pasosMeta]);
+  }, [stepCount, pasosMeta, sessionStartSteps]);
 
-  // Cronómetro basado en estadísticas diarias
+  // Cronómetro de sesión
   useEffect(() => {
-    setTime(dailyStats.activeTime);
-  }, [dailyStats.activeTime]);
-
-  // Verificar si ya se guardaron pasos hoy
-  useEffect(() => {
-    const verificarGuardadoHoy = async () => {
-      const hoy = new Date().toISOString().split('T')[0];
-      const guardado = await AsyncStorage.getItem(`pasosGuardados_${hoy}`);
-      setGuardadoHoy(guardado === 'true');
-    };
-    verificarGuardadoHoy();
-  }, []);
-
-  // Función para guardar pasos en Firebase (actualizada)
-  const guardarPasosDiarios = async (pasosHoy: number) => {
-    const user = auth.currentUser;
-    if (!user) {
-      console.log('Usuario no autenticado');
-      return false;
+    if (isTimerActive) {
+      timerRef.current = setInterval(() => {
+        setTime(prevTime => {
+          const newTime = prevTime + 1;
+          // Guardar cada minuto
+          if (newTime % 60 === 0) {
+            AsyncStorage.setItem('session_time', newTime.toString());
+          }
+          return newTime;
+        });
+      }, 1000);
+    } else {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
     }
+    
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, [isTimerActive]);
 
+  // Iniciar sesión de caminata
+  const handleStartSession = async () => {
     try {
-      const hoy = new Date();
-      const fechaId = hoy.toISOString().split('T')[0];
-      const pasosRef = doc(firestore, 'users', user.uid, 'pasosDiarios', fechaId);
-
-      const docSnap = await getDoc(pasosRef);
+      await startCounting();
+      setIsTimerActive(true);
       
-      if (docSnap.exists()) {
-        await updateDoc(pasosRef, {
-          totalPasos: pasosHoy,
-          distancia: dailyStats.distance,
-          calorias: dailyStats.calories,
-          tiempoActivo: dailyStats.activeTime,
-          ultimaActualizacion: new Date().toISOString()
-        });
-      } else {
-        await setDoc(pasosRef, {
-          totalPasos: pasosHoy,
-          distancia: dailyStats.distance,
-          calorias: dailyStats.calories,
-          tiempoActivo: dailyStats.activeTime,
-          fecha: fechaId,
-          fechaCompleta: new Date().toISOString(),
-          creadoEl: new Date().toISOString(),
-          ultimaActualizacion: new Date().toISOString()
-        });
+      // Guardar pasos iniciales si es una nueva sesión
+      const savedStartSteps = await AsyncStorage.getItem('session_start_steps');
+      if (!savedStartSteps || savedStartSteps === '0') {
+        setSessionStartSteps(stepCount);
+        await AsyncStorage.setItem('session_start_steps', stepCount.toString());
       }
       
-      console.log('Pasos guardados correctamente');
-      return true;
     } catch (error) {
-      console.error('Error guardando pasos:', error);
-      return false;
+      console.error('Error iniciando sesión:', error);
+      Alert.alert('Error', 'No se pudo iniciar el contador de pasos');
     }
   };
 
-  // Manejar guardado y salida
-  const handleGuardarYVolver = async () => {
-    if (guardadoHoy) {
-      navigation.goBack();
-      return;
-    }
-    
-    const hoy = new Date().toISOString().split('T')[0];
-    const success = await guardarPasosDiarios(steps);
-    
-    if (success) {
-      await AsyncStorage.setItem(`pasosGuardados_${hoy}`, 'true');
-      setGuardadoHoy(true);
+  // Pausar/reanudar sesión
+  const handleToggleSession = () => {
+    setIsTimerActive(!isTimerActive);
+  };
+
+  // Finalizar sesión
+  const handleEndSession = async () => {
+    Alert.alert(
+      'Finalizar Sesión',
+      '¿Deseas finalizar la sesión de caminata?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { 
+          text: 'Finalizar', 
+          style: 'destructive',
+          onPress: async () => {
+            await finalizarSesion();
+          }
+        }
+      ]
+    );
+  };
+
+  // Finalizar sesión y guardar datos
+  const finalizarSesion = async () => {
+    try {
+      setIsTimerActive(false);
+      
+      // Sincronizar con Firebase
+      const syncSuccess = await syncSteps();
+      if (syncSuccess) {
+        setLastSyncTime(new Date().toLocaleTimeString());
+      }
+      
+      // Limpiar datos de sesión
+      await AsyncStorage.multiRemove([
+        'session_time',
+        'session_start_steps'
+      ]);
+      
+      // Resetear estados
+      setTime(0);
+      setSessionStartSteps(stepCount);
       
       Alert.alert(
-        '✅ Guardado',
-        `Se han guardado ${steps} pasos del día de hoy. El contador seguirá activo en segundo plano.`,
-        [
-          {
-            text: 'OK',
-            onPress: () => navigation.goBack()
-          }
-        ]
+        'Sesión Finalizada',
+        `Pasos registrados: ${stepCount - sessionStartSteps}\nTiempo: ${formatTime(time)}`,
+        [{ text: 'OK' }]
       );
-    } else {
-      Alert.alert('❌ Error', 'No se pudieron guardar los pasos. Intenta de nuevo.');
+      
+    } catch (error) {
+      console.error('Error finalizando sesión:', error);
+      Alert.alert('Error', 'Hubo un problema al finalizar la sesión');
     }
   };
 
+  // Guardar estado de sesión
+  const saveSessionState = async () => {
+    try {
+      await AsyncStorage.multiSet([
+        ['session_time', time.toString()],
+        ['session_start_steps', sessionStartSteps.toString()],
+        ['pasos_meta', pasosMeta.toString()]
+      ]);
+    } catch (error) {
+      console.error('Error guardando estado:', error);
+    }
+  };
+
+  // Sincronización manual
+  const handleManualSync = async () => {
+    try {
+      const success = await syncSteps();
+      if (success) {
+        setLastSyncTime(new Date().toLocaleTimeString());
+        Alert.alert('Éxito', 'Pasos sincronizados correctamente');
+      } else {
+        Alert.alert('Error', 'No se pudo sincronizar con Firebase');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Problema de conexión');
+    }
+  };
+
+  // Cambiar meta de pasos
+  const handleMetaChange = async (newMeta) => {
+    setPasosMeta(newMeta);
+    await AsyncStorage.setItem('pasos_meta', newMeta.toString());
+  };
+
+  // Calcular métricas
+  const sessionSteps = Math.max(0, stepCount - sessionStartSteps);
+  const distance = sessionSteps / stepsPerKm;
+  const speed = time > 0 ? (distance / (time / 3600)) : 0;
+  const calories = sessionSteps * 0.04; // Aproximado
+
   // Formatear tiempo
-  const formatTime = (totalSeconds: number) => {
+  const formatTime = (totalSeconds) => {
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
     const seconds = totalSeconds % 60;
@@ -171,74 +262,98 @@ const Cardiocaminar = () => {
     >
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
         <View className="flex-1 justify-center items-center bg-black pb-10">
-          <View className="mt-10">
-            <Text className="text-white text-3xl font-mono mb-5">Caminar</Text>
-            {isActive && (
-              <View className="bg-green-600 px-3 py-1 rounded-full">
-                <Text className="text-white text-sm font-bold">🟢 Activo en segundo plano</Text>
-              </View>
-            )}
+          {/* Header */}
+          <View className="mt-10 flex-row items-center justify-between w-full px-5">
+            <Text className="text-white text-3xl font-mono">Caminar</Text>
+            <View className="flex-row items-center">
+              {isActive && (
+                <View className="w-3 h-3 bg-green-500 rounded-full mr-2" />
+              )}
+              <Text className="text-white text-sm">
+                {isActive ? 'Activo' : 'Inactivo'}
+              </Text>
+            </View>
           </View>
 
-          <View>
+          {/* Imagen principal */}
+          <View className="my-5">
             <Image
               source={require('../../assets/cardioCaminar.png')}
               className="rounded-2xl w-[200] h-[200]"
             />
           </View>
 
-          <View className="flex-1 items-center justify-center mt-[-20] rounded-t-3xl px-5 w-full">
-            <Text className="text-white text-3xl font-mono mb-5">Resumen</Text>
+          {/* Métricas principales */}
+          <View className="flex-1 items-center justify-center rounded-t-3xl px-5 w-full">
+            <Text className="text-white text-3xl font-mono mb-5">Sesión Actual</Text>
 
-            <View className="flex-row flex-wrap justify-between w-full">
+            {/* Grid de métricas */}
+            <View className="flex-row flex-wrap justify-between w-full mb-6">
               <View className="bg-[#202938] w-[48%] h-36 mb-4 rounded-xl justify-center items-center">
-                <Text className="text-xl font-bold text-white">Velocidad</Text>
-                <Text className="text-3xl font-bold text-white">
-                  {time > 0 ? (dailyStats.distance / (time / 3600)).toFixed(2) : '0.00'} km/h
-                </Text>
+                <Text className="text-lg font-bold text-white">Velocidad</Text>
+                <Text className="text-2xl font-bold text-white">{speed.toFixed(2)}</Text>
+                <Text className="text-sm text-gray-300">km/h</Text>
               </View>
 
               <View className="bg-[#202938] w-[48%] h-36 mb-4 rounded-xl justify-center items-center">
-                <Text className="text-xl font-bold text-white">Distancia</Text>
-                <Text className="text-3xl font-bold text-white">{dailyStats.distance.toFixed(2)} km</Text>
+                <Text className="text-lg font-bold text-white">Distancia</Text>
+                <Text className="text-2xl font-bold text-white">{distance.toFixed(2)}</Text>
+                <Text className="text-sm text-gray-300">km</Text>
               </View>
 
               <View className="bg-[#202938] w-[48%] h-36 mb-4 rounded-xl justify-center items-center">
-                <Text className="text-xl font-bold text-white">Tiempo</Text>
-                <Text className="text-3xl font-bold text-white">{formatTime(time)}</Text>
+                <Text className="text-lg font-bold text-white">Tiempo</Text>
+                <Text className="text-2xl font-bold text-white">{formatTime(time)}</Text>
+                <Text className="text-sm text-gray-300">h:m:s</Text>
               </View>
 
               <View className="bg-[#202938] w-[48%] h-36 mb-4 rounded-xl justify-center items-center">
-                <Text className="text-xl font-bold text-white">Pasos</Text>
-                <Text className="text-3xl font-bold text-white">{steps}</Text>
-              </View>
-
-              {/* Nueva tarjeta de calorías */}
-              <View className="bg-[#202938] w-[48%] h-36 mb-4 rounded-xl justify-center items-center">
-                <Text className="text-xl font-bold text-white">Calorías</Text>
-                <Text className="text-3xl font-bold text-white">{dailyStats.calories}</Text>
+                <Text className="text-lg font-bold text-white">Pasos</Text>
+                <Text className="text-2xl font-bold text-white">{sessionSteps}</Text>
+                <Text className="text-sm text-gray-300">esta sesión</Text>
               </View>
             </View>
 
-            <Text className="text-white text-lg font-bold mb-2">Selecciona tu meta de pasos:</Text>
+            {/* Métricas adicionales */}
+            <View className="bg-[#202938] w-full rounded-xl p-4 mb-4">
+              <View className="flex-row justify-between items-center mb-2">
+                <Text className="text-white font-bold">Pasos totales hoy:</Text>
+                <Text className="text-white font-bold">{stepCount}</Text>
+              </View>
+              <View className="flex-row justify-between items-center mb-2">
+                <Text className="text-white font-bold">Calorías aprox:</Text>
+                <Text className="text-white font-bold">{calories.toFixed(0)} kcal</Text>
+              </View>
+              {lastSyncTime && (
+                <View className="flex-row justify-between items-center">
+                  <Text className="text-gray-300 text-sm">Última sincronización:</Text>
+                  <Text className="text-green-400 text-sm">{lastSyncTime}</Text>
+                </View>
+              )}
+            </View>
+
+            {/* Selector de meta */}
+            <Text className="text-white text-lg font-bold mb-2">Meta de pasos:</Text>
             <View className="w-full bg-[#202938] rounded-xl px-4 py-2 mb-4">
               <Picker
                 selectedValue={pasosMeta}
                 style={{ height: 50, width: '100%', color: 'white' }}
-                onValueChange={(itemValue) => setPasosMeta(itemValue)}
+                onValueChange={handleMetaChange}
               >
-                <Picker.Item label="5000 pasos" value={5000} />
-                <Picker.Item label="8000 pasos" value={8000} />
-                <Picker.Item label="10000 pasos" value={10000} />
-                <Picker.Item label="12000 pasos" value={12000} />
-                <Picker.Item label="15000 pasos" value={15000} />
+                <Picker.Item label="5,000 pasos" value={5000} />
+                <Picker.Item label="8,000 pasos" value={8000} />
+                <Picker.Item label="10,000 pasos" value={10000} />
+                <Picker.Item label="12,000 pasos" value={12000} />
+                <Picker.Item label="15,000 pasos" value={15000} />
+                <Picker.Item label="20,000 pasos" value={20000} />
               </Picker>
             </View>
 
+            {/* Barra de progreso */}
             <View className="w-full mb-6">
               <View className="flex-row justify-between mb-2">
-                <Text className="text-white font-bold">Progreso de pasos:</Text>
-                <Text className="text-white font-bold">{steps} / {pasosMeta}</Text>
+                <Text className="text-white font-bold">Progreso de sesión:</Text>
+                <Text className="text-white font-bold">{sessionSteps} / {pasosMeta}</Text>
               </View>
 
               <View className="h-4 bg-gray-700 rounded-full overflow-hidden">
@@ -254,24 +369,83 @@ const Cardiocaminar = () => {
               </View>
 
               <Text className="text-white text-right mt-1">
-                {Math.round((steps / pasosMeta) * 100)}% completado
+                {Math.round((sessionSteps / pasosMeta) * 100)}% completado
               </Text>
             </View>
 
-            <TouchableOpacity
-              className={`py-3 px-6 rounded-full w-full ${guardadoHoy ? 'bg-gray-600' : 'bg-[#2563ea]'}`}
-              onPress={handleGuardarYVolver}
-            >
-              <Text className="text-white font-bold text-center">
-                {guardadoHoy ? 'Guardado hoy ✓' : 'Guardar y Volver'}
-              </Text>
-            </TouchableOpacity>
-            
-            {guardadoHoy && (
-              <Text className="text-green-400 mt-2 text-center">
-                Ya has guardado tus pasos hoy. El contador sigue activo en segundo plano.
-              </Text>
+            {/* Botones de control */}
+            <View className="w-full space-y-3">
+              {/* Botón principal de control */}
+              <TouchableOpacity
+                className={`py-4 px-6 rounded-full w-full ${isTimerActive ? 'bg-yellow-600' : 'bg-green-600'}`}
+                onPress={handleToggleSession}
+              >
+                <Text className="text-white font-bold text-center text-lg">
+                  {isTimerActive ? '⏸️ Pausar Sesión' : '▶️ Continuar Sesión'}
+                </Text>
+              </TouchableOpacity>
+
+              {/* Botones secundarios */}
+              <View className="flex-row justify-between space-x-3">
+                <TouchableOpacity
+                  className="py-3 px-4 rounded-full flex-1 bg-[#2563ea]"
+                  onPress={handleManualSync}
+                >
+                  <Text className="text-white font-bold text-center">
+                    🔄 Sincronizar
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  className="py-3 px-4 rounded-full flex-1 bg-red-600"
+                  onPress={handleEndSession}
+                >
+                  <Text className="text-white font-bold text-center">
+                    ⏹️ Finalizar
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Botón volver */}
+              <TouchableOpacity
+                className="py-3 px-6 rounded-full w-full bg-gray-700"
+                onPress={() => {
+                  saveSessionState();
+                  navigation.goBack();
+                }}
+              >
+                <Text className="text-white font-bold text-center">
+                  ← Volver al Menú
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Estadísticas semanales */}
+            {statistics && (
+              <View className="w-full mt-6 bg-[#202938] rounded-xl p-4">
+                <Text className="text-white text-lg font-bold mb-3">Estadísticas (7 días)</Text>
+                <View className="flex-row justify-between mb-2">
+                  <Text className="text-gray-300">Promedio diario:</Text>
+                  <Text className="text-white font-bold">{statistics.averageDaily} pasos</Text>
+                </View>
+                <View className="flex-row justify-between mb-2">
+                  <Text className="text-gray-300">Mejor día:</Text>
+                  <Text className="text-white font-bold">{statistics.maxDaily} pasos</Text>
+                </View>
+                <View className="flex-row justify-between">
+                  <Text className="text-gray-300">Total semanal:</Text>
+                  <Text className="text-white font-bold">{statistics.totalSteps} pasos</Text>
+                </View>
+              </View>
             )}
+
+            {/* Información adicional */}
+            <View className="w-full mt-4 p-4 bg-gray-800 rounded-xl">
+              <Text className="text-gray-300 text-sm text-center">
+                💡 El contador funciona en segundo plano y sincroniza automáticamente con Firebase.
+                Los pasos se guardan localmente y se suben cuando hay conexión.
+              </Text>
+            </View>
           </View>
         </View>
       </ScrollView>

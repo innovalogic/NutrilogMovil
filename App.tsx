@@ -48,7 +48,6 @@ import SubirDePeso from 'screens/HabitoAlimentacion/SubirDePeso';
 import DesayunoSubirDePeso from 'screens/HabitoAlimentacion/DesayunoSubirDePeso';
 import AlmuerzoSubirDePeso from 'screens/HabitoAlimentacion/AlmuerzoSubirDePeso';
 import CenaSubirDePeso from 'screens/HabitoAlimentacion/CenaSubirDePeso';
-import useStepCounter from 'screens/HabitoEjercicioFisico/useStepCounter';
 import StepCounterService from 'screens/HabitoEjercicioFisico/StepCounterService';
 
 const Stack = createNativeStackNavigator();
@@ -110,7 +109,6 @@ export default function App() {
         <Stack.Screen name="CenaSubirDePeso" component={CenaSubirDePeso} />
         <Stack.Screen name="AudioInspira" component={AudioInspira} />
         <Stack.Screen name="Origami" component={Origami} />
-        <Stack.Screen name="useStepCounter" component={useStepCounter} />
         <Stack.Screen name="StepCounterService" component={StepCounterService} />
       </Stack.Navigator>
     </NavigationContainer>

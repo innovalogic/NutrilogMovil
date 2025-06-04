@@ -1,271 +1,437 @@
-import * as TaskManager from 'expo-task-manager';
-import * as BackgroundFetch from 'expo-background-fetch';
 import { Accelerometer } from 'expo-sensors';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Notifications from 'expo-notifications';
+import { auth, firestore } from '../../firebase';
+import { doc, getDoc, setDoc, updateDoc, onSnapshot } from 'firebase/firestore';
+import * as TaskManager from 'expo-task-manager';
+import * as BackgroundFetch from 'expo-background-fetch';
 
-const STEP_COUNTER_TASK = 'STEP_COUNTER_BACKGROUND';
-const STEP_UPDATE_INTERVAL = 100; // ms
-
-interface StepData {
-  steps: number;
-  lastUpdate: number;
-  isActive: boolean;
-  startTime: number;
-}
-
-// Configurar notificaciones
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: false,
-    shouldSetBadge: false,
-  }),
-});
+const STEP_COUNTER_TASK = 'step-counter-background';
+const STORAGE_KEYS = {
+  DAILY_STEPS: 'daily_steps_',
+  LAST_SYNC: 'last_sync_date',
+  STEP_BUFFER: 'step_buffer',
+  CALIBRATION: 'step_calibration'
+};
 
 class StepCounterService {
-  private static instance: StepCounterService;
-  private subscription: any = null;
-  private lastMagnitude = 0;
-  private lastStepTime = Date.now();
-  private stepThreshold = 0.4;
-  private minStepInterval = 250; // ms
+  constructor() {
+    this.isActive = false;
+    this.subscription = null;
+    this.stepBuffer = [];
+    this.lastMagnitude = 0;
+    this.lastStepTime = 0;
+    this.stepThreshold = 1.2; 
+    this.minStepInterval = 200; 
+    this.maxStepInterval = 2000; 
+    this.calibrationData = {
+      averageMagnitude: 0,
+      stepPattern: [],
+      sensitivity: 1.0
+    };
 
-  static getInstance(): StepCounterService {
-    if (!StepCounterService.instance) {
-      StepCounterService.instance = new StepCounterService();
-    }
-    return StepCounterService.instance;
+    this.accelerometerData = [];
+    this.windowSize = 50; 
+    this.peakThreshold = 0.5;
+    this.valleyThreshold = -0.5;
+    this.lastPeakTime = 0;
+    this.lastValleyTime = 0;
   }
 
-  // Inicializar el servicio de segundo plano
-  async initializeBackgroundService(): Promise<boolean> {
+  async initialize() {
     try {
-      // Registrar la tarea en segundo plano
-      await this.registerBackgroundTask();
-      
-      // Iniciar el servicio
-      await BackgroundFetch.registerTaskAsync(STEP_COUNTER_TASK, {
-        minimumInterval: 1000, // 1 segundo
-        stopOnTerminate: false,
-        startOnBoot: true,
-      });
-
-      console.log('✅ Servicio de pasos en segundo plano inicializado');
+      await this.loadCalibrationData();
+      await this.setupBackgroundTask();
+      await this.syncPendingSteps();
       return true;
     } catch (error) {
-      console.error('❌ Error iniciando servicio de segundo plano:', error);
+      console.error('Error inicializando StepCounterService:', error);
       return false;
     }
   }
 
-  // Registrar la tarea que se ejecutará en segundo plano
-  private async registerBackgroundTask() {
-    TaskManager.defineTask(STEP_COUNTER_TASK, async () => {
-      try {
-        const stepData = await this.getStepData();
-        if (stepData.isActive) {
-          // Mantener el contador activo por un tiempo limitado
-          await this.updateStepsInBackground();
+  async loadCalibrationData() {
+    try {
+      const calibrationStr = await AsyncStorage.getItem(STORAGE_KEYS.CALIBRATION);
+      if (calibrationStr) {
+        this.calibrationData = JSON.parse(calibrationStr);
+        this.stepThreshold = this.calibrationData.sensitivity || 1.2;
+      }
+    } catch (error) {
+      console.error('Error cargando calibración:', error);
+    }
+  }
+
+  async saveCalibrationData() {
+    try {
+      await AsyncStorage.setItem(
+        STORAGE_KEYS.CALIBRATION, 
+        JSON.stringify(this.calibrationData)
+      );
+    } catch (error) {
+      console.error('Error guardando calibración:', error);
+    }
+  }
+
+  detectStep(accelData) {
+    const { x, y, z } = accelData;
+
+    const magnitude = Math.sqrt(x * x + y * y + z * z) - 9.81; 
+    const timestamp = Date.now();
+
+    this.accelerometerData.push({ magnitude, timestamp });
+    if (this.accelerometerData.length > this.windowSize) {
+      this.accelerometerData.shift();
+    }
+    
+    if (this.accelerometerData.length < 10) return false;
+    
+    const smoothedMagnitude = this.applySmoothingFilter(magnitude);
+
+    const isPeak = this.detectPeak(smoothedMagnitude, timestamp);
+    const isValidStep = this.validateStep(isPeak, timestamp);
+
+    if (isValidStep) {
+      this.updateCalibration(smoothedMagnitude);
+    }
+    
+    return isValidStep;
+  }
+
+  applySmoothingFilter(currentMagnitude) {
+    const alpha = 0.1; 
+    this.lastMagnitude = alpha * currentMagnitude + (1 - alpha) * this.lastMagnitude;
+    return this.lastMagnitude;
+  }
+
+  detectPeak(magnitude, timestamp) {
+    const recentData = this.accelerometerData.slice(-5);
+    if (recentData.length < 5) return false;
+    
+    const current = magnitude;
+    const prev2 = recentData[recentData.length - 3].magnitude;
+    const prev1 = recentData[recentData.length - 2].magnitude;
+    const next1 = recentData[recentData.length - 1].magnitude;
+    
+    const isPeak = (current > prev2 && current > prev1 && current > next1 && 
+                   current > this.peakThreshold * this.stepThreshold);
+    
+    return isPeak;
+  }
+
+  validateStep(isPeak, timestamp) {
+    if (!isPeak) return false;
+
+    if (timestamp - this.lastStepTime < this.minStepInterval) {
+      return false;
+    }
+
+    if (timestamp - this.lastStepTime > this.maxStepInterval) {
+      this.calibrationData.sensitivity *= 0.95;
+    }
+    
+    this.lastStepTime = timestamp;
+    return true;
+  }
+
+  updateCalibration(magnitude) {
+    const alpha = 0.05;
+    this.calibrationData.averageMagnitude = 
+      alpha * Math.abs(magnitude) + (1 - alpha) * this.calibrationData.averageMagnitude;
+
+    if (this.calibrationData.averageMagnitude > 2.0) {
+      this.calibrationData.sensitivity = Math.max(0.8, this.calibrationData.sensitivity * 0.98);
+    } else if (this.calibrationData.averageMagnitude < 0.5) {
+      this.calibrationData.sensitivity = Math.min(1.5, this.calibrationData.sensitivity * 1.02);
+    }
+    
+    this.stepThreshold = this.calibrationData.sensitivity;
+  }
+
+  async startCounting() {
+    if (this.isActive) return;
+    
+    this.isActive = true;
+    await this.loadTodaySteps();
+
+    Accelerometer.setUpdateInterval(50); 
+    
+    this.subscription = Accelerometer.addListener((accelData) => {
+      if (this.detectStep(accelData)) {
+        this.addStep();
+      }
+    });
+    
+    this.saveInterval = setInterval(() => {
+      this.saveTodaySteps();
+    }, 30000); 
+    
+    console.log('Contador de pasos iniciado');
+  }
+
+  async stopCounting() {
+    if (!this.isActive) return;
+    
+    this.isActive = false;
+    
+    if (this.subscription) {
+      this.subscription.remove();
+      this.subscription = null;
+    }
+    
+    if (this.saveInterval) {
+      clearInterval(this.saveInterval);
+    }
+    
+    await this.saveTodaySteps();
+    await this.saveCalibrationData();
+    
+    console.log('Contador de pasos detenido');
+  }
+
+  addStep() {
+    const today = this.getTodayDateString();
+    const stepData = {
+      timestamp: Date.now(),
+      date: today
+    };
+    
+    this.stepBuffer.push(stepData);
+
+    if (this.onStepDetected) {
+      this.onStepDetected(this.getTodayStepCount());
+    }
+  }
+
+  getTodayStepCount() {
+    const today = this.getTodayDateString();
+    return this.stepBuffer.filter(step => step.date === today).length;
+  }
+
+  getTodayDateString() {
+    return new Date().toISOString().split('T')[0];
+  }
+
+  async loadTodaySteps() {
+    try {
+      const today = this.getTodayDateString();
+      const stepsStr = await AsyncStorage.getItem(STORAGE_KEYS.DAILY_STEPS + today);
+      if (stepsStr) {
+        this.stepBuffer = JSON.parse(stepsStr);
+      } else {
+        this.stepBuffer = [];
+      }
+    } catch (error) {
+      console.error('Error cargando pasos:', error);
+      this.stepBuffer = [];
+    }
+  }
+
+  async saveTodaySteps() {
+    try {
+      const today = this.getTodayDateString();
+      const todaySteps = this.stepBuffer.filter(step => step.date === today);
+      await AsyncStorage.setItem(
+        STORAGE_KEYS.DAILY_STEPS + today, 
+        JSON.stringify(todaySteps)
+      );
+    } catch (error) {
+      console.error('Error guardando pasos:', error);
+    }
+  }
+
+  async syncWithFirebase() {
+    const user = auth.currentUser;
+    if (!user) return false;
+
+    try {
+      const today = this.getTodayDateString();
+      const todaySteps = this.stepBuffer.filter(step => step.date === today);
+      const stepCount = todaySteps.length;
+      
+      if (stepCount === 0) return true;
+
+      const docRef = doc(firestore, 'users', user.uid, 'pasosDiarios', today);
+      const docSnap = await getDoc(docRef);
+      
+      const stepData = {
+        totalPasos: stepCount,
+        fecha: today,
+        fechaCompleta: new Date().toISOString(),
+        ultimaActualizacion: new Date().toISOString(),
+        detallesPasos: todaySteps.map(step => ({
+          timestamp: step.timestamp,
+          hora: new Date(step.timestamp).toTimeString().split(' ')[0]
+        }))
+      };
+      
+      if (docSnap.exists()) {
+        await updateDoc(docRef, stepData);
+      } else {
+        await setDoc(docRef, {
+          ...stepData,
+          creadoEl: new Date().toISOString()
+        });
+      }
+      
+      await AsyncStorage.setItem(STORAGE_KEYS.LAST_SYNC, today);
+      console.log(`Sincronizados ${stepCount} pasos con Firebase`);
+      return true;
+      
+    } catch (error) {
+      console.error('Error sincronizando con Firebase:', error);
+      return false;
+    }
+  }
+
+  async syncPendingSteps() {
+    try {
+      const lastSync = await AsyncStorage.getItem(STORAGE_KEYS.LAST_SYNC);
+      const today = this.getTodayDateString();
+      
+      if (lastSync !== today) {
+        await this.syncWithFirebase();
+      }
+    } catch (error) {
+      console.error('Error sincronizando pasos pendientes:', error);
+    }
+  }
+
+  async setupBackgroundTask() {
+    try {
+      TaskManager.defineTask(STEP_COUNTER_TASK, async () => {
+        try {
+          await this.syncWithFirebase();
+          return BackgroundFetch.BackgroundFetchResult.NewData;
+        } catch (error) {
+          console.error('Error en tarea background:', error);
+          return BackgroundFetch.BackgroundFetchResult.Failed;
         }
-        return BackgroundFetch.BackgroundFetchResult.NewData;
-      } catch (error) {
-        console.error('Error en tarea de segundo plano:', error);
-        return BackgroundFetch.BackgroundFetchResult.Failed;
-      }
-    });
-  }
-
-  // Iniciar el contador de pasos
-  async startStepCounting(): Promise<void> {
-    try {
-      const isAvailable = await Accelerometer.isAvailableAsync();
-      if (!isAvailable) {
-        throw new Error('Acelerómetro no disponible');
-      }
-
-      // Guardar estado activo
-      await this.saveStepData({
-        steps: 0,
-        lastUpdate: Date.now(),
-        isActive: true,
-        startTime: Date.now()
       });
 
-      // Configurar acelerómetro
-      Accelerometer.setUpdateInterval(STEP_UPDATE_INTERVAL);
+      const isRegistered = await TaskManager.isTaskRegisteredAsync(STEP_COUNTER_TASK);
+      if (!isRegistered) {
+        await BackgroundFetch.registerTaskAsync(STEP_COUNTER_TASK, {
+          minimumInterval: 15 * 60, 
+          stopOnTerminate: false,
+          startOnBoot: true,
+        });
+      }
+    } catch (error) {
+      console.error('Error configurando tarea background:', error);
+    }
+  }
+
+  async getStepStatistics(days = 7) {
+    const stats = {
+      totalSteps: 0,
+      averageDaily: 0,
+      maxDaily: 0,
+      dailyData: []
+    };
+
+    try {
+      for (let i = 0; i < days; i++) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        const dateStr = date.toISOString().split('T')[0];
+        
+        const stepsStr = await AsyncStorage.getItem(STORAGE_KEYS.DAILY_STEPS + dateStr);
+        const steps = stepsStr ? JSON.parse(stepsStr).length : 0;
+        
+        stats.dailyData.push({ date: dateStr, steps });
+        stats.totalSteps += steps;
+        stats.maxDaily = Math.max(stats.maxDaily, steps);
+      }
       
-      this.subscription = Accelerometer.addListener(this.handleAccelerometerData.bind(this));
+      stats.averageDaily = Math.round(stats.totalSteps / days);
       
-      console.log('✅ Contador de pasos iniciado');
     } catch (error) {
-      console.error('❌ Error iniciando contador de pasos:', error);
-      throw error;
-    }
-  }
-
-  // Detener el contador de pasos
-  async stopStepCounting(): Promise<void> {
-    if (this.subscription) {
-      this.subscription.remove();
-      this.subscription = null;
+      console.error('Error obteniendo estadísticas:', error);
     }
 
-    // Marcar como inactivo pero mantener los datos
-    const stepData = await this.getStepData();
-    await this.saveStepData({
-      ...stepData,
-      isActive: false,
-      lastUpdate: Date.now()
-    });
-
-    console.log('⏹️ Contador de pasos detenido');
+    return stats;
   }
 
-  // Pausar temporalmente (cuando la app va al segundo plano)
-  async pauseStepCounting(): Promise<void> {
-    if (this.subscription) {
-      this.subscription.remove();
-      this.subscription = null;
-    }
-
-    // Mantener como activo para reanudar después
-    const stepData = await this.getStepData();
-    await this.saveStepData({
-      ...stepData,
-      lastUpdate: Date.now()
-    });
-
-    console.log('⏸️ Contador de pasos pausado');
-  }
-
-  // Reanudar contador (cuando la app vuelve al primer plano)
-  async resumeStepCounting(): Promise<void> {
-    const stepData = await this.getStepData();
-    if (stepData.isActive) {
-      Accelerometer.setUpdateInterval(STEP_UPDATE_INTERVAL);
-      this.subscription = Accelerometer.addListener(this.handleAccelerometerData.bind(this));
-      console.log('▶️ Contador de pasos reanudado');
-    }
-  }
-
-  // Manejar datos del acelerómetro
-  private async handleAccelerometerData(accel: { x: number; y: number; z: number }) {
-    const { x, y, z } = accel;
-    const magnitude = Math.sqrt(x * x + y * y + z * z);
-    const delta = magnitude - this.lastMagnitude;
-    const now = Date.now();
-
-    if (delta > this.stepThreshold && now - this.lastStepTime > this.minStepInterval) {
-      await this.incrementStepCount();
-      this.lastStepTime = now;
-    }
-    this.lastMagnitude = magnitude;
-  }
-
-  // Incrementar contador de pasos
-  private async incrementStepCount(): Promise<void> {
-    const stepData = await this.getStepData();
-    const newStepData = {
-      ...stepData,
-      steps: stepData.steps + 1,
-      lastUpdate: Date.now()
-    };
-    
-    await this.saveStepData(newStepData);
-    
-    // Notificar logros importantes
-    if (newStepData.steps % 1000 === 0) {
-      await this.sendStepNotification(newStepData.steps);
-    }
-  }
-
-  // Actualizar pasos en segundo plano (versión simplificada)
-  private async updateStepsInBackground(): Promise<void> {
-    const stepData = await this.getStepData();
-    const timeSinceLastUpdate = Date.now() - stepData.lastUpdate;
-    
-    // Si ha pasado mucho tiempo, desactivar para ahorrar batería
-    if (timeSinceLastUpdate > 30 * 60 * 1000) { // 30 minutos
-      await this.saveStepData({
-        ...stepData,
-        isActive: false
-      });
-    }
-  }
-
-  // Obtener datos de pasos almacenados
-  async getStepData(): Promise<StepData> {
+  async cleanOldData(daysToKeep = 30) {
     try {
-      const data = await AsyncStorage.getItem('stepCounterData');
-      if (data) {
-        return JSON.parse(data);
+      const keys = await AsyncStorage.getAllKeys();
+      const stepKeys = keys.filter(key => key.startsWith(STORAGE_KEYS.DAILY_STEPS));
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
+      
+      for (const key of stepKeys) {
+        const dateStr = key.replace(STORAGE_KEYS.DAILY_STEPS, '');
+        const keyDate = new Date(dateStr);
+        
+        if (keyDate < cutoffDate) {
+          await AsyncStorage.removeItem(key);
+        }
       }
     } catch (error) {
-      console.error('Error obteniendo datos de pasos:', error);
-    }
-
-    return {
-      steps: 0,
-      lastUpdate: Date.now(),
-      isActive: false,
-      startTime: Date.now()
-    };
-  }
-
-  // Guardar datos de pasos
-  private async saveStepData(data: StepData): Promise<void> {
-    try {
-      await AsyncStorage.setItem('stepCounterData', JSON.stringify(data));
-    } catch (error) {
-      console.error('Error guardando datos de pasos:', error);
+      console.error('Error limpiando datos antiguos:', error);
     }
   }
 
-  // Resetear contador diario
-  async resetDailySteps(): Promise<void> {
-    await this.saveStepData({
-      steps: 0,
-      lastUpdate: Date.now(),
-      isActive: false,
-      startTime: Date.now()
-    });
+  setStepDetectedCallback(callback) {
+    this.onStepDetected = callback;
   }
 
-  // Enviar notificación de logro
-  private async sendStepNotification(steps: number): Promise<void> {
-    try {
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: '🚶‍♂️ ¡Nuevo logro!',
-          body: `Has caminado ${steps} pasos. ¡Sigue así!`,
-          data: { steps }
-        },
-        trigger: null // Inmediata
-      });
-    } catch (error) {
-      console.error('Error enviando notificación:', error);
+  async calibrateManually(knownSteps, recordedSteps) {
+    if (recordedSteps > 0) {
+      const accuracy = knownSteps / recordedSteps;
+      this.calibrationData.sensitivity *= accuracy;
+      this.calibrationData.sensitivity = Math.max(0.5, Math.min(2.0, this.calibrationData.sensitivity));
+      await this.saveCalibrationData();
+      return true;
     }
-  }
-
-  // Obtener estadísticas del día
-  async getDailyStats(): Promise<{
-    steps: number;
-    distance: number;
-    activeTime: number;
-    calories: number;
-  }> {
-    const stepData = await this.getStepData();
-    const strideLength = 0.762; // metros
-    const caloriesPerStep = 0.04; // aproximado
-    
-    return {
-      steps: stepData.steps,
-      distance: (stepData.steps * strideLength) / 1000, // km
-      activeTime: Math.floor((stepData.lastUpdate - stepData.startTime) / 1000), // segundos
-      calories: Math.round(stepData.steps * caloriesPerStep)
-    };
+    return false;
   }
 }
 
-export default StepCounterService;
+export const stepCounterService = new StepCounterService();
+
+export const useStepCounter = () => {
+  const [stepCount, setStepCount] = useState(0);
+  const [isActive, setIsActive] = useState(false);
+
+  useEffect(() => {
+    const initService = async () => {
+      await stepCounterService.initialize();
+      setStepCount(stepCounterService.getTodayStepCount());
+    };
+
+    initService();
+
+    stepCounterService.setStepDetectedCallback((count) => {
+      setStepCount(count);
+    });
+
+    return () => {
+      stepCounterService.stopCounting();
+    };
+  }, []);
+
+  const startCounting = async () => {
+    await stepCounterService.startCounting();
+    setIsActive(true);
+  };
+
+  const stopCounting = async () => {
+    await stepCounterService.stopCounting();
+    setIsActive(false);
+  };
+
+  const syncSteps = async () => {
+    return await stepCounterService.syncWithFirebase();
+  };
+
+  return {
+    stepCount,
+    isActive,
+    startCounting,
+    stopCounting,
+    syncSteps,
+    getStatistics: stepCounterService.getStepStatistics.bind(stepCounterService),
+    calibrate: stepCounterService.calibrateManually.bind(stepCounterService)
+  };
+};
