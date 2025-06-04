@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, SafeAreaView, ActivityIndicator, ScrollView } from 'react-native';
+import { 
+  View, 
+  Text, 
+  SafeAreaView, 
+  ActivityIndicator, 
+  ScrollView, 
+  TouchableOpacity,
+  Animated,
+  Dimensions
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { auth, firestore } from '../../firebase';
@@ -20,57 +29,151 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 interface UserData {
   weightGoal?: number;
+  currentStreak?: number;
+  totalDinners?: number;
 }
 
 interface MealPlan {
   title: string;
   description: string;
   meals: string[];
+  calories: string;
+  difficulty: string;
+  tips: string[];
 }
+
+const { width } = Dimensions.get('window');
+
+// Componente de icono personalizado
+const Icon = ({ name, size = 24, color = '#FFFFFF' }: { name: string; size?: number; color?: string }) => {
+  const icons: { [key: string]: string } = {
+    dinner: '🍽️',
+    target: '🎯',
+    fire: '🔥',
+    apple: '🍎',
+    check: '✅',
+    star: '⭐',
+    clock: '⏰',
+    lightbulb: '💡',
+    chef: '👨‍🍳',
+    healthy: '🥗',
+    back: '⬅️'
+  };
+  
+  return (
+    <Text style={{ fontSize: size, color }}>
+      {icons[name] || '📱'}
+    </Text>
+  );
+};
+
+// Componente de estadística
+const StatCard = ({ icon, value, label, color = 'bg-gray-700' }: {
+  icon: string;
+  value: string | number;
+  label: string;
+  color?: string;
+}) => (
+  <View className={`${color} rounded-2xl p-4 flex-1 mx-1`}>
+    <View className="items-center">
+      <Icon name={icon} size={24} />
+      <Text className="text-white text-xl font-bold mt-2">{value}</Text>
+      <Text className="text-gray-300 text-sm text-center">{label}</Text>
+    </View>
+  </View>
+);
+
+// Componente de meal card
+const MealCard = ({ meal, index }: { meal: string; index: number }) => {
+  const colors = ['bg-green-600', 'bg-blue-600', 'bg-purple-600'];
+  const bgColor = colors[index % colors.length];
+  
+  return (
+    <View className={`${bgColor} rounded-2xl p-4 mb-4 shadow-lg`}>
+      <View className="flex-row items-start">
+        <View className="bg-white/20 rounded-full p-2 mr-3">
+          <Text className="text-white font-bold">{index + 1}</Text>
+        </View>
+        <View className="flex-1">
+          <Text className="text-white text-base leading-6">{meal}</Text>
+        </View>
+      </View>
+    </View>
+  );
+};
 
 export default function CenaBajarDePeso() {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [mealPlan, setMealPlan] = useState<MealPlan | null>(null);
+  const [fadeAnim] = useState(new Animated.Value(0));
   const navigation = useNavigation<NavigationProp>();
 
   // Define meal plans based on weight loss goals
   const mealPlans: { [key: string]: MealPlan } = {
     '1-5': {
-      title: 'Plan de Cena: Pérdida de 1-5 kg',
-      description: 'Un plan ligero para la cena, enfocado en mantener un déficit calórico moderado con alimentos nutritivos.',
+      title: 'Plan Ligero',
+      description: 'Cenas nutritivas y bajas en calorías para una pérdida de peso saludable y sostenible.',
+      calories: '200-300 cal',
+      difficulty: 'Fácil',
       meals: [
-        'Ensalada de quinoa con vegetales y atún (100 g de quinoa cocida, lechuga, tomate, 100 g de atún al natural)',
-        'Sopa de verduras con pechuga de pollo (200 ml de sopa, 100 g de pollo a la plancha)',
-        'Tortilla de claras con espinacas (3 claras, 1 taza de espinacas, pimientos)',
+        '🥗 Ensalada de quinoa con vegetales y atún (100g quinoa cocida, lechuga, tomate, 100g atún al natural)',
+        '🍲 Sopa de verduras con pechuga de pollo (200ml sopa, 100g pollo a la plancha)',
+        '🍳 Tortilla de claras con espinacas (3 claras, 1 taza espinacas, pimientos)',
       ],
+      tips: [
+        'Usa especias para dar sabor sin añadir calorías',
+        'Evita aderezos grasos en las ensaladas',
+        'Come lentamente para sentirte satisfecho con menos'
+      ]
     },
     '6-10': {
-      title: 'Plan de Cena: Pérdida de 6-10 kg',
-      description: 'Un plan con mayor control calórico, priorizando proteínas magras y vegetales bajos en carbohidratos.',
+      title: 'Plan Equilibrado',
+      description: 'Mayor control calórico con énfasis en proteínas magras y vegetales bajos en carbohidratos.',
+      calories: '150-250 cal',
+      difficulty: 'Moderado',
       meals: [
-        'Ensalada verde con pechuga de pavo (100 g de pavo, espinacas, pepino, sin aderezo calórico)',
-        'Pescado al vapor con brócoli (120 g de pescado blanco, 150 g de brócoli al vapor)',
-        'Sopa de calabacín sin crema (200 ml de sopa, calabacín, cebolla, especias)',
+        '🥗 Ensalada verde con pechuga de pavo (100g pavo, espinacas, pepino, sin aderezo calórico)',
+        '🐟 Pescado al vapor con brócoli (120g pescado blanco, 150g brócoli al vapor)',
+        '🍲 Sopa de calabacín sin crema (200ml sopa, calabacín, cebolla, especias)',
       ],
+      tips: [
+        'Prioriza vegetales de hoja verde para mayor saciedad',
+        'Bebe agua antes de la cena para controlar el apetito',
+        'Evita carbohidratos refinados por la noche'
+      ]
     },
     '11-15': {
-      title: 'Plan de Cena: Pérdida de 11-15 kg',
-      description: 'Un plan estricto con énfasis en alimentos ricos en fibra y muy bajos en calorías.',
+      title: 'Plan Intensivo',
+      description: 'Cenas ricas en fibra y muy bajas en calorías para resultados más rápidos.',
+      calories: '100-200 cal',
+      difficulty: 'Avanzado',
       meals: [
-        'Ensalada de espinacas con huevo cocido (1 taza de espinacas, 1 huevo cocido, pepino)',
-        'Calabacín salteado con tofu (100 g de tofu, 150 g de calabacín, especias)',
-        'Sopa de verduras bajas en carbohidratos (200 ml de sopa, coliflor, espinacas)',
+        '🥗 Ensalada de espinacas con huevo cocido (1 taza espinacas, 1 huevo cocido, pepino)',
+        '🥒 Calabacín salteado con tofu (100g tofu, 150g calabacín, especias)',
+        '🍲 Sopa de verduras bajas en carbohidratos (200ml sopa, coliflor, espinacas)',
       ],
+      tips: [
+        'Incorpora infusiones como té verde para mejorar la digestión',
+        'Mantén porciones pequeñas pero ricas en nutrientes',
+        'Evita comer tarde para optimizar el metabolismo'
+      ]
     },
     '16-20': {
-      title: 'Plan de Cena: Pérdida de 16-20 kg',
-      description: 'Un plan riguroso con comidas muy ligeras para maximizar la pérdida de peso.',
+      title: 'Plan Extremo',
+      description: 'Enfoque riguroso en cenas muy ligeras para maximizar la pérdida de peso.',
+      calories: '80-150 cal',
+      difficulty: 'Experto',
       meals: [
-        'Ensalada de lechuga con camarones (100 g de camarones cocidos, lechuga, pepino)',
-        'Espárragos al vapor con huevo cocido (150 g de espárragos, 1 huevo cocido)',
-        'Caldo de verduras sin grasa (200 ml de caldo, apio, zanahoria, especias)',
+        '🥗 Ensalada de lechuga con camarones (100g camarones cocidos, lechuga, pepino)',
+        '🥬 Espárragos al vapor con huevo cocido (150g espárragos, 1 huevo cocido)',
+        '🍲 Caldo de verduras sin grasa (200ml caldo, apio, zanahoria, especias)',
       ],
+      tips: [
+        'Consulta con un nutricionista para este plan',
+        'Considera suplementos vitamínicos si es necesario',
+        'Monitorea tu energía y evita excesos'
+      ]
     },
   };
 
@@ -84,6 +187,7 @@ export default function CenaBajarDePeso() {
             const data = snapshot.data() as UserData;
             console.log('Datos del usuario:', data);
             setUserData(data);
+            
             // Determine the meal plan based on weight goal
             if (data.weightGoal) {
               if (data.weightGoal >= 1 && data.weightGoal <= 5) {
@@ -99,6 +203,13 @@ export default function CenaBajarDePeso() {
                 console.log('Meta de peso fuera de rango:', data.weightGoal);
               }
             }
+            
+            // Animate content appearance
+            Animated.timing(fadeAnim, {
+              toValue: 1,
+              duration: 800,
+              useNativeDriver: true,
+            }).start();
           } else {
             console.log('No se encontraron datos del usuario');
           }
@@ -120,38 +231,167 @@ export default function CenaBajarDePeso() {
   if (loading) {
     return (
       <SafeAreaView className="flex-1 bg-gray-900 items-center justify-center">
-        <ActivityIndicator size="large" color="#FFFFFF" />
+        <View className="items-center">
+          <ActivityIndicator size="large" color="#FFFFFF" />
+          <Text className="text-white mt-4 text-lg">Preparando tu plan de cena...</Text>
+        </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-900 px-6">
-      <View className="py-12 items-center">
-        <Text className="text-white text-3xl font-bold">Cena para Bajar de Peso</Text>
-      </View>
-
-      {userData?.weightGoal ? (
-        <ScrollView>
-          <View className="bg-gray-800 rounded-2xl p-6 mb-6">
-            <Text className="text-white text-xl font-semibold mb-2">
-              {mealPlan ? mealPlan.title : 'Meta no válida'}
-            </Text>
-            <Text className="text-white mb-4">
-              {mealPlan
-                ? mealPlan.description
-                : 'Por favor, establece una meta de peso entre 1 y 20 kg.'}
-            </Text>
+    <SafeAreaView className="flex-1 bg-gray-900">
+      <ScrollView 
+        className="flex-1" 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 20 }}
+      >
+        {/* Header */}
+        <View className="bg-green-600 pt-12 pb-8 px-6 rounded-b-3xl">
+          <View className="flex-row items-center justify-between mb-4">
+            <TouchableOpacity
+              onPress={() => navigation.goBack()}
+              className="bg-white/20 rounded-full p-2"
+            >
+              <Icon name="back" size={24} />
+            </TouchableOpacity>
+            <View className="flex-1 items-center">
+              <Icon name="dinner" size={32} />
+              <Text className="text-white text-2xl font-bold mt-2">Cena Saludable</Text>
+              <Text className="text-green-200 text-base">Termina el día con ligereza</Text>
+            </View>
+            <View className="w-10" />
           </View>
-          {mealPlan && <WeeklyCalendar meals={mealPlan.meals} />}
-        </ScrollView>
-      ) : (
-        <View className="bg-gray-800 rounded-2xl p-6">
-          <Text className="text-white text-lg">
-            Por favor, establece una meta de peso en la pantalla anterior.
-          </Text>
         </View>
-      )}
+
+        <View className="px-6 mt-6">
+          {userData?.weightGoal ? (
+            <Animated.View style={{ opacity: fadeAnim }}>
+              {/* Stats Section */}
+              <View className="flex-row mb-6">
+                <StatCard 
+                  icon="target" 
+                  value={`${userData.weightGoal} kg`} 
+                  label="Meta de Peso" 
+                  color="bg-purple-600"
+                />
+                <StatCard 
+                  icon="fire" 
+                  value={userData.currentStreak || 0} 
+                  label="Días Seguidos" 
+                  color="bg-orange-600"
+                />
+                <StatCard 
+                  icon="check" 
+                  value={userData.totalDinners || 0} 
+                  label="Cenas" 
+                  color="bg-green-600"
+                />
+              </View>
+
+              {/* Plan Info Card */}
+              {mealPlan && (
+                <View className="bg-gray-800 rounded-3xl p-6 mb-6 border border-gray-700">
+                  <View className="flex-row items-center justify-between mb-4">
+                    <View>
+                      <Text className="text-white text-xl font-bold">{mealPlan.title}</Text>
+                      <Text className="text-gray-400 text-sm mt-1">
+                        <Icon name="chef" size={16} /> Plan personalizado para ti
+                      </Text>
+                    </View>
+                    <View className="items-center">
+                      <Icon name="star" size={28} color="#F59E0B" />
+                      <Text className="text-yellow-400 text-xs">{mealPlan.difficulty}</Text>
+                    </View>
+                  </View>
+
+                  <Text className="text-gray-300 text-base leading-6 mb-4">
+                    {mealPlan.description}
+                  </Text>
+
+                  <View className="flex-row justify-between">
+                    <View className="bg-blue-600 rounded-xl px-4 py-2">
+                      <Text className="text-white text-sm font-medium">
+                        <Icon name="apple" size={14} /> {mealPlan.calories}
+                      </Text>
+                    </View>
+                    <View className="bg-green-600 rounded-xl px-4 py-2">
+                      <Text className="text-white text-sm font-medium">
+                        <Icon name="clock" size={14} /> 10-15 min
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              )}
+
+              {/* Meal Options */}
+              {mealPlan && (
+                <View className="mb-6">
+                  <Text className="text-white text-xl font-bold mb-4 text-center">
+                    🍽️ Opciones de Cena
+                  </Text>
+                  {mealPlan.meals.map((meal, index) => (
+                    <MealCard key={index} meal={meal} index={index} />
+                  ))}
+                </View>
+              )}
+
+              {/* Tips Section */}
+              {mealPlan?.tips && (
+                <View className="bg-indigo-800 rounded-2xl p-6 mb-6 border border-indigo-600">
+                  <View className="flex-row items-center mb-4">
+                    <Icon name="lightbulb" size={24} color="#F59E0B" />
+                    <Text className="text-white text-lg font-bold ml-2">Consejos Pro</Text>
+                  </View>
+                  {mealPlan.tips.map((tip, index) => (
+                    <View key={index} className="flex-row items-start mb-2">
+                      <Text className="text-indigo-300 mr-2">•</Text>
+                      <Text className="text-indigo-200 text-sm flex-1 leading-5">{tip}</Text>
+                    </View>
+                  ))}
+                </View>
+              )}
+
+              {/* Weekly Calendar */}
+              {mealPlan && (
+                <View className="bg-gray-800 rounded-2xl p-4 mb-6">
+                  <Text className="text-white text-lg font-bold mb-4 text-center">
+                    📅 Planificador Semanal
+                  </Text>
+                  <WeeklyCalendar meals={mealPlan.meals} />
+                </View>
+              )}
+
+              {/* Motivation Card */}
+              <View className="bg-green-800 rounded-2xl p-6 mb-6">
+                <Text className="text-white text-lg font-bold mb-2 text-center">
+                  🌟 Motivación del Día
+                </Text>
+                <Text className="text-green-200 text-center text-base leading-6">
+                  "Una cena ligera y saludable te acerca a tus metas. ¡Cada elección cuenta!"
+                </Text>
+              </View>
+            </Animated.View>
+          ) : (
+            /* No Goal Set */
+            <View className="bg-gray-800 rounded-3xl p-8 items-center">
+              <Icon name="target" size={48} color="#EF4444" />
+              <Text className="text-white text-xl font-bold mt-4 mb-2 text-center">
+                Meta No Establecida
+              </Text>
+              <Text className="text-gray-400 text-center text-base leading-6 mb-6">
+                Para obtener tu plan personalizado de cena, primero necesitas establecer tu meta de peso en la pantalla principal.
+              </Text>
+              <TouchableOpacity
+                className="bg-blue-500 py-3 px-6 rounded-2xl"
+                onPress={() => navigation.navigate('BajarDePeso')}
+              >
+                <Text className="text-white font-semibold">Establecer Meta</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }

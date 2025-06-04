@@ -48,6 +48,18 @@ import SubirDePeso from 'screens/HabitoAlimentacion/SubirDePeso';
 import DesayunoSubirDePeso from 'screens/HabitoAlimentacion/DesayunoSubirDePeso';
 import AlmuerzoSubirDePeso from 'screens/HabitoAlimentacion/AlmuerzoSubirDePeso';
 import CenaSubirDePeso from 'screens/HabitoAlimentacion/CenaSubirDePeso';
+import MenuLectura from 'screens/HabitoSaludMental/menuLecturaDiaria'
+import registroLibro from 'screens/HabitoSaludMental/registroLibro'
+import DetalleLibro from 'screens/HabitoSaludMental/DetalleLibro'
+import * as Notifications from 'expo-notifications'
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
 import StepCounterService from 'screens/HabitoEjercicioFisico/StepCounterService';
 
 const Stack = createNativeStackNavigator();
@@ -58,7 +70,7 @@ export default function App() {
       <Stack.Navigator
         initialRouteName="Inicio"
         screenOptions={{
-          headerShown: false, // Desactiva el encabezado en todas las pantallas
+          headerShown: false,
         }}
       >
         <Stack.Screen name="Inicio" component={InicioScreen} options={{ headerShown: false }} />
@@ -109,6 +121,9 @@ export default function App() {
         <Stack.Screen name="CenaSubirDePeso" component={CenaSubirDePeso} />
         <Stack.Screen name="AudioInspira" component={AudioInspira} />
         <Stack.Screen name="Origami" component={Origami} />
+        <Stack.Screen name="RegistroLecturaDiaria" component={MenuLectura} />
+        <Stack.Screen name="RegistroLibro" component={registroLibro} />
+        <Stack.Screen name="DetalleLibro" component={DetalleLibro} />
         <Stack.Screen name="StepCounterService" component={StepCounterService} />
       </Stack.Navigator>
     </NavigationContainer>
