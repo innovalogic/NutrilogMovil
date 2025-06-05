@@ -50,6 +50,7 @@ export default function OrigamiApp() {
   const [stepIndex, setStepIndex] = useState(0);
   const [gallery, setGallery] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [filter, setFilter] = useState('all'); // 'all', 'easy', 'medium', 'hard'
 
   useEffect(() => {
     const names = Object.keys(origamiExamples);
@@ -194,27 +195,86 @@ export default function OrigamiApp() {
     }
   };
 
+  const getFilteredOrigamis = () => {
+    if (filter === 'all') {
+      return Object.keys(origamiExamples);
+    }
+    
+    return Object.keys(origamiExamples).filter(item => {
+      const difficulty = origamiExamples[item].difficulty.toLowerCase();
+      if (filter === 'easy') return difficulty.includes('fácil') || difficulty.includes('facil');
+      if (filter === 'medium') return difficulty.includes('intermedio');
+      if (filter === 'hard') return difficulty.includes('difícil') || difficulty.includes('dificil');
+      return true;
+    });
+  };
+
   if (view === 'list') {
+    const filteredOrigamis = getFilteredOrigamis();
+    
     return (
       <SafeAreaView className="flex-1 bg-white pt-10">
         <View className="flex-1 bg-black p-4">
           <Text className="text-2xl font-bold mb-4 text-white">Origami Diario</Text>
+          
+          {/* Filtros de dificultad */}
+          <View className="flex-row justify-between mb-4">
+            <TouchableOpacity
+              className={`px-3 py-2 rounded-lg ${filter === 'all' ? 'bg-blue-500' : 'bg-gray-600'}`}
+              onPress={() => setFilter('all')}
+            >
+              <Text className="text-white">Todos</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              className={`px-3 py-2 rounded-lg ${filter === 'easy' ? 'bg-green-500' : 'bg-gray-600'}`}
+              onPress={() => setFilter('easy')}
+            >
+              <Text className="text-white">Fácil</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              className={`px-3 py-2 rounded-lg ${filter === 'medium' ? 'bg-yellow-500' : 'bg-gray-600'}`}
+              onPress={() => setFilter('medium')}
+            >
+              <Text className="text-white">Intermedio</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              className={`px-3 py-2 rounded-lg ${filter === 'hard' ? 'bg-red-500' : 'bg-gray-600'}`}
+              onPress={() => setFilter('hard')}
+            >
+              <Text className="text-white">Difícil</Text>
+            </TouchableOpacity>
+          </View>
+          
           <ScrollView>
-            {Object.keys(origamiExamples).map((item) => (
-              <TouchableOpacity
-                key={item}
-                className="p-3 bg-[#202938] mb-2 rounded-lg"
-                onPress={() => { setSelected(item); setStepIndex(0); setView('detail'); }}
-              >
-                <Text className="text-lg font-semibold text-white">{item}</Text>
-                <Text className="text-white">Dificultad: {origamiExamples[item].difficulty}</Text>
-                <Image
-                  source={{ uri: origamiExamples[item].finalImage }}
-                  className="w-full h-40 mt-2 rounded-lg"
-                  resizeMode="contain"
-                />
-              </TouchableOpacity>
-            ))}
+            {filteredOrigamis.length === 0 ? (
+              <Text className="text-white text-center mt-4">
+                No hay origamis con esta dificultad
+              </Text>
+            ) : (
+              filteredOrigamis.map((item) => (
+                <TouchableOpacity
+                  key={item}
+                  className="p-3 bg-[#202938] mb-2 rounded-lg"
+                  onPress={() => { setSelected(item); setStepIndex(0); setView('detail'); }}
+                >
+                  <View className="flex-row justify-between items-center">
+                    <Text className="text-lg font-semibold text-white">{item}</Text>
+                    <View className={`px-2 py-1 rounded-full ${
+                      origamiExamples[item].difficulty === 'Fácil' ? 'bg-green-500' :
+                      origamiExamples[item].difficulty === 'Intermedio' ? 'bg-yellow-500' :
+                      'bg-red-500'
+                    }`}>
+                      <Text className="text-xs text-white">{origamiExamples[item].difficulty}</Text>
+                    </View>
+                  </View>
+                  <Image
+                    source={{ uri: origamiExamples[item].finalImage }}
+                    className="w-full h-40 mt-2 rounded-lg"
+                    resizeMode="contain"
+                  />
+                </TouchableOpacity>
+              ))
+            )}
           </ScrollView>
           <TouchableOpacity
             className="mt-4 bg-blue-500 py-2 rounded-lg"
@@ -233,6 +293,13 @@ export default function OrigamiApp() {
       <SafeAreaView className="flex-1 bg-white pt-10">
         <View className="flex-1 bg-black p-4">
           <Text className="text-2xl font-bold mb-4 text-white">{selected} - Paso {stepIndex + 1}/{data.steps.length}</Text>
+          <View className={`absolute top-4 right-4 z-10 px-2 py-1 rounded-full ${
+            data.difficulty === 'Fácil' ? 'bg-green-500' :
+            data.difficulty === 'Intermedio' ? 'bg-yellow-500' :
+            'bg-red-500'
+          }`}>
+            <Text className="text-xs text-white">{data.difficulty}</Text>
+          </View>
           <Image
             source={{ uri: data.steps[stepIndex] }}
             className="w-full h-72 mb-4 rounded-lg"
@@ -276,6 +343,13 @@ export default function OrigamiApp() {
       <SafeAreaView className="flex-1 bg-white">
         <View className="flex-1 bg-black p-4 justify-center items-center">
           <Text className="text-2xl font-bold mb-4 text-white">¡Completado!</Text>
+          <View className={`absolute top-4 right-4 z-10 px-2 py-1 rounded-full ${
+            origamiExamples[selected].difficulty === 'Fácil' ? 'bg-green-500' :
+            origamiExamples[selected].difficulty === 'Intermedio' ? 'bg-yellow-500' :
+            'bg-red-500'
+          }`}>
+            <Text className="text-xs text-white">{origamiExamples[selected].difficulty}</Text>
+          </View>
           <Image source={{ uri: final }} className="w-full h-64 resize-contain mb-4" />
           
           <TouchableOpacity 
@@ -304,15 +378,67 @@ export default function OrigamiApp() {
       <SafeAreaView className="flex-1 bg-white pt-10">
         <View className="flex-1 bg-black p-4">
           <Text className="text-2xl font-bold mb-4 text-white">Galería de Origamis</Text>
+          
+          {/* Filtros para la galería */}
+          <View className="flex-row justify-between mb-4">
+            <TouchableOpacity
+              className={`px-3 py-2 rounded-lg ${filter === 'all' ? 'bg-blue-500' : 'bg-gray-600'}`}
+              onPress={() => setFilter('all')}
+            >
+              <Text className="text-white">Todos</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              className={`px-3 py-2 rounded-lg ${filter === 'easy' ? 'bg-green-500' : 'bg-gray-600'}`}
+              onPress={() => setFilter('easy')}
+            >
+              <Text className="text-white">Fácil</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              className={`px-3 py-2 rounded-lg ${filter === 'medium' ? 'bg-yellow-500' : 'bg-gray-600'}`}
+              onPress={() => setFilter('medium')}
+            >
+              <Text className="text-white">Intermedio</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              className={`px-3 py-2 rounded-lg ${filter === 'hard' ? 'bg-red-500' : 'bg-gray-600'}`}
+              onPress={() => setFilter('hard')}
+            >
+              <Text className="text-white">Difícil</Text>
+            </TouchableOpacity>
+          </View>
+          
           <ScrollView>
-            {gallery.length === 0 ? (
+            {gallery.filter(item => {
+              if (filter === 'all') return true;
+              const difficulty = item.difficulty.toLowerCase();
+              if (filter === 'easy') return difficulty.includes('fácil') || difficulty.includes('facil');
+              if (filter === 'medium') return difficulty.includes('intermedio');
+              if (filter === 'hard') return difficulty.includes('difícil') || difficulty.includes('dificil');
+              return true;
+            }).length === 0 ? (
               <Text className="text-white text-center mt-10">
-                No tienes origamis completados aún
+                No tienes origamis completados con esta dificultad
               </Text>
             ) : (
-              gallery.map((item, idx) => (
+              gallery.filter(item => {
+                if (filter === 'all') return true;
+                const difficulty = item.difficulty.toLowerCase();
+                if (filter === 'easy') return difficulty.includes('fácil') || difficulty.includes('facil');
+                if (filter === 'medium') return difficulty.includes('intermedio');
+                if (filter === 'hard') return difficulty.includes('difícil') || difficulty.includes('dificil');
+                return true;
+              }).map((item, idx) => (
                 <View key={item.id || idx} className="mb-4 items-center bg-[#202938] p-3 rounded-lg">
-                  <Text className="font-semibold text-white mb-2">{item.name}</Text>
+                  <View className="flex-row justify-between w-full mb-2">
+                    <Text className="font-semibold text-white">{item.name}</Text>
+                    <View className={`px-2 py-1 rounded-full ${
+                      item.difficulty === 'Fácil' ? 'bg-green-500' :
+                      item.difficulty === 'Intermedio' ? 'bg-yellow-500' :
+                      'bg-red-500'
+                    }`}>
+                      <Text className="text-xs text-white">{item.difficulty}</Text>
+                    </View>
+                  </View>
                   <Text className="text-gray-300 text-sm mb-2">
                     {new Date(item.date).toLocaleDateString()}
                   </Text>
