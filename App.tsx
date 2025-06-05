@@ -60,7 +60,7 @@ Notifications.setNotificationHandler({
     shouldSetBadge: false,
   }),
 });
-import StepCounterService from 'screens/HabitoEjercicioFisico/StepCounterService';
+
 
 const Stack = createNativeStackNavigator();
 
@@ -124,7 +124,6 @@ export default function App() {
         <Stack.Screen name="RegistroLecturaDiaria" component={MenuLectura} />
         <Stack.Screen name="RegistroLibro" component={registroLibro} />
         <Stack.Screen name="DetalleLibro" component={DetalleLibro} />
-        <Stack.Screen name="StepCounterService" component={StepCounterService} />
       </Stack.Navigator>
     </NavigationContainer>
   );

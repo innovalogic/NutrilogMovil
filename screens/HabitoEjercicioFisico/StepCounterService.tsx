@@ -1,437 +1,232 @@
 import { Accelerometer } from 'expo-sensors';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { auth, firestore } from '../../firebase';
-import { doc, getDoc, setDoc, updateDoc, onSnapshot } from 'firebase/firestore';
-import * as TaskManager from 'expo-task-manager';
-import * as BackgroundFetch from 'expo-background-fetch';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { AppState, AppStateStatus } from 'react-native';
 
-const STEP_COUNTER_TASK = 'step-counter-background';
-const STORAGE_KEYS = {
-  DAILY_STEPS: 'daily_steps_',
-  LAST_SYNC: 'last_sync_date',
-  STEP_BUFFER: 'step_buffer',
-  CALIBRATION: 'step_calibration'
-};
+export interface StepData {
+  stepCount: number;
+  time: number;
+  lastUpdate: number;
+  isActive: boolean;
+}
 
 class StepCounterService {
-  constructor() {
-    this.isActive = false;
-    this.subscription = null;
-    this.stepBuffer = [];
-    this.lastMagnitude = 0;
-    this.lastStepTime = 0;
-    this.stepThreshold = 1.2; 
-    this.minStepInterval = 200; 
-    this.maxStepInterval = 2000; 
-    this.calibrationData = {
-      averageMagnitude: 0,
-      stepPattern: [],
-      sensitivity: 1.0
-    };
+  private static instance: StepCounterService;
+  private subscription: any = null;
+  private isRunning: boolean = false;
+  private stepCount: number = 0;
+  private startTime: number = 0;
+  private elapsedTime: number = 0;
+  private lastMagnitude: number = 0;
+  private lastStepTime: number = Date.now();
+  private syncTimer: NodeJS.Timeout | null = null;
+  private appStateSubscription: any = null;
+  private lastSyncTime: number = 0;
 
-    this.accelerometerData = [];
-    this.windowSize = 50; 
-    this.peakThreshold = 0.5;
-    this.valleyThreshold = -0.5;
-    this.lastPeakTime = 0;
-    this.lastValleyTime = 0;
+  private readonly STEP_THRESHOLD = 0.4;
+  private readonly MIN_STEP_INTERVAL = 250; 
+  private readonly UPDATE_INTERVAL = 100;
+  private readonly SYNC_INTERVAL = 30000; 
+  private readonly STORAGE_KEY = 'stepCounterData';
+
+  private constructor() {
+    this.initializeAppStateListener();
   }
 
-  async initialize() {
+  public static getInstance(): StepCounterService {
+    if (!StepCounterService.instance) {
+      StepCounterService.instance = new StepCounterService();
+    }
+    return StepCounterService.instance;
+  }
+
+  private initializeAppStateListener() {
+    this.appStateSubscription = AppState.addEventListener('change', this.handleAppStateChange);
+  }
+
+  private handleAppStateChange = (nextAppState: AppStateStatus) => {
+    if (nextAppState === 'active') {
+      this.loadStoredData();
+    } else if (nextAppState === 'background' || nextAppState === 'inactive') {
+      this.saveDataToStorage();
+      this.syncToFirebase();
+    }
+  };
+
+  public async startCounting(): Promise<void> {
+    if (this.isRunning) return;
     try {
-      await this.loadCalibrationData();
-      await this.setupBackgroundTask();
-      await this.syncPendingSteps();
-      return true;
+      await this.loadStoredData();
+      this.isRunning = true;
+      this.startTime = Date.now() - this.elapsedTime * 1000;     
+      Accelerometer.setUpdateInterval(this.UPDATE_INTERVAL);
+      this.subscription = Accelerometer.addListener(this.handleAccelerometerData);
+      this.startAutoSync();
+      console.log('StepCounter: Conteo iniciado');
     } catch (error) {
-      console.error('Error inicializando StepCounterService:', error);
-      return false;
+      console.error('Error iniciando contador de pasos:', error);
     }
   }
 
-  async loadCalibrationData() {
-    try {
-      const calibrationStr = await AsyncStorage.getItem(STORAGE_KEYS.CALIBRATION);
-      if (calibrationStr) {
-        this.calibrationData = JSON.parse(calibrationStr);
-        this.stepThreshold = this.calibrationData.sensitivity || 1.2;
-      }
-    } catch (error) {
-      console.error('Error cargando calibración:', error);
-    }
-  }
+  public async stopCounting(): Promise<void> {
+    if (!this.isRunning) return;
 
-  async saveCalibrationData() {
-    try {
-      await AsyncStorage.setItem(
-        STORAGE_KEYS.CALIBRATION, 
-        JSON.stringify(this.calibrationData)
-      );
-    } catch (error) {
-      console.error('Error guardando calibración:', error);
-    }
-  }
-
-  detectStep(accelData) {
-    const { x, y, z } = accelData;
-
-    const magnitude = Math.sqrt(x * x + y * y + z * z) - 9.81; 
-    const timestamp = Date.now();
-
-    this.accelerometerData.push({ magnitude, timestamp });
-    if (this.accelerometerData.length > this.windowSize) {
-      this.accelerometerData.shift();
-    }
-    
-    if (this.accelerometerData.length < 10) return false;
-    
-    const smoothedMagnitude = this.applySmoothingFilter(magnitude);
-
-    const isPeak = this.detectPeak(smoothedMagnitude, timestamp);
-    const isValidStep = this.validateStep(isPeak, timestamp);
-
-    if (isValidStep) {
-      this.updateCalibration(smoothedMagnitude);
-    }
-    
-    return isValidStep;
-  }
-
-  applySmoothingFilter(currentMagnitude) {
-    const alpha = 0.1; 
-    this.lastMagnitude = alpha * currentMagnitude + (1 - alpha) * this.lastMagnitude;
-    return this.lastMagnitude;
-  }
-
-  detectPeak(magnitude, timestamp) {
-    const recentData = this.accelerometerData.slice(-5);
-    if (recentData.length < 5) return false;
-    
-    const current = magnitude;
-    const prev2 = recentData[recentData.length - 3].magnitude;
-    const prev1 = recentData[recentData.length - 2].magnitude;
-    const next1 = recentData[recentData.length - 1].magnitude;
-    
-    const isPeak = (current > prev2 && current > prev1 && current > next1 && 
-                   current > this.peakThreshold * this.stepThreshold);
-    
-    return isPeak;
-  }
-
-  validateStep(isPeak, timestamp) {
-    if (!isPeak) return false;
-
-    if (timestamp - this.lastStepTime < this.minStepInterval) {
-      return false;
-    }
-
-    if (timestamp - this.lastStepTime > this.maxStepInterval) {
-      this.calibrationData.sensitivity *= 0.95;
-    }
-    
-    this.lastStepTime = timestamp;
-    return true;
-  }
-
-  updateCalibration(magnitude) {
-    const alpha = 0.05;
-    this.calibrationData.averageMagnitude = 
-      alpha * Math.abs(magnitude) + (1 - alpha) * this.calibrationData.averageMagnitude;
-
-    if (this.calibrationData.averageMagnitude > 2.0) {
-      this.calibrationData.sensitivity = Math.max(0.8, this.calibrationData.sensitivity * 0.98);
-    } else if (this.calibrationData.averageMagnitude < 0.5) {
-      this.calibrationData.sensitivity = Math.min(1.5, this.calibrationData.sensitivity * 1.02);
-    }
-    
-    this.stepThreshold = this.calibrationData.sensitivity;
-  }
-
-  async startCounting() {
-    if (this.isActive) return;
-    
-    this.isActive = true;
-    await this.loadTodaySteps();
-
-    Accelerometer.setUpdateInterval(50); 
-    
-    this.subscription = Accelerometer.addListener((accelData) => {
-      if (this.detectStep(accelData)) {
-        this.addStep();
-      }
-    });
-    
-    this.saveInterval = setInterval(() => {
-      this.saveTodaySteps();
-    }, 30000); 
-    
-    console.log('Contador de pasos iniciado');
-  }
-
-  async stopCounting() {
-    if (!this.isActive) return;
-    
-    this.isActive = false;
+    this.isRunning = false;
     
     if (this.subscription) {
       this.subscription.remove();
       this.subscription = null;
     }
     
-    if (this.saveInterval) {
-      clearInterval(this.saveInterval);
-    }
+    this.stopAutoSync();
+    await this.saveDataToStorage();
+    await this.syncToFirebase();
     
-    await this.saveTodaySteps();
-    await this.saveCalibrationData();
-    
-    console.log('Contador de pasos detenido');
+    console.log('StepCounter: Conteo detenido');
   }
 
-  addStep() {
-    const today = this.getTodayDateString();
-    const stepData = {
-      timestamp: Date.now(),
-      date: today
-    };
-    
-    this.stepBuffer.push(stepData);
+  private handleAccelerometerData = (accel: { x: number; y: number; z: number }) => {
+    if (!this.isRunning) return;
 
-    if (this.onStepDetected) {
-      this.onStepDetected(this.getTodayStepCount());
-    }
-  }
-
-  getTodayStepCount() {
-    const today = this.getTodayDateString();
-    return this.stepBuffer.filter(step => step.date === today).length;
-  }
-
-  getTodayDateString() {
-    return new Date().toISOString().split('T')[0];
-  }
-
-  async loadTodaySteps() {
-    try {
-      const today = this.getTodayDateString();
-      const stepsStr = await AsyncStorage.getItem(STORAGE_KEYS.DAILY_STEPS + today);
-      if (stepsStr) {
-        this.stepBuffer = JSON.parse(stepsStr);
-      } else {
-        this.stepBuffer = [];
+    const { x, y, z } = accel;
+    const magnitude = Math.sqrt(x * x + y * y + z * z);
+    const delta = magnitude - this.lastMagnitude;
+    const now = Date.now();
+    if (delta > this.STEP_THRESHOLD && now - this.lastStepTime > this.MIN_STEP_INTERVAL) {
+      this.stepCount++;
+      this.lastStepTime = now;
+      if (this.stepCount % 10 === 0) {
+        this.saveDataToStorage();
       }
-    } catch (error) {
-      console.error('Error cargando pasos:', error);
-      this.stepBuffer = [];
+    }
+    this.lastMagnitude = magnitude;
+    this.elapsedTime = Math.floor((now - this.startTime) / 1000);
+  };
+
+  private startAutoSync() {
+    this.syncTimer = setInterval(() => {
+      this.syncToFirebase();
+    }, this.SYNC_INTERVAL);
+  }
+
+  private stopAutoSync() {
+    if (this.syncTimer) {
+      clearInterval(this.syncTimer);
+      this.syncTimer = null;
     }
   }
 
-  async saveTodaySteps() {
+  private async saveDataToStorage(): Promise<void> {
     try {
-      const today = this.getTodayDateString();
-      const todaySteps = this.stepBuffer.filter(step => step.date === today);
-      await AsyncStorage.setItem(
-        STORAGE_KEYS.DAILY_STEPS + today, 
-        JSON.stringify(todaySteps)
-      );
-    } catch (error) {
-      console.error('Error guardando pasos:', error);
-    }
-  }
-
-  async syncWithFirebase() {
-    const user = auth.currentUser;
-    if (!user) return false;
-
-    try {
-      const today = this.getTodayDateString();
-      const todaySteps = this.stepBuffer.filter(step => step.date === today);
-      const stepCount = todaySteps.length;
-      
-      if (stepCount === 0) return true;
-
-      const docRef = doc(firestore, 'users', user.uid, 'pasosDiarios', today);
-      const docSnap = await getDoc(docRef);
-      
-      const stepData = {
-        totalPasos: stepCount,
-        fecha: today,
-        fechaCompleta: new Date().toISOString(),
-        ultimaActualizacion: new Date().toISOString(),
-        detallesPasos: todaySteps.map(step => ({
-          timestamp: step.timestamp,
-          hora: new Date(step.timestamp).toTimeString().split(' ')[0]
-        }))
+      const data: StepData = {
+        stepCount: this.stepCount,
+        time: this.elapsedTime,
+        lastUpdate: Date.now(),
+        isActive: this.isRunning
       };
       
+      await AsyncStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
+    } catch (error) {
+      console.error('Error guardando datos en storage:', error);
+    }
+  }
+
+  private async loadStoredData(): Promise<void> {
+    try {
+      const storedData = await AsyncStorage.getItem(this.STORAGE_KEY);
+      if (storedData) {
+        const data: StepData = JSON.parse(storedData);
+        this.stepCount = data.stepCount || 0;
+        this.elapsedTime = data.time || 0;
+        const lastUpdate = new Date(data.lastUpdate);
+        const today = new Date();
+        if (lastUpdate.toDateString() !== today.toDateString()) {
+          this.resetDailyData();
+        }
+      }
+    } catch (error) {
+      console.error('Error cargando datos del storage:', error);
+    }
+  }
+
+  private async syncToFirebase(): Promise<boolean> {
+    const user = auth.currentUser;
+    if (!user || this.stepCount === 0) return false;
+    const now = Date.now();
+    if (now - this.lastSyncTime < 10000) return false;
+    try {
+      const hoy = new Date();
+      const fechaId = hoy.toISOString().split('T')[0];
+      const pasosRef = doc(firestore, 'users', user.uid, 'pasosDiarios', fechaId);
+      const docSnap = await getDoc(pasosRef);
       if (docSnap.exists()) {
-        await updateDoc(docRef, stepData);
+        await updateDoc(pasosRef, {
+          totalPasos: this.stepCount,
+          tiempo: this.elapsedTime,
+          ultimaActualizacion: new Date().toISOString(),
+          sincronizadoDesdeServicio: true
+        });
       } else {
-        await setDoc(docRef, {
-          ...stepData,
-          creadoEl: new Date().toISOString()
+        await setDoc(pasosRef, {
+          totalPasos: this.stepCount,
+          tiempo: this.elapsedTime,
+          fecha: fechaId,
+          fechaCompleta: new Date().toISOString(),
+          creadoEl: new Date().toISOString(),
+          ultimaActualizacion: new Date().toISOString(),
+          sincronizadoDesdeServicio: true
         });
       }
-      
-      await AsyncStorage.setItem(STORAGE_KEYS.LAST_SYNC, today);
-      console.log(`Sincronizados ${stepCount} pasos con Firebase`);
+      this.lastSyncTime = now;
+      console.log(`StepCounter: Sincronizado - ${this.stepCount} pasos, ${this.elapsedTime}s`);
       return true;
-      
     } catch (error) {
       console.error('Error sincronizando con Firebase:', error);
       return false;
     }
   }
-
-  async syncPendingSteps() {
-    try {
-      const lastSync = await AsyncStorage.getItem(STORAGE_KEYS.LAST_SYNC);
-      const today = this.getTodayDateString();
-      
-      if (lastSync !== today) {
-        await this.syncWithFirebase();
-      }
-    } catch (error) {
-      console.error('Error sincronizando pasos pendientes:', error);
-    }
+  private resetDailyData(): void {
+    this.stepCount = 0;
+    this.elapsedTime = 0;
+    this.startTime = Date.now();
+    this.saveDataToStorage();
+  }
+  public getCurrentSteps(): number {
+    return this.stepCount;
   }
 
-  async setupBackgroundTask() {
-    try {
-      TaskManager.defineTask(STEP_COUNTER_TASK, async () => {
-        try {
-          await this.syncWithFirebase();
-          return BackgroundFetch.BackgroundFetchResult.NewData;
-        } catch (error) {
-          console.error('Error en tarea background:', error);
-          return BackgroundFetch.BackgroundFetchResult.Failed;
-        }
-      });
-
-      const isRegistered = await TaskManager.isTaskRegisteredAsync(STEP_COUNTER_TASK);
-      if (!isRegistered) {
-        await BackgroundFetch.registerTaskAsync(STEP_COUNTER_TASK, {
-          minimumInterval: 15 * 60, 
-          stopOnTerminate: false,
-          startOnBoot: true,
-        });
-      }
-    } catch (error) {
-      console.error('Error configurando tarea background:', error);
-    }
+  public getCurrentTime(): number {
+    return this.elapsedTime;
   }
 
-  async getStepStatistics(days = 7) {
-    const stats = {
-      totalSteps: 0,
-      averageDaily: 0,
-      maxDaily: 0,
-      dailyData: []
-    };
-
-    try {
-      for (let i = 0; i < days; i++) {
-        const date = new Date();
-        date.setDate(date.getDate() - i);
-        const dateStr = date.toISOString().split('T')[0];
-        
-        const stepsStr = await AsyncStorage.getItem(STORAGE_KEYS.DAILY_STEPS + dateStr);
-        const steps = stepsStr ? JSON.parse(stepsStr).length : 0;
-        
-        stats.dailyData.push({ date: dateStr, steps });
-        stats.totalSteps += steps;
-        stats.maxDaily = Math.max(stats.maxDaily, steps);
-      }
-      
-      stats.averageDaily = Math.round(stats.totalSteps / days);
-      
-    } catch (error) {
-      console.error('Error obteniendo estadísticas:', error);
-    }
-
-    return stats;
+  public isCountingActive(): boolean {
+    return this.isRunning;
   }
 
-  async cleanOldData(daysToKeep = 30) {
-    try {
-      const keys = await AsyncStorage.getAllKeys();
-      const stepKeys = keys.filter(key => key.startsWith(STORAGE_KEYS.DAILY_STEPS));
-      const cutoffDate = new Date();
-      cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
-      
-      for (const key of stepKeys) {
-        const dateStr = key.replace(STORAGE_KEYS.DAILY_STEPS, '');
-        const keyDate = new Date(dateStr);
-        
-        if (keyDate < cutoffDate) {
-          await AsyncStorage.removeItem(key);
-        }
-      }
-    } catch (error) {
-      console.error('Error limpiando datos antiguos:', error);
-    }
+  public getDistance(): number {
+    const strideLength = 0.762; 
+    const stepsPerKm = 1000 / strideLength;
+    return this.stepCount / stepsPerKm;
   }
 
-  setStepDetectedCallback(callback) {
-    this.onStepDetected = callback;
+  public getSpeed(): number {
+    if (this.elapsedTime === 0) return 0;
+    const distance = this.getDistance();
+    return distance / (this.elapsedTime / 3600); 
   }
 
-  async calibrateManually(knownSteps, recordedSteps) {
-    if (recordedSteps > 0) {
-      const accuracy = knownSteps / recordedSteps;
-      this.calibrationData.sensitivity *= accuracy;
-      this.calibrationData.sensitivity = Math.max(0.5, Math.min(2.0, this.calibrationData.sensitivity));
-      await this.saveCalibrationData();
-      return true;
+  public async forceSyncToFirebase(): Promise<boolean> {
+    this.lastSyncTime = 0; 
+    return await this.syncToFirebase();
+  }
+
+  public cleanup(): void {
+    this.stopCounting();
+    if (this.appStateSubscription) {
+      this.appStateSubscription.remove();
     }
-    return false;
   }
 }
 
-export const stepCounterService = new StepCounterService();
-
-export const useStepCounter = () => {
-  const [stepCount, setStepCount] = useState(0);
-  const [isActive, setIsActive] = useState(false);
-
-  useEffect(() => {
-    const initService = async () => {
-      await stepCounterService.initialize();
-      setStepCount(stepCounterService.getTodayStepCount());
-    };
-
-    initService();
-
-    stepCounterService.setStepDetectedCallback((count) => {
-      setStepCount(count);
-    });
-
-    return () => {
-      stepCounterService.stopCounting();
-    };
-  }, []);
-
-  const startCounting = async () => {
-    await stepCounterService.startCounting();
-    setIsActive(true);
-  };
-
-  const stopCounting = async () => {
-    await stepCounterService.stopCounting();
-    setIsActive(false);
-  };
-
-  const syncSteps = async () => {
-    return await stepCounterService.syncWithFirebase();
-  };
-
-  return {
-    stepCount,
-    isActive,
-    startCounting,
-    stopCounting,
-    syncSteps,
-    getStatistics: stepCounterService.getStepStatistics.bind(stepCounterService),
-    calibrate: stepCounterService.calibrateManually.bind(stepCounterService)
-  };
-};
+export default StepCounterService;
