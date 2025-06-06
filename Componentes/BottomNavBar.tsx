@@ -23,18 +23,6 @@ const BottomNavBar = () => {
 
   return (
     <View className="flex-row justify-around items-center bg-black py-4 border-t border-black">
-
-      <TouchableOpacity
-        className="items-center"
-        onPress={() => navigation.navigate('Menu')}
-      >
-        <Image
-          source={require('../assets/Menu.png')}
-          className="w-6 h-6 mb-1"
-          resizeMode="contain"
-        />
-        <Text className="text-white text-xs font-extrabold">Menu</Text>
-      </TouchableOpacity>
       <TouchableOpacity
         className="items-center"
         onPress={() => navigation.navigate('Seguimiento')}

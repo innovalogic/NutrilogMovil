@@ -1,8 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, TouchableOpacity, SafeAreaView } from 'react-native';
+import { 
+  View, 
+  Text, 
+  Image, 
+  TouchableOpacity, 
+  SafeAreaView, 
+  Modal, 
+  TextInput,
+  ActivityIndicator
+} from 'react-native';
 import { auth, firestore } from '../firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import BottomNavBar from '../Componentes/BottomNavBar';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -30,6 +39,10 @@ export default function HomePerfilScreen() {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [dailyTip, setDailyTip] = useState(wellnessTips[0]);
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [newHeight, setNewHeight] = useState('');
+  const [newWeight, setNewWeight] = useState('');
+  const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -39,7 +52,10 @@ export default function HomePerfilScreen() {
           const userDocSnap = await getDoc(userDocRef);
 
           if (userDocSnap.exists()) {
-            setUserData(userDocSnap.data() as UserData);
+            const data = userDocSnap.data() as UserData;
+            setUserData(data);
+            setNewHeight(data.height || '');
+            setNewWeight(data.weight || '');
           } else {
             setUserData(null);
           }
@@ -49,7 +65,7 @@ export default function HomePerfilScreen() {
         }
       } else {
         setUserData(null);
-        navigation.navigate('InicioSesion' as never); // Cambiado a InicioSesion
+        navigation.navigate('InicioSesion' as never);
       }
       setLoading(false);
     });
@@ -61,7 +77,7 @@ export default function HomePerfilScreen() {
   }, [navigation]);
 
   const handleSignOut = async () => {
-    setLoading(true); // Mostrar pantalla de carga durante el cierre
+    setLoading(true);
     try {
       await signOut(auth);
       navigation.reset({
@@ -70,7 +86,43 @@ export default function HomePerfilScreen() {
       });
     } catch (error) {
       console.error('Error al cerrar sesión:', error);
-      setLoading(false); // Ocultar carga en caso de error
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateProfile = async () => {
+    if (!auth.currentUser) return;
+    
+    setUpdating(true);
+    try {
+      // Validate inputs
+      if (newHeight && isNaN(parseFloat(newHeight))) {
+        alert('Por favor ingrese una altura válida');
+        return;
+      }
+      
+      if (newWeight && isNaN(parseFloat(newWeight))) {
+        alert('Por favor ingrese un peso válido');
+        return;
+      }
+
+      await updateDoc(doc(firestore, 'users', auth.currentUser.uid), {
+        height: newHeight,
+        weight: newWeight
+      });
+      
+      setUserData(prev => ({
+        ...prev,
+        height: newHeight,
+        weight: newWeight
+      }));
+      
+      setEditModalVisible(false);
+    } catch (error) {
+      console.error('Error al actualizar perfil:', error);
+      alert('Ocurrió un error al actualizar el perfil');
+    } finally {
+      setUpdating(false);
     }
   };
 
@@ -147,7 +199,7 @@ export default function HomePerfilScreen() {
 
           <TouchableOpacity
             className="mt-8 rounded-full overflow-hidden"
-            onPress={() => navigation.navigate('EditProfile' as never)}
+            onPress={() => setEditModalVisible(true)}
           >
             <LinearGradient
               colors={['#FF6464', '#FF8A8A']}
@@ -192,6 +244,68 @@ export default function HomePerfilScreen() {
           </View>
         </View>
       </View>
+
+      {/* Edit Profile Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={editModalVisible}
+        onRequestClose={() => setEditModalVisible(false)}
+      >
+        <View className="flex-1 justify-center items-center bg-black/80">
+          <View className="bg-gray-800 rounded-2xl p-6 w-4/5 max-w-sm border border-gray-700">
+            <Text className="text-white text-xl font-semibold mb-4 text-center">
+              Editar Perfil
+            </Text>
+            
+            <View className="mb-4">
+              <Text className="text-gray-300 text-sm mb-1">Altura (metros)</Text>
+              <TextInput
+                className="bg-gray-700 text-white p-3 rounded-xl border border-gray-600"
+                placeholder="Ej: 1.75"
+                placeholderTextColor="#9CA3AF"
+                keyboardType="numeric"
+                value={newHeight}
+                onChangeText={setNewHeight}
+              />
+            </View>
+            
+            <View className="mb-6">
+              <Text className="text-gray-300 text-sm mb-1">Peso (kg)</Text>
+              <TextInput
+                className="bg-gray-700 text-white p-3 rounded-xl border border-gray-600"
+                placeholder="Ej: 68.5"
+                placeholderTextColor="#9CA3AF"
+                keyboardType="numeric"
+                value={newWeight}
+                onChangeText={setNewWeight}
+              />
+            </View>
+            
+            <View className="flex-row space-x-3">
+              <TouchableOpacity
+                className="bg-gray-600 px-4 py-3 rounded-xl flex-1"
+                onPress={() => setEditModalVisible(false)}
+                disabled={updating}
+              >
+                <Text className="text-white text-center font-medium">Cancelar</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                className="bg-[#FF6464] px-4 py-3 rounded-xl flex-1"
+                onPress={handleUpdateProfile}
+                disabled={updating}
+              >
+                {updating ? (
+                  <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                  <Text className="text-white text-center font-semibold">Guardar</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       <View className="absolute bottom-0 w-full">
         <BottomNavBar />
