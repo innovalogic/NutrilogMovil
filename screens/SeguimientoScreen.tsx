@@ -11,6 +11,7 @@ import { auth, firestore } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, onSnapshot, collection, getDocs } from 'firebase/firestore';
 import ProgresoAlimentacion from './HabitoAlimentacion/ProgresoAlimentacion';
+import BottomNavBar from '../Componentes/BottomNavBar';
 
 interface UserData {
   weightGoal?: number;
@@ -171,6 +172,7 @@ export default function SeguimientoScreen() {
           </View>
         </View>
       </ScrollView>
+      <BottomNavBar />
     </SafeAreaView>
   );
 }
