@@ -37,9 +37,11 @@ export default function FelicitacionView() {
                 const data = docSnap.data();
                 const minutosExistentes = data.minutos || 0;
                 const segundosExistentes = data.segundos || 0;
+                const sesiones = data.sesiones || 0;
 
                 const nuevosMinutos = minutosExistentes + minutos;
                 const nuevosSegundos = segundosExistentes + segundos;
+                const nuevaSesion = sesiones + 1;
 
                 const minutosFinal = nuevosMinutos + Math.floor(nuevosSegundos / 60);
                 const segundosFinal = nuevosSegundos % 60;
@@ -48,12 +50,14 @@ export default function FelicitacionView() {
                     nivel,
                     minutos: minutosFinal,
                     segundos: segundosFinal,
+                    sesiones: nuevaSesion,
                 });
             } else {
                 await setDoc(docRef, {
                     nivel: nivel,
                     minutos: minutos,
                     segundos: segundos,
+                    sesiones: 1,
                 });
             }
         } catch (error) {
