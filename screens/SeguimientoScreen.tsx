@@ -24,14 +24,31 @@ interface UserData {
   totalDaysTracked?: number;
 }
 
+const motivationalMessages = [
+  "Cada pequeño paso cuenta. ¡Sigue adelante!",
+  "La constancia es el secreto del éxito. ¡Tú puedes!",
+  "Hoy es un gran día para seguir progresando.",
+  "Los hábitos saludables son regalos que te haces a ti mismo.",
+  "Celebra cada victoria, por pequeña que sea.",
+  "Tu dedicación de hoy construye tu éxito de mañana.",
+  "El progreso no es lineal, cada esfuerzo suma.",
+  "Eres más fuerte de lo que crees. ¡Sigue así!",
+  "La disciplina es elegir lo que quieres más sobre lo que quieres ahora.",
+  "Cada día es una nueva oportunidad para ser mejor."
+];
+
 export default function SeguimientoScreen() {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [hasDietHabit, setHasDietHabit] = useState(false);
   const [hasAnyHabit, setHasAnyHabit] = useState(false);
   const [habitoYoga, sethabitoYoga] = useState(false);
+  const [randomMessage, setRandomMessage] = useState("");
 
   useEffect(() => {
+    // Seleccionar un mensaje motivacional aleatorio al cargar
+    setRandomMessage(motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)]);
+    
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       if (user) {
         // Verificar si tiene el hábito de dieta para bajar de peso
@@ -74,7 +91,7 @@ export default function SeguimientoScreen() {
       sethabitoYoga(hasYoga);
       
       // Verificar si tiene cualquier hábito registrado
-      const hasAny = alimenticiosSnapshot.size > 0;
+      const hasAny = alimenticiosSnapshot.size > 0 || hasYoga;
       setHasAnyHabit(hasAny);
 
     } catch (error) {
@@ -90,6 +107,8 @@ export default function SeguimientoScreen() {
       const user = auth.currentUser;
       if (user) {
         checkHabits(user.uid);
+        // Cambiar el mensaje motivacional cada vez que se enfoca la pantalla
+        setRandomMessage(motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)]);
       }
     }, [])
   );
@@ -126,6 +145,12 @@ export default function SeguimientoScreen() {
         </View>
 
         <View className="px-6 mt-6">
+          {/* Mensaje motivacional */}
+          <View className="bg-indigo-800 rounded-3xl p-6 mb-6 shadow-2xl border border-indigo-700">
+            <Text className="text-white text-xl font-bold mb-2">💪 Motivación del día</Text>
+            <Text className="text-gray-100 text-lg italic">"{randomMessage}"</Text>
+          </View>
+
           {/* Componente de Progreso - Solo si tiene hábito de dieta */}
           {hasDietHabit && (
             <ProgresoAlimentacion
@@ -168,18 +193,13 @@ export default function SeguimientoScreen() {
             <ProgresoYoga />
           )}
 
-          {/* Secciones adicionales */}
-          <View className="bg-gray-800 rounded-3xl p-6 mb-6 shadow-2xl border border-gray-700">
-            <Text className="text-white text-xl font-bold mb-4">📈 Estadísticas Semanales</Text>
-            <Text className="text-gray-400 text-base">
-              Próximamente: Gráficos detallados de tu progreso semanal y mensual.
-            </Text>
-          </View>
 
-          <View className="bg-gray-800 rounded-3xl p-6 mb-6 shadow-2xl border border-gray-700">
-            <Text className="text-white text-xl font-bold mb-4">🏆 Logros</Text>
-            <Text className="text-gray-400 text-base">
-              Próximamente: Sistema de logros y recompensas por tu constancia.
+          {/* Consejo saludable */}
+          <View className="bg-teal-800 rounded-3xl p-6 mb-6 shadow-2xl border border-teal-700">
+            <Text className="text-white text-xl font-bold mb-4">🌿 Consejo Saludable</Text>
+            <Text className="text-gray-100 text-base">
+              Recuerda que pequeños cambios consistentes llevan a grandes resultados. 
+              Hoy es un buen día para beber más agua y mover tu cuerpo.
             </Text>
           </View>
         </View>

@@ -9,13 +9,14 @@ import {
   TextInput,
   ScrollView,
   Dimensions,
-  Animated
+  Animated,
+  Alert
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { auth, firestore } from '../../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
-import { doc, onSnapshot, setDoc } from 'firebase/firestore';
+import { doc, onSnapshot, setDoc, updateDoc, increment } from 'firebase/firestore';
 import ReminderButton from 'Componentes/ReminderButton';
 
 // Define the navigation stack's param list
@@ -37,6 +38,7 @@ interface UserData {
   dinnerReminder?: string;
   currentStreak?: number;
   totalDaysTracked?: number;
+  lastCompletedDay?: string; // Para evitar completar el mismo día múltiples veces
 }
 
 const { width } = Dimensions.get('window');
@@ -66,6 +68,7 @@ const Icon = ({ name, size = 24, color = '#1F2A44' }: { name: string; size?: num
 export default function BajarDePeso() {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [finishingDay, setFinishingDay] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [weightGoalInput, setWeightGoalInput] = useState('');
   const [fadeAnim] = useState(new Animated.Value(0));
@@ -156,10 +159,73 @@ export default function BajarDePeso() {
     setModalVisible(true);
   };
 
-  const handleFinishDay = () => {
-    // TODO: Implement finish day functionality
-    console.log("Finalizar día presionado");
-    alert("Función de finalizar día será implementada pronto");
+  const getTodayDateString = () => {
+    const today = new Date();
+    return today.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+  };
+
+  const canCompleteDay = () => {
+    const today = getTodayDateString();
+    return userData?.lastCompletedDay !== today;
+  };
+
+  const handleFinishDay = async () => {
+    if (!auth.currentUser || !userData?.weightGoal) {
+      Alert.alert(
+        "Meta requerida", 
+        "Primero debes establecer una meta de peso para comenzar a trackear tus días."
+      );
+      return;
+    }
+
+    if (!canCompleteDay()) {
+      Alert.alert(
+        "Día ya completado", 
+        "Ya completaste el día de hoy. ¡Vuelve mañana para continuar tu progreso!"
+      );
+      return;
+    }
+
+    Alert.alert(
+      "Finalizar Día",
+      "¿Estás seguro de que quieres marcar este día como completado? Esto sumará +1 día a tu progreso.",
+      [
+        {
+          text: "Cancelar",
+          style: "cancel"
+        },
+        {
+          text: "Confirmar",
+          onPress: async () => {
+            try {
+              setFinishingDay(true);
+              const today = getTodayDateString();
+              const userDocRef = doc(firestore, 'users', auth.currentUser!.uid);
+              
+              await updateDoc(userDocRef, {
+                totalDaysTracked: increment(1),
+                currentStreak: increment(1),
+                lastCompletedDay: today
+              });
+
+              Alert.alert(
+                "¡Excelente! 🎉", 
+                `Has completado un día más en tu transformación. Llevas ${(userData.totalDaysTracked || 0) + 1} días en total.`,
+                [{ text: "¡Genial!", style: "default" }]
+              );
+            } catch (error) {
+              console.error('Error al finalizar día:', error);
+              Alert.alert(
+                "Error", 
+                "Hubo un problema al guardar tu progreso. Intenta nuevamente."
+              );
+            } finally {
+              setFinishingDay(false);
+            }
+          }
+        }
+      ]
+    );
   };
 
   if (loading) {
@@ -254,16 +320,29 @@ export default function BajarDePeso() {
 
               {/* Botón Finalizar Día */}
               <TouchableOpacity
-                className="bg-purple-600 py-4 px-6 rounded-xl mt-6 shadow-sm"
+                className={`${canCompleteDay() ? 'bg-purple-600' : 'bg-gray-500'} py-4 px-6 rounded-xl mt-6 shadow-sm`}
                 onPress={handleFinishDay}
+                disabled={finishingDay || !canCompleteDay()}
               >
                 <View className="flex-row items-center justify-center">
-                  <Icon name="check" size={20} color="#FFFFFF" />
-                  <Text className="text-white text-center font-semibold text-base ml-2">
-                    Finalizar Día
-                  </Text>
+                  {finishingDay ? (
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                  ) : (
+                    <>
+                      <Icon name="check" size={20} color="#FFFFFF" />
+                      <Text className="text-white text-center font-semibold text-base ml-2">
+                        {canCompleteDay() ? 'Finalizar Día' : 'Día Completado ✨'}
+                      </Text>
+                    </>
+                  )}
                 </View>
               </TouchableOpacity>
+
+              {!canCompleteDay() && (
+                <Text className="text-gray-400 text-center text-xs mt-2">
+                  Ya completaste el día de hoy. ¡Vuelve mañana!
+                </Text>
+              )}
             </Animated.View>
           )}
 

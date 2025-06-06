@@ -20,7 +20,8 @@ const Icon = ({ name, size = 24, color = '#FFFFFF' }: { name: string; size?: num
     dinner: '🌙',
     trophy: '🏆',
     fire: '🔥',
-    chart: '📊'
+    chart: '📊',
+    calendar: '📅'
   };
   
   return (
@@ -30,26 +31,45 @@ const Icon = ({ name, size = 24, color = '#FFFFFF' }: { name: string; size?: num
   );
 };
 
-// Componente de progreso circular simplificado
-const CircularProgress = ({ progress, size = 120 }: { 
+// Componente de progreso circular mejorado
+const CircularProgress = ({ progress, size = 120, daysCompleted, totalDays }: { 
   progress: number; 
-  size?: number; 
+  size?: number;
+  daysCompleted: number;
+  totalDays: number;
 }) => {
+  const getProgressColor = () => {
+    if (progress >= 75) return '#10B981'; // Verde
+    if (progress >= 50) return '#F59E0B'; // Amarillo
+    if (progress >= 25) return '#EF4444'; // Rojo
+    return '#6B7280'; // Gris
+  };
+
   return (
-    <View 
-      style={{
-        width: size,
-        height: size,
-        borderRadius: size / 2,
-        backgroundColor: 'rgba(255,255,255,0.1)',
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderWidth: 8,
-        borderColor: progress > 50 ? '#4F46E5' : progress > 25 ? '#F59E0B' : '#EF4444',
-      }}
-    >
-      <Text className="text-white text-2xl font-bold">{Math.round(progress)}%</Text>
-      <Text className="text-gray-300 text-sm">Progreso</Text>
+    <View className="items-center">
+      <View 
+        style={{
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+          backgroundColor: 'rgba(255,255,255,0.1)',
+          justifyContent: 'center',
+          alignItems: 'center',
+          borderWidth: 8,
+          borderColor: getProgressColor(),
+        }}
+      >
+        <Text className="text-white text-2xl font-bold">{Math.round(progress)}%</Text>
+        <Text className="text-gray-300 text-sm">Progreso</Text>
+      </View>
+      <View className="items-center mt-3">
+        <Text className="text-white text-lg font-semibold">
+          {daysCompleted}/{totalDays} días
+        </Text>
+        <Text className="text-gray-400 text-xs">
+          {totalDays - daysCompleted} días restantes
+        </Text>
+      </View>
     </View>
   );
 };
@@ -59,6 +79,7 @@ interface UserData {
   weight?: string;
   currentStreak?: number;
   totalDaysTracked?: number;
+  lastCompletedDay?: string;
 }
 
 interface ProgresoAlimentacionProps {
@@ -74,6 +95,9 @@ const ProgresoAlimentacion: React.FC<ProgresoAlimentacionProps> = ({
   const [weightGoalInput, setWeightGoalInput] = useState('');
   const [saving, setSaving] = useState(false);
   const [localUserData, setLocalUserData] = useState<UserData | null>(userData);
+
+  // Constante para días objetivo (30 días = 1 mes)
+  const TARGET_DAYS = 30;
 
   useEffect(() => {
     setLocalUserData(userData);
@@ -92,11 +116,44 @@ const ProgresoAlimentacion: React.FC<ProgresoAlimentacionProps> = ({
   }, []);
 
   const calculateProgress = () => {
-    if (!localUserData?.weightGoal || !localUserData?.weight) return 0;
-    const currentWeight = parseFloat(localUserData.weight);
-    const goalWeight = currentWeight - localUserData.weightGoal;
-    const daysProgress = (localUserData.totalDaysTracked || 0) * 2;
-    return Math.min(daysProgress, 100);
+    if (!localUserData?.totalDaysTracked) return 0;
+    const daysCompleted = localUserData.totalDaysTracked;
+    const progressPercentage = Math.min((daysCompleted / TARGET_DAYS) * 100, 100);
+    return progressPercentage;
+  };
+
+  const getDaysInfo = () => {
+    const daysCompleted = localUserData?.totalDaysTracked || 0;
+    const remainingDays = Math.max(TARGET_DAYS - daysCompleted, 0);
+    return {
+      completed: daysCompleted,
+      remaining: remainingDays,
+      total: TARGET_DAYS,
+      isCompleted: daysCompleted >= TARGET_DAYS
+    };
+  };
+
+  const getMotivationalMessage = () => {
+    const progress = calculateProgress();
+    const daysInfo = getDaysInfo();
+    
+    if (daysInfo.isCompleted) {
+      return "¡Felicidades! 🎉 Has completado tu primer mes de transformación. ¡Sigue así!";
+    }
+    
+    if (progress >= 75) {
+      return `¡Increíble! Solo te faltan ${daysInfo.remaining} días para completar tu primer mes 💪`;
+    }
+    
+    if (progress >= 50) {
+      return `¡Vas por la mitad! Ya llevas ${daysInfo.completed} días, mantén el ritmo 🚀`;
+    }
+    
+    if (progress >= 25) {
+      return `¡Buen comienzo! Llevas ${daysInfo.completed} días, cada día cuenta 🌟`;
+    }
+    
+    return `¡Empezaste tu transformación! Cada día es un paso hacia tu meta 🎯`;
   };
 
   const handleSetGoalPress = () => {
@@ -133,7 +190,6 @@ const ProgresoAlimentacion: React.FC<ProgresoAlimentacionProps> = ({
         { merge: true }
       );
       
-      // Cerrar el modal inmediatamente
       setModalVisible(false);
       setWeightGoalInput('');
       onGoalUpdated?.();
@@ -146,13 +202,15 @@ const ProgresoAlimentacion: React.FC<ProgresoAlimentacionProps> = ({
     }
   };
 
+  const daysInfo = getDaysInfo();
+
   return (
     <>
       <View className="bg-gray-800 rounded-3xl p-6 mb-6 shadow-2xl border border-gray-700">
         <View className="flex-row items-center justify-between mb-4">
           <View>
             <Text className="text-white text-xl font-bold">Tu Progreso</Text>
-            <Text className="text-gray-400 text-sm">Sigue así, vas genial! 💪</Text>
+            <Text className="text-gray-400 text-sm">{getMotivationalMessage()}</Text>
           </View>
           <Icon name="chart" size={28} />
         </View>
@@ -177,20 +235,41 @@ const ProgresoAlimentacion: React.FC<ProgresoAlimentacionProps> = ({
             </View>
 
             {localUserData?.weightGoal && (
-              <View className="flex-row items-center space-x-4">
-                <View className="items-center">
-                  <Icon name="fire" size={18} />
-                  <Text className="text-orange-400 text-sm font-medium">
-                    {localUserData?.currentStreak || 0} días
-                  </Text>
-                  <Text className="text-gray-400 text-xs">Racha</Text>
+              <View className="space-y-3">
+                <View className="flex-row items-center space-x-4">
+                  <View className="items-center">
+                    <Icon name="fire" size={18} />
+                    <Text className="text-orange-400 text-sm font-medium">
+                      {localUserData?.currentStreak || 0} días
+                    </Text>
+                    <Text className="text-gray-400 text-xs">Racha</Text>
+                  </View>
+                  <View className="items-center">
+                    <Icon name="calendar" size={18} />
+                    <Text className="text-blue-400 text-sm font-medium">
+                      {daysInfo.completed} días
+                    </Text>
+                    <Text className="text-gray-400 text-xs">Completados</Text>
+                  </View>
+                  <View className="items-center">
+                    <Icon name="trophy" size={18} />
+                    <Text className="text-yellow-400 text-sm font-medium">
+                      {daysInfo.remaining} días
+                    </Text>
+                    <Text className="text-gray-400 text-xs">Restantes</Text>
+                  </View>
                 </View>
-                <View className="items-center">
-                  <Icon name="trophy" size={18} />
-                  <Text className="text-yellow-400 text-sm font-medium">
-                    {localUserData?.totalDaysTracked || 0} días
-                  </Text>
-                  <Text className="text-gray-400 text-xs">Total</Text>
+                
+                {/* Barra de progreso lineal adicional */}
+                <View className="bg-gray-700 rounded-full h-2 mt-2">
+                  <View 
+                    className={`h-2 rounded-full ${
+                      calculateProgress() >= 75 ? 'bg-green-500' :
+                      calculateProgress() >= 50 ? 'bg-yellow-500' :
+                      calculateProgress() >= 25 ? 'bg-red-500' : 'bg-gray-500'
+                    }`}
+                    style={{ width: `${calculateProgress()}%` }}
+                  />
                 </View>
               </View>
             )}
@@ -198,7 +277,11 @@ const ProgresoAlimentacion: React.FC<ProgresoAlimentacionProps> = ({
 
           {localUserData?.weightGoal && (
             <View className="ml-4">
-              <CircularProgress progress={calculateProgress()} />
+              <CircularProgress 
+                progress={calculateProgress()} 
+                daysCompleted={daysInfo.completed}
+                totalDays={daysInfo.total}
+              />
             </View>
           )}
         </View>
@@ -211,6 +294,21 @@ const ProgresoAlimentacion: React.FC<ProgresoAlimentacionProps> = ({
             {localUserData?.weightGoal ? '✏️ Cambiar Meta' : '🎯 Establecer Meta'}
           </Text>
         </TouchableOpacity>
+
+        {/* Información adicional sobre el ciclo de 30 días */}
+        {localUserData?.weightGoal && (
+          <View className="bg-gray-700 rounded-2xl p-4 mt-4">
+            <Text className="text-gray-300 text-sm font-medium mb-1">
+              📋 Ciclo de Transformación (30 días)
+            </Text>
+            <Text className="text-gray-400 text-xs">
+              {daysInfo.isCompleted 
+                ? "¡Completaste tu primer ciclo! Puedes empezar uno nuevo o ajustar tu meta."
+                : `Te encuentras en el día ${daysInfo.completed} de tu ciclo de transformación de 30 días.`
+              }
+            </Text>
+          </View>
+        )}
       </View>
 
       {/* Modal para establecer/cambiar meta */}
@@ -226,7 +324,7 @@ const ProgresoAlimentacion: React.FC<ProgresoAlimentacionProps> = ({
               <Text style={{ fontSize: 40 }}>🎯</Text>
               <Text className="text-white text-2xl font-bold mt-2">Nueva Meta</Text>
               <Text className="text-gray-400 text-center mt-1">
-                Define cuánto peso quieres perder
+                Define cuánto peso quieres perder en 30 días
               </Text>
             </View>
             
