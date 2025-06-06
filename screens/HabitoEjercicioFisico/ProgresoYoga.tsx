@@ -2,6 +2,7 @@ import { View, Text, Image } from 'react-native'
 import { collection, getDocs } from 'firebase/firestore';
 import { auth, firestore } from '../../firebase';
 import React, { useState, useEffect } from 'react';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const ProgresoYoga = ({ }) => {
     const [niveles, setNiveles] = useState<any[]>([]);
@@ -23,6 +24,7 @@ const ProgresoYoga = ({ }) => {
                     minutos: data.minutos,
                     segundos: data.segundos,
                     nivel: data.nivel,
+                    sesiones: data.sesiones,
                 };
             });
             setNiveles(datosNiveles);
@@ -35,17 +37,11 @@ const ProgresoYoga = ({ }) => {
     }, []);
 
     const formatearTiempo = (minutos: number, segundos: number) => {
-        const totalSegundos = (minutos * 60) + segundos;
-
-        const horas = Math.floor(totalSegundos / 3600);
-        const mins = Math.floor((totalSegundos % 3600) / 60);
-        const segs = totalSegundos % 60;
-
-        return [
-            horas.toString().padStart(2, '0'),
-            mins.toString().padStart(2, '0'),
-            segs.toString().padStart(2, '0')
-        ].join(':');
+        const hora = Math.floor(minutos / 60);
+        const nuevosMinutos = Math.floor(minutos % 60);
+        return hora.toString().padStart(2, '0') + ":" +
+            nuevosMinutos.toString().padStart(2, '0') + ":" +
+            segundos.toString().padStart(2, '0');
     };
 
 
@@ -54,28 +50,41 @@ const ProgresoYoga = ({ }) => {
             <View className="bg-gray-800 rounded-3xl p-6 mb-6 shadow-2xl border border-gray-700">
                 <View className=" items-center justify-between mb-4">
                     <Text className="text-white text-2xl font-bold">Progreso Yoga</Text>
-                    <View>
+                    <View className="items-center">
                         {niveles.map((item) => (
-                            <View key={item.nivel} className="bg-purple-500 p-4 rounded-2xl mb-4 w-full mt-3">
-                                <View className="flex-row items-center">
+                            <View
+                                key={item.nivel}
+                                className="p-4 justify-between items-center"
+                            >
+                                <LinearGradient
+                                    colors={['#121826', '#202938']} // #202938, #424799, #121826
+                                    start={{ x: 0.5, y: 0 }}
+                                    end={{ x: 0.5, y: 1 }}
+                                    style={{ borderRadius: 16 }}
+                                    className='flex-row justify-between items-center border border-gray-700'
+                                >
 
-                                    <View>
+                                    <View className="rounded-full p-3">
                                         <Image
                                             source={require('../../assets/yoga1.png')}
-                                            className="w-[45] h-[45] mt-5 rounded-full"
+                                            className="w-[50] h-[50] rounded-full"
                                         />
                                     </View>
 
-                                    <View>
-                                        <Text className="text-white text-lg font-bold">{item.nivel}</Text>
-                                        <Text className="text-gray-300 text-sm">Tiempo Total</Text>
-
-                                        <Text className="text-white text-lg font-mono">  {formatearTiempo(item.minutos, item.segundos)}</Text>
-                                        {/* <Text className="text-white text-lg font-mono">{formatearTiempo(item.totalSegundos)}</Text> */}
-                                        <Text className="text-gray-300 text-sm mt-1">Sesiones{item.sesiones}</Text>
+                                    <View className="ml-4 flex-1 mb-1">
+                                        <Text className="text-white text-xl font-bold">{item.nivel}</Text>
+                                        <Text className="text-white text-sm mt-1 font-light">Tiempo Total 🕒 </Text>
+                                        <Text className="text-white text-2xl font-light mt-1">
+                                            {formatearTiempo(item.minutos, item.segundos)}
+                                        </Text>
+                                        <Text className="text-white text-sm font-light mt-1">Sesiones ✅ </Text>
+                                        <Text className="text-white text-sm font-light mt-1">
+                                            {item.sesiones}
+                                        </Text>
                                     </View>
-                                </View>
+                                </LinearGradient>
                             </View>
+
                         ))}
                     </View>
 
