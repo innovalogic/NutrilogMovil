@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, 
   Text, 
   TouchableOpacity, 
   Modal, 
-  TextInput 
+  TextInput,
+  ActivityIndicator
 } from 'react-native';
 import { auth, firestore } from '../../firebase';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, onSnapshot } from 'firebase/firestore';
 
 // Componente de icono personalizado
 const Icon = ({ name, size = 24, color = '#FFFFFF' }: { name: string; size?: number; color?: string }) => {
@@ -62,7 +63,7 @@ interface UserData {
 
 interface ProgresoAlimentacionProps {
   userData: UserData | null;
-  onGoalUpdated?: () => void; // Callback opcional para notificar cambios
+  onGoalUpdated?: () => void;
 }
 
 const ProgresoAlimentacion: React.FC<ProgresoAlimentacionProps> = ({ 
@@ -71,17 +72,35 @@ const ProgresoAlimentacion: React.FC<ProgresoAlimentacionProps> = ({
 }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [weightGoalInput, setWeightGoalInput] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [localUserData, setLocalUserData] = useState<UserData | null>(userData);
+
+  useEffect(() => {
+    setLocalUserData(userData);
+  }, [userData]);
+
+  useEffect(() => {
+    if (auth.currentUser) {
+      const userDocRef = doc(firestore, 'users', auth.currentUser.uid);
+      const unsubscribe = onSnapshot(userDocRef, (doc) => {
+        if (doc.exists()) {
+          setLocalUserData(doc.data() as UserData);
+        }
+      });
+      return () => unsubscribe();
+    }
+  }, []);
 
   const calculateProgress = () => {
-    if (!userData?.weightGoal || !userData?.weight) return 0;
-    const currentWeight = parseFloat(userData.weight);
-    const goalWeight = currentWeight - userData.weightGoal;
-    // Simulamos progreso basado en días rastreados (esto se puede mejorar con datos reales)
-    const daysProgress = (userData.totalDaysTracked || 0) * 2;
+    if (!localUserData?.weightGoal || !localUserData?.weight) return 0;
+    const currentWeight = parseFloat(localUserData.weight);
+    const goalWeight = currentWeight - localUserData.weightGoal;
+    const daysProgress = (localUserData.totalDaysTracked || 0) * 2;
     return Math.min(daysProgress, 100);
   };
 
   const handleSetGoalPress = () => {
+    setWeightGoalInput(localUserData?.weightGoal?.toString() || '');
     setModalVisible(true);
   };
 
@@ -89,7 +108,9 @@ const ProgresoAlimentacion: React.FC<ProgresoAlimentacionProps> = ({
     if (!auth.currentUser || !weightGoalInput) return;
     
     try {
+      setSaving(true);
       const weightGoal = parseFloat(weightGoalInput);
+      
       if (isNaN(weightGoal)) {
         alert('Ingrese un número válido');
         return;
@@ -106,21 +127,22 @@ const ProgresoAlimentacion: React.FC<ProgresoAlimentacionProps> = ({
       await setDoc(doc(firestore, 'users', auth.currentUser.uid), 
         { 
           weightGoal,
-          totalDaysTracked: userData?.totalDaysTracked || 0,
-          currentStreak: userData?.currentStreak || 0
+          totalDaysTracked: localUserData?.totalDaysTracked || 0,
+          currentStreak: localUserData?.currentStreak || 0
         }, 
         { merge: true }
       );
       
+      // Cerrar el modal inmediatamente
       setModalVisible(false);
       setWeightGoalInput('');
-      
-      // Notificar al componente padre si hay callback
       onGoalUpdated?.();
       
     } catch (error) {
       console.error('Error al guardar:', error);
       alert('Error al guardar la meta. Intenta nuevamente.');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -142,7 +164,7 @@ const ProgresoAlimentacion: React.FC<ProgresoAlimentacionProps> = ({
               <View className="flex-row items-center">
                 <Icon name="scale" size={20} />
                 <Text className="text-white text-lg font-semibold ml-2">
-                  {userData?.weight ? `${userData.weight} kg` : 'No registrado'}
+                  {localUserData?.weight ? `${localUserData.weight} kg` : 'No registrado'}
                 </Text>
               </View>
             </View>
@@ -150,23 +172,23 @@ const ProgresoAlimentacion: React.FC<ProgresoAlimentacionProps> = ({
             <View className="mb-4">
               <Text className="text-gray-300 text-sm mb-1">Meta</Text>
               <Text className="text-purple-400 text-lg font-semibold">
-                {userData?.weightGoal ? `Bajar ${userData.weightGoal} kg` : 'Sin meta definida'}
+                {localUserData?.weightGoal ? `Bajar ${localUserData.weightGoal} kg` : 'Sin meta definida'}
               </Text>
             </View>
 
-            {userData?.weightGoal && (
+            {localUserData?.weightGoal && (
               <View className="flex-row items-center space-x-4">
                 <View className="items-center">
                   <Icon name="fire" size={18} />
                   <Text className="text-orange-400 text-sm font-medium">
-                    {userData?.currentStreak || 0} días
+                    {localUserData?.currentStreak || 0} días
                   </Text>
                   <Text className="text-gray-400 text-xs">Racha</Text>
                 </View>
                 <View className="items-center">
                   <Icon name="trophy" size={18} />
                   <Text className="text-yellow-400 text-sm font-medium">
-                    {userData?.totalDaysTracked || 0} días
+                    {localUserData?.totalDaysTracked || 0} días
                   </Text>
                   <Text className="text-gray-400 text-xs">Total</Text>
                 </View>
@@ -174,7 +196,7 @@ const ProgresoAlimentacion: React.FC<ProgresoAlimentacionProps> = ({
             )}
           </View>
 
-          {userData?.weightGoal && (
+          {localUserData?.weightGoal && (
             <View className="ml-4">
               <CircularProgress progress={calculateProgress()} />
             </View>
@@ -186,7 +208,7 @@ const ProgresoAlimentacion: React.FC<ProgresoAlimentacionProps> = ({
           onPress={handleSetGoalPress}
         >
           <Text className="text-white text-center font-bold text-lg">
-            {userData?.weightGoal ? '✏️ Cambiar Meta' : '🎯 Establecer Meta'}
+            {localUserData?.weightGoal ? '✏️ Cambiar Meta' : '🎯 Establecer Meta'}
           </Text>
         </TouchableOpacity>
       </View>
@@ -196,7 +218,7 @@ const ProgresoAlimentacion: React.FC<ProgresoAlimentacionProps> = ({
         animationType="slide"
         transparent={true}
         visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
+        onRequestClose={() => !saving && setModalVisible(false)}
       >
         <View className="flex-1 justify-center items-center bg-black/80">
           <View className="bg-gray-800 rounded-3xl p-8 w-4/5 max-w-sm border border-gray-600 shadow-2xl">
@@ -208,11 +230,11 @@ const ProgresoAlimentacion: React.FC<ProgresoAlimentacionProps> = ({
               </Text>
             </View>
             
-            {userData?.weight && (
+            {localUserData?.weight && (
               <View className="bg-gray-700 rounded-2xl p-4 mb-6">
                 <Text className="text-gray-300 text-sm">Peso Actual</Text>
                 <Text className="text-white text-xl font-semibold">
-                  {userData.weight} kg
+                  {localUserData.weight} kg
                 </Text>
               </View>
             )}
@@ -233,16 +255,22 @@ const ProgresoAlimentacion: React.FC<ProgresoAlimentacionProps> = ({
             <View className="flex-row space-x-3">
               <TouchableOpacity
                 className="bg-gray-600 px-6 py-4 rounded-2xl flex-1"
-                onPress={() => setModalVisible(false)}
+                onPress={() => !saving && setModalVisible(false)}
+                disabled={saving}
               >
                 <Text className="text-white text-center font-semibold">Cancelar</Text>
               </TouchableOpacity>
               
               <TouchableOpacity
-                className="bg-purple-500 px-6 py-4 rounded-2xl flex-1 shadow-lg"
+                className="bg-purple-500 px-6 py-4 rounded-2xl flex-1 shadow-lg items-center justify-center"
                 onPress={saveWeightGoal}
+                disabled={saving}
               >
-                <Text className="text-white text-center font-bold">Guardar</Text>
+                {saving ? (
+                  <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                  <Text className="text-white text-center font-bold">Guardar</Text>
+                )}
               </TouchableOpacity>
             </View>
           </View>
