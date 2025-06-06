@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  SafeAreaView, 
-  ActivityIndicator, 
+import {
+  View,
+  Text,
+  SafeAreaView,
+  ActivityIndicator,
   ScrollView
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
@@ -12,6 +12,7 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { doc, onSnapshot, collection, getDocs } from 'firebase/firestore';
 import ProgresoAlimentacion from './HabitoAlimentacion/ProgresoAlimentacion';
 import BottomNavBar from '../Componentes/BottomNavBar';
+import ProgresoYoga from './HabitoEjercicioFisico/ProgresoYoga';
 
 interface UserData {
   weightGoal?: number;
@@ -28,13 +29,14 @@ export default function SeguimientoScreen() {
   const [loading, setLoading] = useState(true);
   const [hasDietHabit, setHasDietHabit] = useState(false);
   const [hasAnyHabit, setHasAnyHabit] = useState(false);
+  const [habitoYoga, sethabitoYoga] = useState(false);
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       if (user) {
         // Verificar si tiene el hábito de dieta para bajar de peso
         checkHabits(user.uid);
-        
+
         const userDocRef = doc(firestore, 'users', user.uid);
         const unsubscribeSnapshot = onSnapshot(userDocRef, (snapshot) => {
           if (snapshot.exists()) {
@@ -58,17 +60,23 @@ export default function SeguimientoScreen() {
       // Verificar hábitos alimenticios
       const habitosAlimenticiosRef = collection(firestore, 'habitosUsuarios', userId, 'habitosAlimenticios');
       const alimenticiosSnapshot = await getDocs(habitosAlimenticiosRef);
-      
-      const hasDiet = alimenticiosSnapshot.docs.some(doc => 
+
+      const hasDiet = alimenticiosSnapshot.docs.some(doc =>
         doc.data().habitoSeleccionado === 'Dieta Para Bajar de Peso'
       );
-      
+
       setHasDietHabit(hasDiet);
+
+      //Verificar habitos de Yoga
+      const habitosFisicos = collection(firestore, 'users', userId, 'ejerciciosYoga');
+      const capturarFisicos = await getDocs(habitosFisicos);
+      const hasYoga = capturarFisicos.size > 0;
+      sethabitoYoga(hasYoga);
       
       // Verificar si tiene cualquier hábito registrado
       const hasAny = alimenticiosSnapshot.size > 0;
       setHasAnyHabit(hasAny);
-      
+
     } catch (error) {
       console.error('Error al verificar hábitos:', error);
       setHasDietHabit(false);
@@ -103,8 +111,8 @@ export default function SeguimientoScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-gray-900">
-      <ScrollView 
-        className="flex-1" 
+      <ScrollView
+        className="flex-1"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 20 }}
       >
@@ -120,7 +128,7 @@ export default function SeguimientoScreen() {
         <View className="px-6 mt-6">
           {/* Componente de Progreso - Solo si tiene hábito de dieta */}
           {hasDietHabit && (
-            <ProgresoAlimentacion 
+            <ProgresoAlimentacion
               userData={userData}
               onGoalUpdated={handleGoalUpdated}
             />
@@ -154,6 +162,10 @@ export default function SeguimientoScreen() {
                 </Text>
               </View>
             </View>
+          )}
+
+          {habitoYoga && (
+            <ProgresoYoga />
           )}
 
           {/* Secciones adicionales */}
