@@ -45,9 +45,9 @@ interface MealPlan {
 const { width } = Dimensions.get('window');
 
 // Componente de icono personalizado
-const Icon = ({ name, size = 24, color = '#FFFFFF' }: { name: string; size?: number; color?: string }) => {
+const Icon = ({ name, size = 24, color = '#1F2A44' }: { name: string; size?: number; color?: string }) => {
   const icons: { [key: string]: string } = {
-    lunch: '🍴',
+    lunch: '🍽️',
     target: '🎯',
     fire: '🔥',
     apple: '🍎',
@@ -68,34 +68,34 @@ const Icon = ({ name, size = 24, color = '#FFFFFF' }: { name: string; size?: num
 };
 
 // Componente de estadística
-const StatCard = ({ icon, value, label, color = 'bg-gray-700' }: {
+const StatCard = ({ icon, value, label, color = 'bg-gray-100' }: {
   icon: string;
   value: string | number;
   label: string;
   color?: string;
 }) => (
-  <View className={`${color} rounded-2xl p-4 flex-1 mx-1`}>
+  <View className={`${color} rounded-xl p-4 flex-1 mx-2 shadow-sm border border-gray-200`}>
     <View className="items-center">
-      <Icon name={icon} size={24} />
-      <Text className="text-white text-xl font-bold mt-2">{value}</Text>
-      <Text className="text-gray-300 text-sm text-center">{label}</Text>
+      <Icon name={icon} size={20} color="#1F2A44" />
+      <Text className="text-gray-900 text-lg font-semibold mt-2">{value}</Text>
+      <Text className="text-gray-500 text-xs text-center">{label}</Text>
     </View>
   </View>
 );
 
 // Componente de meal card
 const MealCard = ({ meal, index }: { meal: string; index: number }) => {
-  const colors = ['bg-green-600', 'bg-blue-600', 'bg-purple-600'];
+  const colors = ['bg-orange-50', 'bg-amber-50', 'bg-yellow-50'];
   const bgColor = colors[index % colors.length];
   
   return (
-    <View className={`${bgColor} rounded-2xl p-4 mb-4 shadow-lg`}>
+    <View className={`${bgColor} rounded-xl p-4 mb-4 shadow-sm border border-gray-200`}>
       <View className="flex-row items-start">
-        <View className="bg-white/20 rounded-full p-2 mr-3">
-          <Text className="text-white font-bold">{index + 1}</Text>
+        <View className="bg-orange-100 rounded-full p-2 mr-3">
+          <Text className="text-orange-900 font-semibold">{index + 1}</Text>
         </View>
         <View className="flex-1">
-          <Text className="text-white text-base leading-6">{meal}</Text>
+          <Text className="text-gray-800 text-sm leading-5">{meal}</Text>
         </View>
       </View>
     </View>
@@ -107,6 +107,7 @@ export default function AlmuerzoBajarDePeso() {
   const [loading, setLoading] = useState(true);
   const [mealPlan, setMealPlan] = useState<MealPlan | null>(null);
   const [fadeAnim] = useState(new Animated.Value(0));
+  const [scaleAnim] = useState(new Animated.Value(0.95));
   const navigation = useNavigation<NavigationProp>();
 
   // Define meal plans based on weight loss goals
@@ -204,12 +205,19 @@ export default function AlmuerzoBajarDePeso() {
               }
             }
             
-            // Animate content appearance
-            Animated.timing(fadeAnim, {
-              toValue: 1,
-              duration: 800,
-              useNativeDriver: true,
-            }).start();
+            // Animate content appearance with fade and scale
+            Animated.parallel([
+              Animated.timing(fadeAnim, {
+                toValue: 1,
+                duration: 800,
+                useNativeDriver: true,
+              }),
+              Animated.timing(scaleAnim, {
+                toValue: 1,
+                duration: 800,
+                useNativeDriver: true,
+              })
+            ]).start();
           } else {
             console.log('No se encontraron datos del usuario');
           }
@@ -232,8 +240,8 @@ export default function AlmuerzoBajarDePeso() {
     return (
       <SafeAreaView className="flex-1 bg-gray-900 items-center justify-center">
         <View className="items-center">
-          <ActivityIndicator size="large" color="#FFFFFF" />
-          <Text className="text-white mt-4 text-lg">Preparando tu plan de almuerzo...</Text>
+          <ActivityIndicator size="large" color="#1F2A44" />
+          <Text className="text-gray-100 mt-4 text-base font-medium">Preparando tu plan de almuerzo...</Text>
         </View>
       </SafeAreaView>
     );
@@ -244,21 +252,21 @@ export default function AlmuerzoBajarDePeso() {
       <ScrollView 
         className="flex-1" 
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 20 }}
+        contentContainerStyle={{ paddingBottom: 32 }}
       >
         {/* Header */}
-        <View className="bg-green-600 pt-12 pb-8 px-6 rounded-b-3xl">
+        <View className="bg-orange-900 pt-12 pb-8 px-6 rounded-b-2xl shadow-md">
           <View className="flex-row items-center justify-between mb-4">
             <TouchableOpacity
               onPress={() => navigation.goBack()}
-              className="bg-white/20 rounded-full p-2"
+              className="bg-orange-800/30 rounded-full p-2"
             >
-              <Icon name="back" size={24} />
+              <Icon name="back" size={20} color="#F5F5F5" />
             </TouchableOpacity>
             <View className="flex-1 items-center">
-              <Icon name="lunch" size={32} />
-              <Text className="text-white text-2xl font-bold mt-2">Almuerzo Saludable</Text>
-              <Text className="text-green-200 text-base">Nutre tu día con equilibrio</Text>
+              <Icon name="lunch" size={28} color="#F5F5F5" />
+              <Text className="text-gray-100 text-xl font-semibold mt-2">Almuerzo Saludable</Text>
+              <Text className="text-gray-300 text-sm">Nutre tu día con equilibrio</Text>
             </View>
             <View className="w-10" />
           </View>
@@ -266,58 +274,46 @@ export default function AlmuerzoBajarDePeso() {
 
         <View className="px-6 mt-6">
           {userData?.weightGoal ? (
-            <Animated.View style={{ opacity: fadeAnim }}>
+            <Animated.View style={{ opacity: fadeAnim, transform: [{ scale: scaleAnim }] }}>
               {/* Stats Section */}
-              <View className="flex-row mb-6">
+              <View className="flex-row mb-6 justify-center">
                 <StatCard 
                   icon="target" 
                   value={`${userData.weightGoal} kg`} 
                   label="Meta de Peso" 
-                  color="bg-purple-600"
-                />
-                <StatCard 
-                  icon="fire" 
-                  value={userData.currentStreak || 0} 
-                  label="Días Seguidos" 
-                  color="bg-orange-600"
-                />
-                <StatCard 
-                  icon="check" 
-                  value={userData.totalLunches || 0} 
-                  label="Almuerzos" 
-                  color="bg-green-600"
+                  color="bg-orange-50"
                 />
               </View>
 
               {/* Plan Info Card */}
               {mealPlan && (
-                <View className="bg-gray-800 rounded-3xl p-6 mb-6 border border-gray-700">
+                <View className="bg-white rounded-2xl p-6 mb-6 shadow-sm border border-gray-200">
                   <View className="flex-row items-center justify-between mb-4">
                     <View>
-                      <Text className="text-white text-xl font-bold">{mealPlan.title}</Text>
-                      <Text className="text-gray-400 text-sm mt-1">
-                        <Icon name="chef" size={16} /> Plan personalizado para ti
+                      <Text className="text-gray-900 text-lg font-semibold">{mealPlan.title}</Text>
+                      <Text className="text-gray-500 text-xs mt-1">
+                        <Icon name="chef" size={14} color="#1F2A44" /> Plan personalizado para ti
                       </Text>
                     </View>
                     <View className="items-center">
-                      <Icon name="star" size={28} color="#F59E0B" />
-                      <Text className="text-yellow-400 text-xs">{mealPlan.difficulty}</Text>
+                      <Icon name="star" size={24} color="#D4A017" />
+                      <Text className="text-gray-600 text-xs">{mealPlan.difficulty}</Text>
                     </View>
                   </View>
 
-                  <Text className="text-gray-300 text-base leading-6 mb-4">
+                  <Text className="text-gray-600 text-sm leading-6 mb-4">
                     {mealPlan.description}
                   </Text>
 
                   <View className="flex-row justify-between">
-                    <View className="bg-blue-600 rounded-xl px-4 py-2">
-                      <Text className="text-white text-sm font-medium">
-                        <Icon name="apple" size={14} /> {mealPlan.calories}
+                    <View className="bg-orange-100 rounded-lg px-4 py-2">
+                      <Text className="text-orange-900 text-xs font-medium">
+                        <Icon name="apple" size={12} color="#1F2A44" /> {mealPlan.calories}
                       </Text>
                     </View>
-                    <View className="bg-green-600 rounded-xl px-4 py-2">
-                      <Text className="text-white text-sm font-medium">
-                        <Icon name="clock" size={14} /> 15-20 min
+                    <View className="bg-amber-100 rounded-lg px-4 py-2">
+                      <Text className="text-amber-900 text-xs font-medium">
+                        <Icon name="clock" size={12} color="#1F2A44" /> 15-20 min
                       </Text>
                     </View>
                   </View>
@@ -327,7 +323,7 @@ export default function AlmuerzoBajarDePeso() {
               {/* Meal Options */}
               {mealPlan && (
                 <View className="mb-6">
-                  <Text className="text-white text-xl font-bold mb-4 text-center">
+                  <Text className="text-gray-100 text-lg font-semibold mb-4 text-center">
                     🍽️ Opciones de Almuerzo
                   </Text>
                   {mealPlan.meals.map((meal, index) => (
@@ -338,15 +334,15 @@ export default function AlmuerzoBajarDePeso() {
 
               {/* Tips Section */}
               {mealPlan?.tips && (
-                <View className="bg-indigo-800 rounded-2xl p-6 mb-6 border border-indigo-600">
+                <View className="bg-amber-50 rounded-2xl p-6 mb-6 border border-amber-100">
                   <View className="flex-row items-center mb-4">
-                    <Icon name="lightbulb" size={24} color="#F59E0B" />
-                    <Text className="text-white text-lg font-bold ml-2">Consejos Pro</Text>
+                    <Icon name="lightbulb" size={24} />
+                    <Text className="text-amber-900 text-lg font-semibold ml-2">Consejos Útiles</Text>
                   </View>
                   {mealPlan.tips.map((tip, index) => (
                     <View key={index} className="flex-row items-start mb-2">
-                      <Text className="text-indigo-300 mr-2">•</Text>
-                      <Text className="text-indigo-200 text-sm flex-1 leading-5">{tip}</Text>
+                      <Text className="text-amber-600 mr-2">•</Text>
+                      <Text className="text-amber-700 text-sm flex-1 leading-5">{tip}</Text>
                     </View>
                   ))}
                 </View>
@@ -354,8 +350,8 @@ export default function AlmuerzoBajarDePeso() {
 
               {/* Weekly Calendar */}
               {mealPlan && (
-                <View className="bg-gray-800 rounded-2xl p-4 mb-6">
-                  <Text className="text-white text-lg font-bold mb-4 text-center">
+                <View className="bg-white rounded-2xl p-4 mb-6 shadow-sm border border-gray-200">
+                  <Text className="text-gray-900 text-lg font-semibold mb-4 text-center">
                     📅 Planificador Semanal
                   </Text>
                   <WeeklyCalendar meals={mealPlan.meals} />
@@ -363,27 +359,27 @@ export default function AlmuerzoBajarDePeso() {
               )}
 
               {/* Motivation Card */}
-              <View className="bg-green-800 rounded-2xl p-6 mb-6">
-                <Text className="text-white text-lg font-bold mb-2 text-center">
+              <View className="bg-orange-50 rounded-2xl p-6 mb-6 border border-orange-100">
+                <Text className="text-orange-900 text-lg font-semibold mb-2 text-center">
                   🌟 Motivación del Día
                 </Text>
-                <Text className="text-green-200 text-center text-base leading-6">
+                <Text className="text-orange-700 text-center text-sm leading-6">
                   "Un almuerzo saludable impulsa tu día. ¡Cada elección te lleva más cerca de tu meta!"
                 </Text>
               </View>
             </Animated.View>
           ) : (
             /* No Goal Set */
-            <View className="bg-gray-800 rounded-3xl p-8 items-center">
-              <Icon name="target" size={48} color="#EF4444" />
-              <Text className="text-white text-xl font-bold mt-4 mb-2 text-center">
+            <View className="bg-white rounded-2xl p-8 items-center shadow-sm border border-gray-200">
+              <Icon name="target" size={40} color="#EF4444" />
+              <Text className="text-gray-900 text-lg font-semibold mt-4 mb-2 text-center">
                 Meta No Establecida
               </Text>
-              <Text className="text-gray-400 text-center text-base leading-6 mb-6">
+              <Text className="text-gray-600 text-center text-sm leading-6 mb-6">
                 Para obtener tu plan personalizado de almuerzo, primero necesitas establecer tu meta de peso en la pantalla principal.
               </Text>
               <TouchableOpacity
-                className="bg-blue-500 py-3 px-6 rounded-2xl"
+                className="bg-orange-600 py-3 px-6 rounded-lg shadow-sm"
                 onPress={() => navigation.navigate('BajarDePeso')}
               >
                 <Text className="text-white font-semibold">Establecer Meta</Text>

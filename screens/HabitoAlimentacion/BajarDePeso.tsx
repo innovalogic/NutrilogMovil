@@ -42,7 +42,7 @@ interface UserData {
 const { width } = Dimensions.get('window');
 
 // Componente de icono personalizado
-const Icon = ({ name, size = 24, color = '#FFFFFF' }: { name: string; size?: number; color?: string }) => {
+const Icon = ({ name, size = 24, color = '#1F2A44' }: { name: string; size?: number; color?: string }) => {
   const icons: { [key: string]: string } = {
     target: '🎯',
     scale: '⚖️',
@@ -51,7 +51,9 @@ const Icon = ({ name, size = 24, color = '#FFFFFF' }: { name: string; size?: num
     dinner: '🌙',
     trophy: '🏆',
     fire: '🔥',
-    chart: '📊'
+    chart: '📊',
+    check: '✅',
+    back: '⬅️'
   };
   
   return (
@@ -66,7 +68,8 @@ export default function BajarDePeso() {
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
   const [weightGoalInput, setWeightGoalInput] = useState('');
-  const [animatedValue] = useState(new Animated.Value(0));
+  const [fadeAnim] = useState(new Animated.Value(0));
+  const [scaleAnim] = useState(new Animated.Value(0.95));
   const navigation = useNavigation<NavigationProp>();
 
   useEffect(() => {
@@ -76,12 +79,19 @@ export default function BajarDePeso() {
         const unsubscribeSnapshot = onSnapshot(userDocRef, (snapshot) => {
           if (snapshot.exists()) {
             setUserData(snapshot.data() as UserData);
-            // Animar la entrada de datos
-            Animated.timing(animatedValue, {
-              toValue: 1,
-              duration: 800,
-              useNativeDriver: true,
-            }).start();
+            // Animate content appearance with fade and scale
+            Animated.parallel([
+              Animated.timing(fadeAnim, {
+                toValue: 1,
+                duration: 800,
+                useNativeDriver: true,
+              }),
+              Animated.timing(scaleAnim, {
+                toValue: 1,
+                duration: 800,
+                useNativeDriver: true,
+              })
+            ]).start();
           }
           setLoading(false);
         });
@@ -146,12 +156,18 @@ export default function BajarDePeso() {
     setModalVisible(true);
   };
 
+  const handleFinishDay = () => {
+    // TODO: Implement finish day functionality
+    console.log("Finalizar día presionado");
+    alert("Función de finalizar día será implementada pronto");
+  };
+
   if (loading) {
     return (
-      <SafeAreaView className="flex-1 bg-purple-900 items-center justify-center">
+      <SafeAreaView className="flex-1 bg-gray-900 items-center justify-center">
         <View className="items-center">
-          <ActivityIndicator size="large" color="#FFFFFF" />
-          <Text className="text-white mt-4 text-lg">Cargando tu progreso...</Text>
+          <ActivityIndicator size="large" color="#1F2A44" />
+          <Text className="text-gray-100 mt-4 text-base font-medium">Cargando tu progreso...</Text>
         </View>
       </SafeAreaView>
     );
@@ -162,34 +178,32 @@ export default function BajarDePeso() {
       <ScrollView 
         className="flex-1" 
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 20 }}
+        contentContainerStyle={{ paddingBottom: 32 }}
       >
-        {/* Header con gradiente */}
-        <View className="bg-purple-600 pt-12 pb-8 px-6 rounded-b-3xl">
+        {/* Header */}
+        <View className="bg-purple-900 pt-12 pb-8 px-6 rounded-b-2xl shadow-md">
           <View className="items-center">
-            <Icon name="target" size={32} />
-            <Text className="text-white text-2xl font-bold mt-2">Transformación Personal</Text>
-            <Text className="text-purple-200 text-base mt-1">Tu camino hacia una vida más saludable</Text>
+            <Icon name="target" size={28} color="#F5F5F5" />
+            <Text className="text-gray-100 text-xl font-semibold mt-2">Transformación Personal</Text>
+            <Text className="text-gray-300 text-sm">Tu camino hacia una vida más saludable</Text>
           </View>
         </View>
 
         <View className="px-6 mt-6">
           {/* Mensaje para establecer meta si no existe */}
           {!userData?.weightGoal && (
-            <View className="bg-gray-800 rounded-3xl p-6 mb-6 shadow-2xl border border-gray-700">
+            <View className="bg-white rounded-2xl p-6 mb-6 shadow-sm border border-gray-200">
               <View className="items-center">
-                <Text style={{ fontSize: 48 }}>🎯</Text>
-                <Text className="text-white text-xl font-bold mt-2 mb-2">¡Establece tu Meta!</Text>
-                <Text className="text-gray-400 text-center mb-6">
+                <Icon name="target" size={40} color="#1F2A44" />
+                <Text className="text-gray-900 text-lg font-semibold mt-4 mb-2">¡Establece tu Meta!</Text>
+                <Text className="text-gray-600 text-center text-sm mb-6">
                   Define cuánto peso quieres perder para comenzar tu transformación
                 </Text>
                 <TouchableOpacity
-                  className="bg-purple-500 py-4 px-8 rounded-2xl shadow-lg"
+                  className="bg-purple-600 py-3 px-6 rounded-lg shadow-sm"
                   onPress={handleSetGoalPress}
                 >
-                  <Text className="text-white text-center font-bold text-lg">
-                    🎯 Establecer Meta
-                  </Text>
+                  <Text className="text-white font-semibold">Establecer Meta</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -198,32 +212,32 @@ export default function BajarDePeso() {
           {/* Sección de comidas */}
           {userData?.weightGoal && (
             <Animated.View 
-              style={{ opacity: animatedValue }}
+              style={{ opacity: fadeAnim, transform: [{ scale: scaleAnim }] }}
               className="mb-6"
             >
-              <Text className="text-white text-xl font-bold mb-4 text-center">
+              <Text className="text-gray-100 text-lg font-semibold mb-4 text-center">
                 📅 Plan de Alimentación Diario
               </Text>
               
               {[
-                { name: 'Desayuno', icon: 'breakfast', color: 'bg-green-500', time: userData?.breakfastReminder, fieldName: 'breakfastReminder' },
-                { name: 'Almuerzo', icon: 'lunch', color: 'bg-yellow-500', time: userData?.lunchReminder, fieldName: 'lunchReminder' },
-                { name: 'Cena', icon: 'dinner', color: 'bg-red-500', time: userData?.dinnerReminder, fieldName: 'dinnerReminder' }
+                { name: 'Desayuno', icon: 'breakfast', color: 'bg-green-50', borderColor: 'border-green-100', time: userData?.breakfastReminder, fieldName: 'breakfastReminder' },
+                { name: 'Almuerzo', icon: 'lunch', color: 'bg-orange-50', borderColor: 'border-orange-100', time: userData?.lunchReminder, fieldName: 'lunchReminder' },
+                { name: 'Cena', icon: 'dinner', color: 'bg-blue-50', borderColor: 'border-blue-100', time: userData?.dinnerReminder, fieldName: 'dinnerReminder' }
               ].map((meal, index) => (
                 <View key={meal.name} className="mb-4">
                   <View className="flex-row items-center space-x-3">
                     <TouchableOpacity
-                      className={`${meal.color} py-4 px-6 rounded-2xl flex-1 shadow-lg`}
+                      className={`${meal.color} ${meal.borderColor} py-4 px-6 rounded-xl flex-1 border shadow-sm`}
                       onPress={() => handleMealPress(meal.name)}
                     >
                       <View className="flex-row items-center justify-center">
-                        <Icon name={meal.icon} size={24} />
-                        <Text className="text-white text-center font-bold text-lg ml-2">
+                        <Icon name={meal.icon} size={20} color="#1F2A44" />
+                        <Text className="text-gray-900 text-center font-semibold text-base ml-2">
                           {meal.name}
                         </Text>
                       </View>
                       {meal.time && (
-                        <Text className="text-white/80 text-center text-sm mt-1">
+                        <Text className="text-gray-600 text-center text-xs mt-1">
                           🔔 {meal.time}
                         </Text>
                       )}
@@ -237,14 +251,27 @@ export default function BajarDePeso() {
                   </View>
                 </View>
               ))}
+
+              {/* Botón Finalizar Día */}
+              <TouchableOpacity
+                className="bg-purple-600 py-4 px-6 rounded-xl mt-6 shadow-sm"
+                onPress={handleFinishDay}
+              >
+                <View className="flex-row items-center justify-center">
+                  <Icon name="check" size={20} color="#FFFFFF" />
+                  <Text className="text-white text-center font-semibold text-base ml-2">
+                    Finalizar Día
+                  </Text>
+                </View>
+              </TouchableOpacity>
             </Animated.View>
           )}
 
           {/* Consejos motivacionales */}
           {userData?.weightGoal && (
-            <View className="bg-indigo-800 rounded-2xl p-6 mb-6 border border-indigo-600">
-              <Text className="text-white text-lg font-bold mb-2">💡 Consejo del Día</Text>
-              <Text className="text-indigo-200 text-base leading-6">
+            <View className="bg-indigo-50 rounded-2xl p-6 mb-6 border border-indigo-100">
+              <Text className="text-indigo-900 text-lg font-semibold mb-2">💡 Consejo del Día</Text>
+              <Text className="text-indigo-700 text-sm leading-5">
                 "Cada pequeño paso cuenta. Mantén la consistencia y celebra cada logro en tu camino hacia una vida más saludable."
               </Text>
             </View>
@@ -252,7 +279,7 @@ export default function BajarDePeso() {
         </View>
       </ScrollView>
 
-      {/* Modal mejorado */}
+      {/* Modal */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -260,50 +287,46 @@ export default function BajarDePeso() {
         onRequestClose={() => setModalVisible(false)}
       >
         <View className="flex-1 justify-center items-center bg-black/80">
-          <View className="bg-gray-800 rounded-3xl p-8 w-4/5 max-w-sm border border-gray-600 shadow-2xl">
-            <View className="items-center mb-6">
-              <Icon name="target" size={40} />
-              <Text className="text-white text-2xl font-bold mt-2">Nueva Meta</Text>
-              <Text className="text-gray-400 text-center mt-1">
+          <View className="bg-white rounded-2xl p-6 w-4/5 max-w-sm border border-gray-200">
+            <View className="items-center mb-4">
+              <Icon name="target" size={40} color="#1F2A44" />
+              <Text className="text-gray-900 text-lg font-semibold mt-2">Nueva Meta</Text>
+              <Text className="text-gray-500 text-center text-sm">
                 Define cuánto peso quieres perder
               </Text>
             </View>
             
             {userData?.weight && (
-              <View className="bg-gray-700 rounded-2xl p-4 mb-6">
-                <Text className="text-gray-300 text-sm">Peso Actual</Text>
-                <Text className="text-white text-xl font-semibold">
+              <View className="bg-gray-100 rounded-xl p-3 mb-4">
+                <Text className="text-gray-500 text-xs">Peso Actual</Text>
+                <Text className="text-gray-900 text-base font-semibold">
                   {userData.weight} kg
                 </Text>
               </View>
             )}
             
             <TextInput
-              className="bg-gray-700 text-white p-4 rounded-2xl mb-6 text-lg"
+              className="bg-gray-100 text-gray-900 p-3 rounded-xl mb-4 text-sm border border-gray-200"
               placeholder="Ej: 5 kg (Máximo 20 kg)"
               placeholderTextColor="#9CA3AF"
               keyboardType="numeric"
               value={weightGoalInput}
               onChangeText={setWeightGoalInput}
-              style={{
-                borderWidth: 2,
-                borderColor: 'rgba(139, 92, 246, 0.3)',
-              }}
             />
             
             <View className="flex-row space-x-3">
               <TouchableOpacity
-                className="bg-gray-600 px-6 py-4 rounded-2xl flex-1"
+                className="bg-gray-200 px-4 py-3 rounded-xl flex-1"
                 onPress={() => setModalVisible(false)}
               >
-                <Text className="text-white text-center font-semibold">Cancelar</Text>
+                <Text className="text-gray-900 text-center font-medium">Cancelar</Text>
               </TouchableOpacity>
               
               <TouchableOpacity
-                className="bg-purple-500 px-6 py-4 rounded-2xl flex-1 shadow-lg"
+                className="bg-purple-600 px-4 py-3 rounded-xl flex-1 shadow-sm"
                 onPress={saveWeightGoal}
               >
-                <Text className="text-white text-center font-bold">Guardar</Text>
+                <Text className="text-white text-center font-semibold">Guardar</Text>
               </TouchableOpacity>
             </View>
           </View>
