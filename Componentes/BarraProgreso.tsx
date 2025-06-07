@@ -3,9 +3,10 @@ import { View } from 'react-native';
 interface BarraProgresoProps {
     paginasTotales: number;
     paginasLeidas: number;
+    color?: string;
 }
 
-const BarraProgreso = ({ paginasTotales, paginasLeidas }: BarraProgresoProps) => {
+const BarraProgreso = ({ paginasTotales, paginasLeidas, color='#87CEEB' }: BarraProgresoProps) => {
     const progreso = paginasTotales > 0 ? paginasLeidas / paginasTotales : 0;
 
     return (
@@ -20,7 +21,7 @@ const BarraProgreso = ({ paginasTotales, paginasLeidas }: BarraProgresoProps) =>
             <View style={{
                 height: '100%',
                 width: `${progreso * 100}%`,
-                backgroundColor: '#87CEEB',
+                backgroundColor: color,
             }}/>
         </View>
     );
