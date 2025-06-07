@@ -47,7 +47,7 @@ export default function SeguimientoScreen() {
   const [habitoYoga, sethabitoYoga] = useState(false);
   const [habitoOrigami, setHabitoOrigami] = useState(false);
   const [habitoAudioInspira, setHabitoAudioInspira] = useState(false);
-  const [habitoSteps, setHabitoSteps] = useState(false); // Nuevo estado para pasos
+  const [habitoSteps, setHabitoSteps] = useState(false);
   const [randomMessage, setRandomMessage] = useState("");
 
   useEffect(() => {
@@ -105,23 +105,13 @@ export default function SeguimientoScreen() {
       const hasOrigami = capturarOrigami.size > 0;
       setHabitoOrigami(hasOrigami);
 
-      // Verificar hábitos de Audio Inspira
-      const habitosAudioInspira = collection(firestore, 'users', userId, 'audioInspira');
+      // Verificar hábitos de Audio Inspira - ACTUALIZADO
+      const habitosAudioInspira = collection(firestore, 'users', userId, 'audios');
       const capturarAudioInspira = await getDocs(habitosAudioInspira);
-      let hasAudioInspira = false;
-      
-      // Verificar si hay al menos un audio en cualquier categoría
-      for (const categoriaDoc of capturarAudioInspira.docs) {
-        const audiosRef = collection(firestore, 'users', userId, 'audioInspira', categoriaDoc.id, 'audios');
-        const audiosSnapshot = await getDocs(audiosRef);
-        if (audiosSnapshot.size > 0) {
-          hasAudioInspira = true;
-          break;
-        }
-      }
+      const hasAudioInspira = capturarAudioInspira.size > 0;
       setHabitoAudioInspira(hasAudioInspira);
 
-      // Verificar hábitos de pasos (nuevo)
+      // Verificar hábitos de pasos
       const habitosSteps = collection(firestore, 'users', userId, 'stepHistory');
       const capturarSteps = await getDocs(habitosSteps);
       const hasSteps = capturarSteps.size > 0;
@@ -192,7 +182,7 @@ export default function SeguimientoScreen() {
             <Text className="text-gray-100 text-lg italic">"{randomMessage}"</Text>
           </View>
 
-          {/* Componente de Progreso Alimentación - Solo si tiene hábito de dieta */}
+          {/* Componente de Progreso Alimentación */}
           {hasDietHabit && (
             <ProgresoAlimentacion
               userData={userData}
@@ -215,7 +205,7 @@ export default function SeguimientoScreen() {
             </View>
           )}
 
-          {/* Progreso de Pasos - NUEVO */}
+          {/* Progreso de Pasos */}
           {habitoSteps && (
             <ProgresoSteps />
           )}
@@ -245,9 +235,24 @@ export default function SeguimientoScreen() {
             <ProgresoOrigami />
           )}
 
-          {/* Progreso de Audio Inspira */}
+          {/* Progreso de Audio Inspira - ACTUALIZADO */}
           {habitoAudioInspira && (
             <ProgresoAudioInspira />
+          )}
+
+          {/* Mensaje cuando no hay hábito de Audio Inspira pero sí otros hábitos */}
+          {!habitoAudioInspira && hasAnyHabit && (
+            <View className="bg-gray-800 rounded-3xl p-6 mb-6 shadow-2xl border border-gray-700">
+              <View className="items-center">
+                <Text style={{ fontSize: 48 }}>🎵</Text>
+                <Text className="text-white text-xl font-bold mt-4 text-center">
+                  Progreso de Audio Inspira
+                </Text>
+                <Text className="text-gray-400 text-base mt-2 text-center">
+                  Para ver tu progreso de bienestar mental, escucha audios en la sección "Audio Inspira".
+                </Text>
+              </View>
+            </View>
           )}
 
           {/* Mensaje cuando no hay ningún hábito registrado */}
@@ -264,7 +269,6 @@ export default function SeguimientoScreen() {
               </View>
             </View>
           )}
-
           {/* Consejo saludable actualizado */}
           <View className="bg-teal-800 rounded-3xl p-6 mb-6 shadow-2xl border border-teal-700">
             <Text className="text-white text-xl font-bold mb-4">🌿 Consejo Saludable</Text>
