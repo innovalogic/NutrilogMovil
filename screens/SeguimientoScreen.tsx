@@ -45,6 +45,7 @@ export default function SeguimientoScreen() {
   const [hasAnyHabit, setHasAnyHabit] = useState(false);
   const [habitoYoga, sethabitoYoga] = useState(false);
   const [randomMessage, setRandomMessage] = useState("");
+  const [habitoLectura, setHabitoLectura] = useState(false);
 
   useEffect(() => {
     // Seleccionar un mensaje motivacional aleatorio al cargar
@@ -91,6 +92,12 @@ export default function SeguimientoScreen() {
       const hasYoga = capturarFisicos.size > 0;
       sethabitoYoga(hasYoga);
       
+      //Verificar habitos de Yoga
+      const habitosLectura = collection(firestore, 'users', userId, 'Libros');
+      const capturarLecturas = await getDocs(habitosLectura);
+      const tieneLecturas = capturarLecturas.size > 0;
+      setHabitoLectura(tieneLecturas);
+
       // Verificar si tiene cualquier hábito registrado
       const hasAny = alimenticiosSnapshot.size > 0 || hasYoga;
       setHasAnyHabit(hasAny);
@@ -194,7 +201,9 @@ export default function SeguimientoScreen() {
             <ProgresoYoga />
           )}
 
-          <ProgresoLectura/>
+          {habitoLectura && (
+            <ProgresoLectura/>
+          )}
 
           {/* Consejo saludable */}
           <View className="bg-teal-800 rounded-3xl p-6 mb-6 shadow-2xl border border-teal-700">
