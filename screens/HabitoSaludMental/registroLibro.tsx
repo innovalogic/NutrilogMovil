@@ -11,7 +11,7 @@ import * as Notifications from 'expo-notifications';
 import { AntDesign } from '@expo/vector-icons';
 import { KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { Alert } from 'react-native';
-
+import BottomNavBar from '../../Componentes/BottomNavBar';
 
 type RootStackParamList = {
     RegistroLecturaDiaria: undefined;
@@ -174,8 +174,10 @@ const RegistroLibro = () => {
                     </View>
                 </LinearGradient>
             </TouchableWithoutFeedback>
-
+        
+            <BottomNavBar />
         </KeyboardAvoidingView>
+        
     );
 };
 export default RegistroLibro;

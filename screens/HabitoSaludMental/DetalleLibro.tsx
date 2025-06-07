@@ -8,6 +8,7 @@ import { Calendar } from 'react-native-calendars';
 import CambiarHora from 'Componentes/Hora';
 import { Modal, TextInput } from 'react-native';
 import { Keyboard } from 'react-native';
+import BottomNavBar from '../../Componentes/BottomNavBar';
 
 type RootStackParamList = {
     DetalleLibro: { libroId: string };
@@ -316,6 +317,7 @@ const DetalleLibro = () => {
                     </TouchableOpacity>
                 </View>
             </ScrollView>
+            <BottomNavBar />
         </LinearGradient>
     );
 };

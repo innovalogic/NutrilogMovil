@@ -6,6 +6,8 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { auth, firestore } from '../../firebase';
 import { getDocs, collection } from 'firebase/firestore';
 import BarraProgreso from '../../Componentes/BarraProgreso';
+import { Ionicons } from '@expo/vector-icons';
+import BottomNavBar from '../../Componentes/BottomNavBar';
 
 type RootStackParamList = {
     RegistroLibro: undefined;
@@ -80,23 +82,19 @@ const LecturaDiaria = () => {
                     </TouchableOpacity>
                 ))}
             </ScrollView>
-            <View className='mt-2 mb-2'>
+            <View className='absolute bottom-20 right-4 z-50'>
                 <TouchableOpacity
                     onPress={() => navigation.navigate('RegistroLibro')}
-                    className="bg-sky-300/75 px-6 py-3 rounded-full items-center"
+                    className="bg-sky-300/75 px-4 py-3 rounded-full flex-row items-center"
                 >
-                    <View className='flex-row justify-between items-center'>
-                        <View>
-                            <Text className="text-white text-2xl">+</Text>
-                        </View>
-
-                        <View>
-                            <Text className="text-white text-base"> Agregar Nuevo Libro</Text>
-                        </View>
-                    </View>
+                    <Ionicons name="add" size={24} color="white" />
                 </TouchableOpacity>
             </View>
+            <View className="absolute bottom-0 left-0 right-0">
+                <BottomNavBar />
+            </View>
         </LinearGradient>
+
     );
 };
 export default LecturaDiaria;
