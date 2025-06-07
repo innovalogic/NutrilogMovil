@@ -1,11 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  SafeAreaView,
-  ActivityIndicator,
-  ScrollView
-} from 'react-native';
+import {View,Text,SafeAreaView,ActivityIndicator,ScrollView} from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { auth, firestore } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -13,6 +7,8 @@ import { doc, onSnapshot, collection, getDocs } from 'firebase/firestore';
 import ProgresoAlimentacion from './HabitoAlimentacion/ProgresoAlimentacion';
 import BottomNavBar from '../Componentes/BottomNavBar';
 import ProgresoYoga from './HabitoEjercicioFisico/ProgresoYoga';
+import ProgresoOrigami from './HabitoSaludMental/ProgresoOrigami';
+import ProgresoAudioInspira from './HabitoSaludMental/ProgresoAudioInspira';
 
 interface UserData {
   weightGoal?: number;
@@ -34,7 +30,10 @@ const motivationalMessages = [
   "El progreso no es lineal, cada esfuerzo suma.",
   "Eres más fuerte de lo que crees. ¡Sigue así!",
   "La disciplina es elegir lo que quieres más sobre lo que quieres ahora.",
-  "Cada día es una nueva oportunidad para ser mejor."
+  "Cada día es una nueva oportunidad para ser mejor.",
+  "Tu mente es tu aliada más poderosa. Cuídala con audios que inspiren.",
+  "La música y los sonidos correctos pueden transformar tu día.",
+  "Cada audio que escuchas es una inversión en tu bienestar mental."
 ];
 
 export default function SeguimientoScreen() {
@@ -43,6 +42,8 @@ export default function SeguimientoScreen() {
   const [hasDietHabit, setHasDietHabit] = useState(false);
   const [hasAnyHabit, setHasAnyHabit] = useState(false);
   const [habitoYoga, sethabitoYoga] = useState(false);
+  const [habitoOrigami, setHabitoOrigami] = useState(false);
+  const [habitoAudioInspira, setHabitoAudioInspira] = useState(false); // Nuevo estado
   const [randomMessage, setRandomMessage] = useState("");
 
   useEffect(() => {
@@ -51,7 +52,7 @@ export default function SeguimientoScreen() {
     
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       if (user) {
-        // Verificar si tiene el hábito de dieta para bajar de peso
+        // Verificar si tiene hábitos registrados
         checkHabits(user.uid);
 
         const userDocRef = doc(firestore, 'users', user.uid);
@@ -66,6 +67,9 @@ export default function SeguimientoScreen() {
         setUserData(null);
         setHasDietHabit(false);
         setHasAnyHabit(false);
+        sethabitoYoga(false);
+        setHabitoOrigami(false);
+        setHabitoAudioInspira(false);
         setLoading(false);
       }
     });
@@ -84,20 +88,45 @@ export default function SeguimientoScreen() {
 
       setHasDietHabit(hasDiet);
 
-      //Verificar habitos de Yoga
+      // Verificar hábitos de Yoga
       const habitosFisicos = collection(firestore, 'users', userId, 'ejerciciosYoga');
       const capturarFisicos = await getDocs(habitosFisicos);
       const hasYoga = capturarFisicos.size > 0;
       sethabitoYoga(hasYoga);
+
+      // Verificar hábitos de Origami
+      const habitosOrigami = collection(firestore, 'users', userId, 'origamisCompletados');
+      const capturarOrigami = await getDocs(habitosOrigami);
+      const hasOrigami = capturarOrigami.size > 0;
+      setHabitoOrigami(hasOrigami);
+
+      // Verificar hábitos de Audio Inspira
+      const habitosAudioInspira = collection(firestore, 'users', userId, 'audioInspira');
+      const capturarAudioInspira = await getDocs(habitosAudioInspira);
+      let hasAudioInspira = false;
+      
+      // Verificar si hay al menos un audio en cualquier categoría
+      for (const categoriaDoc of capturarAudioInspira.docs) {
+        const audiosRef = collection(firestore, 'users', userId, 'audioInspira', categoriaDoc.id, 'audios');
+        const audiosSnapshot = await getDocs(audiosRef);
+        if (audiosSnapshot.size > 0) {
+          hasAudioInspira = true;
+          break;
+        }
+      }
+      setHabitoAudioInspira(hasAudioInspira);
       
       // Verificar si tiene cualquier hábito registrado
-      const hasAny = alimenticiosSnapshot.size > 0 || hasYoga;
+      const hasAny = alimenticiosSnapshot.size > 0 || hasYoga || hasOrigami || hasAudioInspira;
       setHasAnyHabit(hasAny);
 
     } catch (error) {
       console.error('Error al verificar hábitos:', error);
       setHasDietHabit(false);
       setHasAnyHabit(false);
+      sethabitoYoga(false);
+      setHabitoOrigami(false);
+      setHabitoAudioInspira(false);
     }
   };
 
@@ -151,7 +180,7 @@ export default function SeguimientoScreen() {
             <Text className="text-gray-100 text-lg italic">"{randomMessage}"</Text>
           </View>
 
-          {/* Componente de Progreso - Solo si tiene hábito de dieta */}
+          {/* Componente de Progreso Alimentación - Solo si tiene hábito de dieta */}
           {hasDietHabit && (
             <ProgresoAlimentacion
               userData={userData}
@@ -174,6 +203,21 @@ export default function SeguimientoScreen() {
             </View>
           )}
 
+          {/* Progreso de Yoga */}
+          {habitoYoga && (
+            <ProgresoYoga />
+          )}
+
+          {/* Progreso de Origami */}
+          {habitoOrigami && (
+            <ProgresoOrigami />
+          )}
+
+          {/* Progreso de Audio Inspira */}
+          {habitoAudioInspira && (
+            <ProgresoAudioInspira />
+          )}
+
           {/* Mensaje cuando no hay ningún hábito registrado */}
           {!hasAnyHabit && (
             <View className="bg-gray-800 rounded-3xl p-6 mb-6 shadow-2xl border border-gray-700">
@@ -189,17 +233,13 @@ export default function SeguimientoScreen() {
             </View>
           )}
 
-          {habitoYoga && (
-            <ProgresoYoga />
-          )}
-
-
-          {/* Consejo saludable */}
+          {/* Consejo saludable actualizado */}
           <View className="bg-teal-800 rounded-3xl p-6 mb-6 shadow-2xl border border-teal-700">
             <Text className="text-white text-xl font-bold mb-4">🌿 Consejo Saludable</Text>
             <Text className="text-gray-100 text-base">
               Recuerda que pequeños cambios consistentes llevan a grandes resultados. 
-              Hoy es un buen día para beber más agua y mover tu cuerpo.
+              Hoy es un buen día para beber más agua, mover tu cuerpo, crear algo hermoso con tus manos, 
+              y nutrir tu mente con audios que te inspiren y calmen.
             </Text>
           </View>
         </View>

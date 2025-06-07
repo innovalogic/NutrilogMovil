@@ -76,7 +76,7 @@ const Cardiocaminar = () => {
 
   useEffect(() => {
     if (isFocused) {
-      stepService.startCounting();e
+      stepService.startCounting();
       updateDataFromService();
       updateInterval.current = setInterval(updateDataFromService, 1000);
       getLastSyncTime();

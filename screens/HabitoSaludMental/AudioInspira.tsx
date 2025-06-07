@@ -1,312 +1,282 @@
 import React, { useState, useEffect } from 'react';
-import { Text, TouchableOpacity, View, Image, SafeAreaView, Platform, StatusBar, ScrollView } from 'react-native';
-import { Audio } from 'expo-av';
-import { AntDesign } from '@expo/vector-icons';
-import Slider from '@react-native-community/slider';
-import { useFocusEffect } from '@react-navigation/native';
+import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { auth, firestore } from '../../firebase';
-import { doc, setDoc } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
 
-const audioList = [
-  {
-    id: 1,
-    title: 'Olas del Mar',
-    format: 'mp3',
-    duration: '2:45',
-    image: 'https://res.cloudinary.com/dynoxftwk/image/upload/v1748562941/brave_PMl2BfXpjq_qsekrv.png',
-    file: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
-    description: 'Sonido de olas para ayudarte a calmar la mente y reducir el estrés.',
-    category: 'Ansiedad',
-    mood: 'Calma'
-  },
-  {
-    id: 2,
-    title: 'Bosque Relajante',
-    format: 'mp3',
-    duration: '3:20',
-    image: 'https://res.cloudinary.com/dynoxftwk/image/upload/v1748562941/brave_dmLTEsfzvI_wyrnhc.png',
-    file: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
-    description: 'Ambiente relajante de bosque para dormir o meditar profundamente.',
-    category: 'Estrés',
-    mood: 'Relajación'
-  },
-  {
-    id: 3,
-    title: 'Pájaros Cantando',
-    format: 'mp3',
-    duration: '2:10',
-    image: 'https://res.cloudinary.com/dynoxftwk/image/upload/v1748562941/brave_x0sRwOxoCj_tdhqme.png',
-    file: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
-    description: 'Melodías de aves para levantar el ánimo y sentir paz interior.',
-    category: 'Felicidad',
-    mood: 'Alegría'
-  },
-  {
-    id: 4,
-    title: 'Inspiración Matutina',
-    format: 'mp3',
-    duration: '4:00',
-    image: 'https://res.cloudinary.com/dynoxftwk/image/upload/v1748562941/brave_lyO68QnVwu_qnkclt.png',
-    file: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3',
-    description: 'Audio motivacional para comenzar tu día con energía positiva.',
-    category: 'Motivación',
-    mood: 'Energía'
-  },
-  {
-    id: 5,
-    title: 'Lluvia Suave',
-    format: 'mp3',
-    duration: '3:45',
-    image: 'https://res.cloudinary.com/dynoxftwk/image/upload/v1748562941/brave_eF4NtKd3Iz_kfqhea.png',
-    file: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3',
-    description: 'Gotas de lluvia para liberar tensiones y conectar con la melancolía.',
-    category: 'Tristeza',
-    mood: 'Melancolía'
-  },
-  {
-    id: 6,
-    title: 'Meditación Guiada',
-    format: 'mp3',
-    duration: '10:00',
-    image: 'https://example.com/meditation.jpg',
-    file: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3',
-    description: 'Meditación guiada para encontrar paz interior.',
-    category: 'Meditación',
-    mood: 'Paz'
-  },
-  {
-    id: 7,
-    title: 'Enfoque Profundo',
-    format: 'mp3',
-    duration: '45:00',
-    image: 'https://example.com/focus.jpg',
-    file: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3',
-    description: 'Sonidos para mejorar la concentración y productividad.',
-    category: 'Productividad',
-    mood: 'Concentración'
-  }
-];
+const ProgresoAudioInspira = () => {
+  const [audioStats, setAudioStats] = useState({
+    totalAudios: 0,
+    audiosPorCategoria: {},
+    audiosPorMood: {},
+    ultimosAudios: [],
+    tiempoTotalEscuchado: 0,
+    rachaActual: 0
+  });
+  const [loading, setLoading] = useState(true);
+  const [vistaActual, setVistaActual] = useState('resumen'); 
 
-// Extraemos todos los estados de ánimo únicos de la lista de audios
-const allMoods = [...new Set(audioList.map(audio => audio.mood))];
-
-export default function AudioInspira({ navigation }) {
-  const [selectedAudio, setSelectedAudio] = useState(null);
-  const [sound, setSound] = useState(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [position, setPosition] = useState(0);
-  const [duration, setDuration] = useState(1);
-  const [selectedMood, setSelectedMood] = useState(null);
-  const [filteredAudios, setFilteredAudios] = useState(audioList);
-
-  // Filtra los audios según el estado de ánimo seleccionado
   useEffect(() => {
-    if (selectedMood) {
-      setFilteredAudios(audioList.filter(audio => audio.mood === selectedMood));
-    } else {
-      setFilteredAudios(audioList);
-    }
-  }, [selectedMood]);
+    cargarEstadisticasAudio();
+  }, []);
 
-  useFocusEffect(
-    React.useCallback(() => {
-      return () => {
-        if (sound) {
-          sound.unloadAsync();
-          setSound(null);
-          setIsPlaying(false);
+  const cargarEstadisticasAudio = async () => {
+    try {
+      const user = auth.currentUser;
+      if (!user) return;
+
+      // NUEVA ESTRUCTURA SIMPLIFICADA: users/{uid}/audios
+      const audiosRef = collection(firestore, 'users', user.uid, 'audios');
+      const audiosSnapshot = await getDocs(audiosRef);
+      
+      let totalAudios = audiosSnapshot.size;
+      let audiosPorCategoria = {};
+      let audiosPorMood = {};
+      let todosLosAudios = [];
+      let tiempoTotal = 0;
+
+      // Procesar cada audio directamente
+      audiosSnapshot.docs.forEach(doc => {
+        const audioData = doc.data();
+        
+        // Contar por categoría
+        const categoria = audioData.categoria || 'Sin categoría';
+        audiosPorCategoria[categoria] = (audiosPorCategoria[categoria] || 0) + 1;
+        
+        // Contar por mood
+        const mood = audioData.estadoAnimo || 'Sin clasificar';
+        audiosPorMood[mood] = (audiosPorMood[mood] || 0) + 1;
+        
+        // Agregar a la lista de todos los audios
+        todosLosAudios.push({
+          id: doc.id,
+          ...audioData
+        });
+
+        // Calcular tiempo total (convertir duración MM:SS a minutos)
+        if (audioData.duracion) {
+          const [minutos, segundos] = audioData.duracion.split(':').map(Number);
+          tiempoTotal += minutos + (segundos / 60);
         }
-      };
-    }, [sound])
+      });
+
+      // Ordenar audios por fecha más reciente
+      const ultimosAudios = todosLosAudios
+        .sort((a, b) => {
+          // Usar timestamp si existe, sino escuchadoEn
+          const fechaA = a.timestamp ? a.timestamp.toDate() : new Date(a.escuchadoEn);
+          const fechaB = b.timestamp ? b.timestamp.toDate() : new Date(b.escuchadoEn);
+          return fechaB - fechaA;
+        })
+        .slice(0, 5);
+
+      // Calcular racha actual (días consecutivos con al menos un audio)
+      const rachaActual = calcularRachaConsecutiva(todosLosAudios);
+
+      setAudioStats({
+        totalAudios,
+        audiosPorCategoria,
+        audiosPorMood,
+        ultimosAudios,
+        tiempoTotalEscuchado: Math.round(tiempoTotal),
+        rachaActual
+      });
+    } catch (error) {
+      console.error('Error al cargar estadísticas de audio:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const calcularRachaConsecutiva = (audios) => {
+    if (audios.length === 0) return 0;
+
+    // Extraer fechas únicas de los audios
+    const fechas = [...new Set(audios.map(audio => {
+      const fecha = audio.timestamp ? audio.timestamp.toDate() : new Date(audio.escuchadoEn);
+      return fecha.toDateString();
+    }))].sort((a, b) => new Date(b) - new Date(a));
+
+    let racha = 0;
+    
+    for (let i = 0; i < fechas.length; i++) {
+      const fechaAudio = new Date(fechas[i]);
+      const fechaEsperada = new Date();
+      fechaEsperada.setDate(fechaEsperada.getDate() - i);
+      
+      if (fechaAudio.toDateString() === fechaEsperada.toDateString()) {
+        racha++;
+      } else {
+        break;
+      }
+    }
+    return racha;
+  };
+
+  const formatearFecha = (audio) => {
+    let fecha;
+    if (audio.timestamp) {
+      fecha = audio.timestamp.toDate();
+    } else {
+      fecha = new Date(audio.escuchadoEn);
+    }
+    
+    return fecha.toLocaleDateString('es-ES', {
+      day: '2-digit',
+      month: '2-digit',
+      year: '2-digit'
+    });
+  };
+
+  const formatearHora = (audio) => {
+    let fecha;
+    if (audio.timestamp) {
+      fecha = audio.timestamp.toDate();
+    } else {
+      fecha = new Date(audio.escuchadoEn);
+    }
+    
+    return fecha.toLocaleTimeString('es-ES', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  if (loading) {
+    return (
+      <View className="bg-gray-800 rounded-3xl p-6 mb-6 shadow-2xl border border-gray-700">
+        <Text className="text-white text-xl font-bold">🎵 Audio Inspira</Text>
+        <Text className="text-gray-400 mt-2">Cargando estadísticas...</Text>
+      </View>
+    );
+  }
+
+  const renderResumen = () => (
+    <View>
+      <View className="flex-row justify-between mb-4">
+        <View className="bg-purple-700 rounded-2xl p-4 flex-1 mr-2">
+          <Text className="text-white text-2xl font-bold">{audioStats.totalAudios}</Text>
+          <Text className="text-purple-200 text-sm">Audios Escuchados</Text>
+        </View>
+        <View className="bg-blue-700 rounded-2xl p-4 flex-1 ml-2">
+          <Text className="text-white text-2xl font-bold">{audioStats.tiempoTotalEscuchado}</Text>
+          <Text className="text-blue-200 text-sm">Minutos Totales</Text>
+        </View>
+      </View>
+      
+      <View className="bg-green-700 rounded-2xl p-4 mb-4">
+        <Text className="text-white text-2xl font-bold text-center">{audioStats.rachaActual}</Text>
+        <Text className="text-green-200 text-sm text-center">
+          {audioStats.rachaActual === 1 ? 'Día consecutivo' : 'Días consecutivos'}
+        </Text>
+      </View>
+
+      {audioStats.ultimosAudios.length > 0 && (
+        <View>
+          <Text className="text-white text-lg font-bold mb-2">🎧 Último Audio</Text>
+          <View className="bg-gray-700 rounded-2xl p-4">
+            <Text className="text-white font-semibold">{audioStats.ultimosAudios[0].titulo}</Text>
+            <Text className="text-gray-300 text-sm">{audioStats.ultimosAudios[0].estadoAnimo} • {audioStats.ultimosAudios[0].categoria}</Text>
+            <Text className="text-gray-400 text-xs mt-1">
+              {formatearFecha(audioStats.ultimosAudios[0])} a las {formatearHora(audioStats.ultimosAudios[0])}
+            </Text>
+          </View>
+        </View>
+      )}
+    </View>
   );
 
-  useEffect(() => {
-    let interval;
-    if (sound && isPlaying) {
-      interval = setInterval(async () => {
-        const status = await sound.getStatusAsync();
-        if (status.isLoaded) {
-          setPosition(status.positionMillis);
-          setDuration(status.durationMillis);
-        }
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [sound, isPlaying]);
+  const renderCategorias = () => (
+    <View>
+      <Text className="text-white text-lg font-bold mb-4">📊 Por Categoría</Text>
+      {Object.entries(audioStats.audiosPorCategoria).map(([categoria, cantidad]) => (
+        <View key={categoria} className="bg-gray-700 rounded-2xl p-4 mb-2 flex-row justify-between">
+          <Text className="text-white font-semibold">{categoria}</Text>
+          <Text className="text-gray-300">{cantidad} {cantidad === 1 ? 'audio' : 'audios'}</Text>
+        </View>
+      ))}
+    </View>
+  );
 
-  const handlePlayAudio = async (audio) => {
-    if (sound) {
-      await sound.unloadAsync();
-    }
+  const renderMoods = () => (
+    <View>
+      <Text className="text-white text-lg font-bold mb-4">😊 Por Estado de Ánimo</Text>
+      {Object.entries(audioStats.audiosPorMood).map(([mood, cantidad]) => (
+        <View key={mood} className="bg-gray-700 rounded-2xl p-4 mb-2 flex-row justify-between">
+          <Text className="text-white font-semibold">{mood}</Text>
+          <Text className="text-gray-300">{cantidad} {cantidad === 1 ? 'vez' : 'veces'}</Text>
+        </View>
+      ))}
+    </View>
+  );
 
-    const { sound: newSound } = await Audio.Sound.createAsync({ uri: audio.file });
-    setSound(newSound);
-    await newSound.playAsync();
-    setSelectedAudio(audio);
-    setIsPlaying(true);
-
-    const user = auth.currentUser;
-    if (user) {
-      const audioDocRef = doc(
-        firestore,
-        'users',
-        user.uid,
-        'audioInspira',
-        audio.category,
-        'audios',
-        audio.id.toString()
-      );
-      await setDoc(audioDocRef, {
-        titulo: audio.title,
-        categoria: audio.category,
-        estadoAnimo: audio.mood,
-        descripcion: audio.description,
-        duracion: audio.duration,
-        escuchadoEn: new Date().toISOString(),
-      });
-    }
-  };
-
-  const handlePause = async () => {
-    if (sound) {
-      await sound.pauseAsync();
-      setIsPlaying(false);
-    }
-  };
-
-  const handleResume = async () => {
-    if (sound) {
-      await sound.playAsync();
-      setIsPlaying(true);
-    }
-  };
-
-  const handleSeek = async (value) => {
-    if (sound) {
-      await sound.setPositionAsync(value);
-    }
-  };
-
-  const handleBack = async () => {
-    if (sound) {
-      await sound.unloadAsync();
-    }
-    setSelectedAudio(null);
-    setSound(null);
-    setIsPlaying(false);
-    setPosition(0);
-    setDuration(1);
-  };
-
-  const formatTime = (millis) => {
-    const minutes = Math.floor(millis / 60000);
-    const seconds = Math.floor((millis % 60000) / 1000);
-    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-  };
+  const renderRecientes = () => (
+    <View>
+      <Text className="text-white text-lg font-bold mb-4">🕐 Audios Recientes</Text>
+      {audioStats.ultimosAudios.map((audio, index) => (
+        <View key={index} className="bg-gray-700 rounded-2xl p-4 mb-2">
+          <Text className="text-white font-semibold">{audio.titulo}</Text>
+          <Text className="text-gray-300 text-sm">{audio.estadoAnimo} • {audio.categoria}</Text>
+          <Text className="text-gray-400 text-xs mt-1">
+            {formatearFecha(audio)} a las {formatearHora(audio)}
+          </Text>
+        </View>
+      ))}
+    </View>
+  );
 
   return (
-    <SafeAreaView
-      style={{
-        flex: 1,
-        paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
-        backgroundColor: 'white',
-      }}
-    >
-      {selectedAudio ? (
-        <View className="flex-1 justify-center items-center bg-black p-4">
-          <TouchableOpacity onPress={handleBack} className="absolute top-10 left-4">
-            <AntDesign name="arrowleft" size={30} color="white" />
-          </TouchableOpacity>
-          <Text className="text-white text-2xl mb-2">{selectedAudio.title}</Text>
-          <Text className="text-gray-300 text-base mb-4 italic">{selectedAudio.mood}</Text>
-          <Image source={{ uri: selectedAudio.image }} className="w-64 h-64 rounded-xl mb-4" />
-          <Text className="text-white text-center px-4 mb-6">{selectedAudio.description}</Text>
-
-          <Slider
-            style={{ width: '90%', height: 40 }}
-            minimumValue={0}
-            maximumValue={duration}
-            value={position}
-            minimumTrackTintColor="#90cdf4"
-            maximumTrackTintColor="#ccc"
-            thumbTintColor="#fff"
-            onSlidingComplete={handleSeek}
-          />
-          <View className="flex-row justify-between w-11/12 mb-4">
-            <Text className="text-white">{formatTime(position)}</Text>
-            <Text className="text-white">{formatTime(duration)}</Text>
+    <View className="bg-gray-800 rounded-3xl p-6 mb-6 shadow-2xl border border-gray-700">
+      <View className="flex-row items-center justify-between mb-4">
+        <Text className="text-white text-xl font-bold">🎵 Audio Inspira</Text>
+        {audioStats.totalAudios > 0 && (
+          <View className="bg-green-600 rounded-full px-3 py-1">
+            <Text className="text-white text-xs font-bold">{audioStats.totalAudios} total</Text>
           </View>
+        )}
+      </View>
 
-          {isPlaying ? (
-            <TouchableOpacity onPress={handlePause} className="bg-white px-6 py-3 rounded-full">
-              <Text className="text-black text-lg">Pausar</Text>
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity onPress={handleResume} className="bg-white px-6 py-3 rounded-full">
-              <Text className="text-black text-lg">Reproducir</Text>
-            </TouchableOpacity>
-          )}
+      {audioStats.totalAudios === 0 ? (
+        <View className="items-center py-4">
+          <Text style={{ fontSize: 48 }}>🎧</Text>
+          <Text className="text-gray-400 text-center text-base mt-2">
+            Aún no has escuchado ningún audio. ¡Comienza tu viaje de bienestar!
+          </Text>
         </View>
       ) : (
-        <ScrollView contentContainerStyle={{ paddingBottom: 20 }} className="bg-black">
-          <View className="items-center pb-6">
-            <Text className="text-white text-3xl font-mono mt-8">Audio Inspira</Text>
-            <Image
-              source={{ uri: 'https://res.cloudinary.com/dynoxftwk/image/upload/v1748562419/menuAudio_dprp9w.png' }}
-              className="rounded-2xl w-48 h-48 mt-4"
-            />
-            
-            {/* Filtro por estado de ánimo */}
-            <View className="w-full px-4 mb-4">
-              <Text className="text-white text-lg mb-2">Selecciona tu estado de ánimo:</Text>
-              <ScrollView 
-                horizontal 
-                showsHorizontalScrollIndicator={false}
-                className="mb-4"
+        <View>
+          {/* Navegación de tabs */}
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            className="mb-4"
+          >
+            {[
+              { key: 'resumen', label: 'Resumen' },
+              { key: 'categorias', label: 'Categorías' },
+              { key: 'moods', label: 'Estados' },
+              { key: 'recientes', label: 'Recientes' }
+            ].map(tab => (
+              <TouchableOpacity
+                key={tab.key}
+                onPress={() => setVistaActual(tab.key)}
+                className={`px-4 py-2 rounded-full mr-2 ${
+                  vistaActual === tab.key ? 'bg-purple-600' : 'bg-gray-600'
+                }`}
               >
-                <TouchableOpacity
-                  onPress={() => setSelectedMood(null)}
-                  className={`px-4 py-2 rounded-full mr-2 ${!selectedMood ? 'bg-blue-500' : 'bg-gray-700'}`}
-                >
-                  <Text className="text-white">Todos</Text>
-                </TouchableOpacity>
-                
-                {allMoods.map((mood, index) => (
-                  <TouchableOpacity
-                    key={index}
-                    onPress={() => setSelectedMood(mood)}
-                    className={`px-4 py-2 rounded-full mr-2 ${selectedMood === mood ? 'bg-blue-500' : 'bg-gray-700'}`}
-                  >
-                    <Text className="text-white">{mood}</Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-              
-              {selectedMood && (
-                <Text className="text-white text-center mb-2">
-                  Mostrando audios para: <Text className="font-bold">{selectedMood}</Text>
-                </Text>
-              )}
-            </View>
-          </View>
+                <Text className="text-white text-sm">{tab.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
 
-          {filteredAudios.map(audio => (
-            <TouchableOpacity
-              key={audio.id}
-              onPress={() => handlePlayAudio(audio)}
-              className="flex-row bg-[#202938] m-4 p-3 rounded-xl items-center shadow-md"
-            >
-              <Image source={{ uri: audio.image }} className="w-16 h-16 rounded-md" />
-              <View className="flex-1 ml-4">
-                <Text className="text-white text-lg font-semibold">{audio.title}</Text>
-                <Text className="text-gray-300">{audio.mood} - {audio.category}</Text>
-                <Text className="text-gray-400">{audio.duration}</Text>
-              </View>
-              <AntDesign name="right" size={24} color="white" />
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+          {/* Contenido según la vista actual */}
+          {vistaActual === 'resumen' && renderResumen()}
+          {vistaActual === 'categorias' && renderCategorias()}
+          {vistaActual === 'moods' && renderMoods()}
+          {vistaActual === 'recientes' && renderRecientes()}
+        </View>
       )}
-    </SafeAreaView>
+    </View>
   );
-}
+};
+
+export default ProgresoAudioInspira;
