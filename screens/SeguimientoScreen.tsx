@@ -101,7 +101,7 @@ export default function SeguimientoScreen() {
       const hasYoga = capturarFisicos.size > 0;
       sethabitoYoga(hasYoga);
       
-      //Verificar habitos de Yoga
+      //Verificar habitos de Lectura
       const habitosLectura = collection(firestore, 'users', userId, 'Libros');
       const capturarLecturas = await getDocs(habitosLectura);
       const tieneLecturas = capturarLecturas.size > 0;
@@ -126,7 +126,7 @@ export default function SeguimientoScreen() {
       setHabitoSteps(hasSteps);
 
       // Verificar si tiene cualquier hábito registrado
-      const hasAny = alimenticiosSnapshot.size > 0 || hasYoga || hasOrigami || hasAudioInspira || hasSteps;
+      const hasAny = alimenticiosSnapshot.size > 0 || hasYoga || hasOrigami || hasAudioInspira || hasSteps || tieneLecturas;
       setHasAnyHabit(hasAny);
 
     } catch (error) {
@@ -137,6 +137,7 @@ export default function SeguimientoScreen() {
       setHabitoOrigami(false);
       setHabitoAudioInspira(false);
       setHabitoSteps(false);
+      setHabitoLectura(false);
     }
   };
 
@@ -248,6 +249,11 @@ export default function SeguimientoScreen() {
             <ProgresoAudioInspira />
           )}
 
+          {/* Progreso de Lectura*/}
+          {habitoLectura && (
+            <ProgresoLectura/>
+          )}
+
           {/* Mensaje cuando no hay hábito de Audio Inspira pero sí otros hábitos */}
           {!habitoAudioInspira && hasAnyHabit && (
             <View className="bg-gray-800 rounded-3xl p-6 mb-6 shadow-2xl border border-gray-700">
@@ -276,14 +282,6 @@ export default function SeguimientoScreen() {
                 </Text>
               </View>
             </View>
-          )}
-
-          {habitoYoga && (
-            <ProgresoYoga />
-          )}
-
-          {habitoLectura && (
-            <ProgresoLectura/>
           )}
 
           {/* Consejo saludable */}
