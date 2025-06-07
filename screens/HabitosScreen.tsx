@@ -359,8 +359,10 @@ export default function HabitosScreen() {
         style={{
           backgroundColor: '#2563eb',
           borderRadius: 30,
-          paddingVertical: 14,
+          paddingVertical: 10,
+          paddingHorizontal: 20,
           alignItems: 'center',
+          alignSelf: 'center',
         }}
       >
         <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold' }}>+ Añadir Hábito</Text>
