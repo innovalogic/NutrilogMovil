@@ -13,6 +13,7 @@ import { doc, onSnapshot, collection, getDocs } from 'firebase/firestore';
 import ProgresoAlimentacion from './HabitoAlimentacion/ProgresoAlimentacion';
 import BottomNavBar from '../Componentes/BottomNavBar';
 import ProgresoYoga from './HabitoEjercicioFisico/ProgresoYoga';
+import ProgresoLectura from './HabitoSaludMental/ProgresoLectura';
 
 interface UserData {
   weightGoal?: number;
@@ -193,6 +194,7 @@ export default function SeguimientoScreen() {
             <ProgresoYoga />
           )}
 
+          <ProgresoLectura/>
 
           {/* Consejo saludable */}
           <View className="bg-teal-800 rounded-3xl p-6 mb-6 shadow-2xl border border-teal-700">
