@@ -1,12 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, SafeAreaView, ActivityIndicator, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  SafeAreaView,
+  ActivityIndicator,
+  ScrollView
+} from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { auth, firestore } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, onSnapshot, collection, getDocs } from 'firebase/firestore';
 import ProgresoAlimentacion from './HabitoAlimentacion/ProgresoAlimentacion';
 import BottomNavBar from '../Componentes/BottomNavBar';
-import ServicioDeProgreso from './HabitoEjercicioFisico/ServicioDeProgreso'; // Importa el componente
+import ProgresoYoga from './HabitoEjercicioFisico/ProgresoYoga';
+import ServicioDeProgreso from './HabitoEjercicioFisico/ServicioDeProgreso';
+import ProgresoSubirDePeso from './HabitoAlimentacion/ProgresoSubirDePeso';
 
 interface UserData {
   weightGoal?: number;
@@ -18,17 +26,35 @@ interface UserData {
   totalDaysTracked?: number;
 }
 
+const motivationalMessages = [
+  "Cada pequeño paso cuenta. ¡Sigue adelante!",
+  "La constancia es el secreto del éxito. ¡Tú puedes!",
+  "Hoy es un gran día para seguir progresando.",
+  "Los hábitos saludables son regalos que te haces a ti mismo.",
+  "Celebra cada victoria, por pequeña que sea.",
+  "Tu dedicación de hoy construye tu éxito de mañana.",
+  "El progreso no es lineal, cada esfuerzo suma.",
+  "Eres más fuerte de lo que crees. ¡Sigue así!",
+  "La disciplina es elegir lo que quieres más sobre lo que quieres ahora.",
+  "Cada día es una nueva oportunidad para ser mejor."
+];
+
 export default function SeguimientoScreen() {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [hasDietHabit, setHasDietHabit] = useState(false);
   const [hasAnyHabit, setHasAnyHabit] = useState(false);
+  const [habitoYoga, sethabitoYoga] = useState(false);
+  const [randomMessage, setRandomMessage] = useState("");
 
   useEffect(() => {
+    // Seleccionar un mensaje motivacional aleatorio al cargar
+    setRandomMessage(motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)]);
+    
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       if (user) {
         checkHabits(user.uid);
-        
+
         const userDocRef = doc(firestore, 'users', user.uid);
         const unsubscribeSnapshot = onSnapshot(userDocRef, (snapshot) => {
           if (snapshot.exists()) {
@@ -51,15 +77,23 @@ export default function SeguimientoScreen() {
     try {
       const habitosAlimenticiosRef = collection(firestore, 'habitosUsuarios', userId, 'habitosAlimenticios');
       const alimenticiosSnapshot = await getDocs(habitosAlimenticiosRef);
-      
-      const hasDiet = alimenticiosSnapshot.docs.some(doc => 
+
+      const hasDiet = alimenticiosSnapshot.docs.some(doc =>
         doc.data().habitoSeleccionado === 'Dieta Para Bajar de Peso'
       );
-      
+
       setHasDietHabit(hasDiet);
-      const hasAny = alimenticiosSnapshot.size > 0;
-      setHasAnyHabit(hasAny);
+
+      //Verificar habitos de Yoga
+      const habitosFisicos = collection(firestore, 'users', userId, 'ejerciciosYoga');
+      const capturarFisicos = await getDocs(habitosFisicos);
+      const hasYoga = capturarFisicos.size > 0;
+      sethabitoYoga(hasYoga);
       
+      // Verificar si tiene cualquier hábito registrado
+      const hasAny = alimenticiosSnapshot.size > 0 || hasYoga;
+      setHasAnyHabit(hasAny);
+
     } catch (error) {
       console.error('Error al verificar hábitos:', error);
       setHasDietHabit(false);
@@ -72,6 +106,8 @@ export default function SeguimientoScreen() {
       const user = auth.currentUser;
       if (user) {
         checkHabits(user.uid);
+        // Cambiar el mensaje motivacional cada vez que se enfoca la pantalla
+        setRandomMessage(motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)]);
       }
     }, [])
   );
@@ -93,8 +129,8 @@ export default function SeguimientoScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-gray-900">
-      <ScrollView 
-        className="flex-1" 
+      <ScrollView
+        className="flex-1"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 20 }}
       >
@@ -108,13 +144,27 @@ export default function SeguimientoScreen() {
         </View>
 
         <View className="px-6 mt-6">
+          {/* Mensaje motivacional */}
+          <View className="bg-indigo-800 rounded-3xl p-6 mb-6 shadow-2xl border border-indigo-700">
+            <Text className="text-white text-xl font-bold mb-2">💪 Motivación del día</Text>
+            <Text className="text-gray-100 text-lg italic">"{randomMessage}"</Text>
+          </View>
+
           {/* Componente de Progreso - Solo si tiene hábito de dieta */}
           {hasDietHabit && (
-            <ProgresoAlimentacion 
+            <ProgresoAlimentacion
               userData={userData}
               onGoalUpdated={handleGoalUpdated}
             />
           )}
+
+          {hasDietHabit && (
+            <ProgresoSubirDePeso
+              userData={userData}
+              onGoalUpdated={handleGoalUpdated}
+            />
+          )}
+
 
           {/* Mostrar el progreso de ejercicios */}
           <ServicioDeProgreso />
@@ -149,18 +199,17 @@ export default function SeguimientoScreen() {
             </View>
           )}
 
-          {/* Secciones adicionales */}
-          <View className="bg-gray-800 rounded-3xl p-6 mb-6 shadow-2xl border border-gray-700">
-            <Text className="text-white text-xl font-bold mb-4">📈 Estadísticas Semanales</Text>
-            <Text className="text-gray-400 text-base">
-              Próximamente: Gráficos detallados de tu progreso semanal y mensual.
-            </Text>
-          </View>
+          {habitoYoga && (
+            <ProgresoYoga />
+          )}
 
-          <View className="bg-gray-800 rounded-3xl p-6 mb-6 shadow-2xl border border-gray-700">
-            <Text className="text-white text-xl font-bold mb-4">🏆 Logros</Text>
-            <Text className="text-gray-400 text-base">
-              Próximamente: Sistema de logros y recompensas por tu constancia.
+
+          {/* Consejo saludable */}
+          <View className="bg-teal-800 rounded-3xl p-6 mb-6 shadow-2xl border border-teal-700">
+            <Text className="text-white text-xl font-bold mb-4">🌿 Consejo Saludable</Text>
+            <Text className="text-gray-100 text-base">
+              Recuerda que pequeños cambios consistentes llevan a grandes resultados. 
+              Hoy es un buen día para beber más agua y mover tu cuerpo.
             </Text>
           </View>
         </View>
