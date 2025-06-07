@@ -1,17 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  SafeAreaView, 
-  ActivityIndicator, 
-  ScrollView
-} from 'react-native';
+import { View, Text, SafeAreaView, ActivityIndicator, ScrollView } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { auth, firestore } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, onSnapshot, collection, getDocs } from 'firebase/firestore';
 import ProgresoAlimentacion from './HabitoAlimentacion/ProgresoAlimentacion';
 import BottomNavBar from '../Componentes/BottomNavBar';
+import ServicioDeProgreso from './HabitoEjercicioFisico/ServicioDeProgreso'; // Importa el componente
 
 interface UserData {
   weightGoal?: number;
@@ -32,7 +27,6 @@ export default function SeguimientoScreen() {
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       if (user) {
-        // Verificar si tiene el hábito de dieta para bajar de peso
         checkHabits(user.uid);
         
         const userDocRef = doc(firestore, 'users', user.uid);
@@ -55,7 +49,6 @@ export default function SeguimientoScreen() {
 
   const checkHabits = async (userId: string) => {
     try {
-      // Verificar hábitos alimenticios
       const habitosAlimenticiosRef = collection(firestore, 'habitosUsuarios', userId, 'habitosAlimenticios');
       const alimenticiosSnapshot = await getDocs(habitosAlimenticiosRef);
       
@@ -64,8 +57,6 @@ export default function SeguimientoScreen() {
       );
       
       setHasDietHabit(hasDiet);
-      
-      // Verificar si tiene cualquier hábito registrado
       const hasAny = alimenticiosSnapshot.size > 0;
       setHasAnyHabit(hasAny);
       
@@ -76,7 +67,6 @@ export default function SeguimientoScreen() {
     }
   };
 
-  // Verificar hábitos cuando la pantalla se enfoque
   useFocusEffect(
     React.useCallback(() => {
       const user = auth.currentUser;
@@ -125,6 +115,9 @@ export default function SeguimientoScreen() {
               onGoalUpdated={handleGoalUpdated}
             />
           )}
+
+          {/* Mostrar el progreso de ejercicios */}
+          <ServicioDeProgreso />
 
           {/* Mensaje cuando no hay hábito de dieta pero sí otros hábitos */}
           {!hasDietHabit && hasAnyHabit && (
