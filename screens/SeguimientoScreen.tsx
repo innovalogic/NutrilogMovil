@@ -1,11 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  SafeAreaView,
-  ActivityIndicator,
-  ScrollView
-} from 'react-native';
+import {View,Text,SafeAreaView,ActivityIndicator,ScrollView} from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { auth, firestore } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -13,7 +7,9 @@ import { doc, onSnapshot, collection, getDocs } from 'firebase/firestore';
 import ProgresoAlimentacion from './HabitoAlimentacion/ProgresoAlimentacion';
 import BottomNavBar from '../Componentes/BottomNavBar';
 import ProgresoYoga from './HabitoEjercicioFisico/ProgresoYoga';
-import ProgresoOrigami from './HabitoSaludMental/ProgresoOrigami'; // Importar el nuevo componente
+import ProgresoOrigami from './HabitoSaludMental/ProgresoOrigami';
+import ProgresoAudioInspira from './HabitoSaludMental/ProgresoAudioInspira';
+import ProgresoSteps from './HabitoEjercicioFisico/ProgresoSteps';
 
 interface UserData {
   weightGoal?: number;
@@ -35,7 +31,12 @@ const motivationalMessages = [
   "El progreso no es lineal, cada esfuerzo suma.",
   "Eres más fuerte de lo que crees. ¡Sigue así!",
   "La disciplina es elegir lo que quieres más sobre lo que quieres ahora.",
-  "Cada día es una nueva oportunidad para ser mejor."
+  "Cada día es una nueva oportunidad para ser mejor.",
+  "Tu mente es tu aliada más poderosa. Cuídala con audios que inspiren.",
+  "La música y los sonidos correctos pueden transformar tu día.",
+  "Cada audio que escuchas es una inversión en tu bienestar mental.",
+  "Caminar es la medicina más natural. ¡Cada paso suma!",
+  "La actividad física es la clave para un cuerpo y mente saludables."
 ];
 
 export default function SeguimientoScreen() {
@@ -44,7 +45,9 @@ export default function SeguimientoScreen() {
   const [hasDietHabit, setHasDietHabit] = useState(false);
   const [hasAnyHabit, setHasAnyHabit] = useState(false);
   const [habitoYoga, sethabitoYoga] = useState(false);
-  const [habitoOrigami, setHabitoOrigami] = useState(false); // Nuevo estado para origami
+  const [habitoOrigami, setHabitoOrigami] = useState(false);
+  const [habitoAudioInspira, setHabitoAudioInspira] = useState(false);
+  const [habitoSteps, setHabitoSteps] = useState(false); // Nuevo estado para pasos
   const [randomMessage, setRandomMessage] = useState("");
 
   useEffect(() => {
@@ -70,6 +73,8 @@ export default function SeguimientoScreen() {
         setHasAnyHabit(false);
         sethabitoYoga(false);
         setHabitoOrigami(false);
+        setHabitoAudioInspira(false);
+        setHabitoSteps(false);
         setLoading(false);
       }
     });
@@ -99,9 +104,31 @@ export default function SeguimientoScreen() {
       const capturarOrigami = await getDocs(habitosOrigami);
       const hasOrigami = capturarOrigami.size > 0;
       setHabitoOrigami(hasOrigami);
+
+      // Verificar hábitos de Audio Inspira
+      const habitosAudioInspira = collection(firestore, 'users', userId, 'audioInspira');
+      const capturarAudioInspira = await getDocs(habitosAudioInspira);
+      let hasAudioInspira = false;
+      
+      // Verificar si hay al menos un audio en cualquier categoría
+      for (const categoriaDoc of capturarAudioInspira.docs) {
+        const audiosRef = collection(firestore, 'users', userId, 'audioInspira', categoriaDoc.id, 'audios');
+        const audiosSnapshot = await getDocs(audiosRef);
+        if (audiosSnapshot.size > 0) {
+          hasAudioInspira = true;
+          break;
+        }
+      }
+      setHabitoAudioInspira(hasAudioInspira);
+
+      // Verificar hábitos de pasos (nuevo)
+      const habitosSteps = collection(firestore, 'users', userId, 'stepHistory');
+      const capturarSteps = await getDocs(habitosSteps);
+      const hasSteps = capturarSteps.size > 0;
+      setHabitoSteps(hasSteps);
       
       // Verificar si tiene cualquier hábito registrado
-      const hasAny = alimenticiosSnapshot.size > 0 || hasYoga || hasOrigami;
+      const hasAny = alimenticiosSnapshot.size > 0 || hasYoga || hasOrigami || hasAudioInspira || hasSteps;
       setHasAnyHabit(hasAny);
 
     } catch (error) {
@@ -110,6 +137,8 @@ export default function SeguimientoScreen() {
       setHasAnyHabit(false);
       sethabitoYoga(false);
       setHabitoOrigami(false);
+      setHabitoAudioInspira(false);
+      setHabitoSteps(false);
     }
   };
 
@@ -186,6 +215,26 @@ export default function SeguimientoScreen() {
             </View>
           )}
 
+          {/* Progreso de Pasos - NUEVO */}
+          {habitoSteps && (
+            <ProgresoSteps />
+          )}
+
+          {/* Mensaje cuando no hay hábito de pasos pero sí otros hábitos */}
+          {!habitoSteps && hasAnyHabit && (
+            <View className="bg-gray-800 rounded-3xl p-6 mb-6 shadow-2xl border border-gray-700">
+              <View className="items-center">
+                <Text style={{ fontSize: 48 }}>👣</Text>
+                <Text className="text-white text-xl font-bold mt-4 text-center">
+                  Progreso de Pasos
+                </Text>
+                <Text className="text-gray-400 text-base mt-2 text-center">
+                  Para ver tu progreso de pasos, ve a la sección "Caminar" y activa el contador de pasos.
+                </Text>
+              </View>
+            </View>
+          )}
+
           {/* Progreso de Yoga */}
           {habitoYoga && (
             <ProgresoYoga />
@@ -194,6 +243,11 @@ export default function SeguimientoScreen() {
           {/* Progreso de Origami */}
           {habitoOrigami && (
             <ProgresoOrigami />
+          )}
+
+          {/* Progreso de Audio Inspira */}
+          {habitoAudioInspira && (
+            <ProgresoAudioInspira />
           )}
 
           {/* Mensaje cuando no hay ningún hábito registrado */}
@@ -205,18 +259,19 @@ export default function SeguimientoScreen() {
                   Comienza tu seguimiento
                 </Text>
                 <Text className="text-gray-400 text-base mt-2 text-center">
-                  Para ver tu progreso, primero registra un hábito en la sección de Hábitos.
+                  Para ver tu progreso, primero registra un hábito en la sección de Hábitos o usa el contador de pasos en "Caminar".
                 </Text>
               </View>
             </View>
           )}
 
-          {/* Consejo saludable */}
+          {/* Consejo saludable actualizado */}
           <View className="bg-teal-800 rounded-3xl p-6 mb-6 shadow-2xl border border-teal-700">
             <Text className="text-white text-xl font-bold mb-4">🌿 Consejo Saludable</Text>
             <Text className="text-gray-100 text-base">
               Recuerda que pequeños cambios consistentes llevan a grandes resultados. 
-              Hoy es un buen día para beber más agua, mover tu cuerpo y crear algo hermoso con tus manos.
+              Hoy es un buen día para beber más agua, dar más pasos, mover tu cuerpo, crear algo hermoso con tus manos, 
+              y nutrir tu mente con audios que te inspiren y calmen.
             </Text>
           </View>
         </View>

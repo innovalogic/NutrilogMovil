@@ -87,7 +87,6 @@ const audioList = [
   }
 ];
 
-// Extraemos todos los estados de ánimo únicos de la lista de audios
 const allMoods = [...new Set(audioList.map(audio => audio.mood))];
 
 export default function AudioInspira({ navigation }) {
@@ -99,7 +98,6 @@ export default function AudioInspira({ navigation }) {
   const [selectedMood, setSelectedMood] = useState(null);
   const [filteredAudios, setFilteredAudios] = useState(audioList);
 
-  // Filtra los audios según el estado de ánimo seleccionado
   useEffect(() => {
     if (selectedMood) {
       setFilteredAudios(audioList.filter(audio => audio.mood === selectedMood));
@@ -145,12 +143,9 @@ export default function AudioInspira({ navigation }) {
     setSelectedAudio(audio);
     setIsPlaying(true);
 
-    // ESTRUCTURA SIMPLIFICADA - Solo dos niveles:
-    // users/{uid}/audios/{autoID}
     const user = auth.currentUser;
     if (user) {
       try {
-        // Opción 1: Usar addDoc para generar ID automático
         const audiosRef = collection(firestore, 'users', user.uid, 'audios');
         await addDoc(audiosRef, {
           audioId: audio.id,
@@ -162,21 +157,6 @@ export default function AudioInspira({ navigation }) {
           escuchadoEn: new Date().toISOString(),
           timestamp: new Date()
         });
-
-        // Opción 2: Usar setDoc con ID específico (descomenta si prefieres esta opción)
-        /*
-        const audioDocRef = doc(firestore, 'users', user.uid, 'audios', `${audio.id}_${Date.now()}`);
-        await setDoc(audioDocRef, {
-          audioId: audio.id,
-          titulo: audio.title,
-          categoria: audio.category,
-          estadoAnimo: audio.mood,
-          descripcion: audio.description,
-          duracion: audio.duration,
-          escuchadoEn: new Date().toISOString(),
-          timestamp: new Date()
-        });
-        */
 
         console.log('Audio guardado exitosamente');
       } catch (error) {
@@ -274,7 +254,6 @@ export default function AudioInspira({ navigation }) {
               className="rounded-2xl w-48 h-48 mt-4"
             />
             
-            {/* Filtro por estado de ánimo */}
             <View className="w-full px-4 mb-4">
               <Text className="text-white text-lg mb-2">Selecciona tu estado de ánimo:</Text>
               <ScrollView 
