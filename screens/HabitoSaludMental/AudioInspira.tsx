@@ -5,7 +5,7 @@ import { AntDesign } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
 import { useFocusEffect } from '@react-navigation/native';
 import { auth, firestore } from '../../firebase';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, collection, addDoc } from 'firebase/firestore';
 
 const audioList = [
   {
@@ -17,6 +17,7 @@ const audioList = [
     file: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
     description: 'Sonido de olas para ayudarte a calmar la mente y reducir el estrés.',
     category: 'Ansiedad',
+    mood: 'Calma'
   },
   {
     id: 2,
@@ -27,6 +28,7 @@ const audioList = [
     file: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
     description: 'Ambiente relajante de bosque para dormir o meditar profundamente.',
     category: 'Estrés',
+    mood: 'Relajación'
   },
   {
     id: 3,
@@ -37,6 +39,7 @@ const audioList = [
     file: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
     description: 'Melodías de aves para levantar el ánimo y sentir paz interior.',
     category: 'Felicidad',
+    mood: 'Alegría'
   },
   {
     id: 4,
@@ -47,6 +50,7 @@ const audioList = [
     file: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3',
     description: 'Audio motivacional para comenzar tu día con energía positiva.',
     category: 'Motivación',
+    mood: 'Energía'
   },
   {
     id: 5,
@@ -57,8 +61,33 @@ const audioList = [
     file: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3',
     description: 'Gotas de lluvia para liberar tensiones y conectar con la melancolía.',
     category: 'Tristeza',
+    mood: 'Melancolía'
   },
+  {
+    id: 6,
+    title: 'Meditación Guiada',
+    format: 'mp3',
+    duration: '10:00',
+    image: 'https://example.com/meditation.jpg',
+    file: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3',
+    description: 'Meditación guiada para encontrar paz interior.',
+    category: 'Meditación',
+    mood: 'Paz'
+  },
+  {
+    id: 7,
+    title: 'Enfoque Profundo',
+    format: 'mp3',
+    duration: '45:00',
+    image: 'https://example.com/focus.jpg',
+    file: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3',
+    description: 'Sonidos para mejorar la concentración y productividad.',
+    category: 'Productividad',
+    mood: 'Concentración'
+  }
 ];
+
+const allMoods = [...new Set(audioList.map(audio => audio.mood))];
 
 export default function AudioInspira({ navigation }) {
   const [selectedAudio, setSelectedAudio] = useState(null);
@@ -66,6 +95,16 @@ export default function AudioInspira({ navigation }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [position, setPosition] = useState(0);
   const [duration, setDuration] = useState(1);
+  const [selectedMood, setSelectedMood] = useState(null);
+  const [filteredAudios, setFilteredAudios] = useState(audioList);
+
+  useEffect(() => {
+    if (selectedMood) {
+      setFilteredAudios(audioList.filter(audio => audio.mood === selectedMood));
+    } else {
+      setFilteredAudios(audioList);
+    }
+  }, [selectedMood]);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -106,22 +145,23 @@ export default function AudioInspira({ navigation }) {
 
     const user = auth.currentUser;
     if (user) {
-      const audioDocRef = doc(
-        firestore,
-        'users',
-        user.uid,
-        'audioInspira',
-        audio.category,
-        'audios',
-        audio.id.toString()
-      );
-      await setDoc(audioDocRef, {
-        titulo: audio.title,
-        categoria: audio.category,
-        descripcion: audio.description,
-        duracion: audio.duration,
-        escuchadoEn: new Date().toISOString(),
-      });
+      try {
+        const audiosRef = collection(firestore, 'users', user.uid, 'audios');
+        await addDoc(audiosRef, {
+          audioId: audio.id,
+          titulo: audio.title,
+          categoria: audio.category,
+          estadoAnimo: audio.mood,
+          descripcion: audio.description,
+          duracion: audio.duration,
+          escuchadoEn: new Date().toISOString(),
+          timestamp: new Date()
+        });
+
+        console.log('Audio guardado exitosamente');
+      } catch (error) {
+        console.error('Error al guardar audio:', error);
+      }
     }
   };
 
@@ -176,7 +216,7 @@ export default function AudioInspira({ navigation }) {
             <AntDesign name="arrowleft" size={30} color="white" />
           </TouchableOpacity>
           <Text className="text-white text-2xl mb-2">{selectedAudio.title}</Text>
-          <Text className="text-gray-300 text-base mb-4 italic">{selectedAudio.category}</Text>
+          <Text className="text-gray-300 text-base mb-4 italic">{selectedAudio.mood}</Text>
           <Image source={{ uri: selectedAudio.image }} className="w-64 h-64 rounded-xl mb-4" />
           <Text className="text-white text-center px-4 mb-6">{selectedAudio.description}</Text>
 
@@ -213,9 +253,41 @@ export default function AudioInspira({ navigation }) {
               source={{ uri: 'https://res.cloudinary.com/dynoxftwk/image/upload/v1748562419/menuAudio_dprp9w.png' }}
               className="rounded-2xl w-48 h-48 mt-4"
             />
+            
+            <View className="w-full px-4 mb-4">
+              <Text className="text-white text-lg mb-2">Selecciona tu estado de ánimo:</Text>
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false}
+                className="mb-4"
+              >
+                <TouchableOpacity
+                  onPress={() => setSelectedMood(null)}
+                  className={`px-4 py-2 rounded-full mr-2 ${!selectedMood ? 'bg-blue-500' : 'bg-gray-700'}`}
+                >
+                  <Text className="text-white">Todos</Text>
+                </TouchableOpacity>
+                
+                {allMoods.map((mood, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    onPress={() => setSelectedMood(mood)}
+                    className={`px-4 py-2 rounded-full mr-2 ${selectedMood === mood ? 'bg-blue-500' : 'bg-gray-700'}`}
+                  >
+                    <Text className="text-white">{mood}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+              
+              {selectedMood && (
+                <Text className="text-white text-center mb-2">
+                  Mostrando audios para: <Text className="font-bold">{selectedMood}</Text>
+                </Text>
+              )}
+            </View>
           </View>
 
-          {audioList.map(audio => (
+          {filteredAudios.map(audio => (
             <TouchableOpacity
               key={audio.id}
               onPress={() => handlePlayAudio(audio)}
@@ -224,7 +296,7 @@ export default function AudioInspira({ navigation }) {
               <Image source={{ uri: audio.image }} className="w-16 h-16 rounded-md" />
               <View className="flex-1 ml-4">
                 <Text className="text-white text-lg font-semibold">{audio.title}</Text>
-                <Text className="text-gray-300">{audio.format.toUpperCase()} - {audio.category}</Text>
+                <Text className="text-gray-300">{audio.mood} - {audio.category}</Text>
                 <Text className="text-gray-400">{audio.duration}</Text>
               </View>
               <AntDesign name="right" size={24} color="white" />

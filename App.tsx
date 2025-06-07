@@ -60,6 +60,7 @@ Notifications.setNotificationHandler({
   }),
 });
 
+
 const Stack = createNativeStackNavigator();
 
 export default function App() {
@@ -116,7 +117,6 @@ export default function App() {
         <Stack.Screen name="DesayunoSubirDePeso" component={DesayunoSubirDePeso} />
         <Stack.Screen name="AlmuerzoSubirDePeso" component={AlmuerzoSubirDePeso} />
         <Stack.Screen name="CenaSubirDePeso" component={CenaSubirDePeso} />
-
         <Stack.Screen name="AudioInspira" component={AudioInspira} />
         <Stack.Screen name="Origami" component={Origami} />
         <Stack.Screen name="RegistroLecturaDiaria" component={MenuLectura} />
