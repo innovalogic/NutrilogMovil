@@ -42,8 +42,7 @@ const Cardiocaminar = () => {
   const [progress] = useState(new Animated.Value(0));
   const [isActive, setIsActive] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState<string>('');
-  
-  // Estados para el seguimiento
+
   const [viewMode, setViewMode] = useState<'tracker' | 'daily' | 'weekly' | 'monthly'>('tracker');
   const [stepStats, setStepStats] = useState<StepStats>({
     daily: [],
@@ -67,13 +66,10 @@ const Cardiocaminar = () => {
     setIsActive(stepService.isCountingActive());
   };
 
-  // Función para calcular calorías quemadas (aproximado)
   const calculateCalories = (steps: number, weight: number = 70): number => {
-    // Aproximadamente 0.04 calorías por paso para una persona de 70kg
     return Math.round(steps * 0.04 * (weight / 70));
   };
 
-  // Función para guardar datos diarios
   const saveDailyData = async () => {
     if (!auth.currentUser || stepCount === 0) return;
 
@@ -101,7 +97,6 @@ const Cardiocaminar = () => {
     }
   };
 
-  // Función para cargar estadísticas
   const loadStepStats = async () => {
     if (!auth.currentUser) return;
 
@@ -109,8 +104,6 @@ const Cardiocaminar = () => {
     try {
       const userId = auth.currentUser.uid;
       const stepHistoryRef = collection(firestore, 'users', userId, 'stepHistory');
-      
-      // Obtener los últimos 30 días
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       
@@ -127,10 +120,7 @@ const Cardiocaminar = () => {
         dailyData.push(doc.data() as StepRecord);
       });
 
-      // Procesar datos semanales
       const weeklyData = processWeeklyData(dailyData);
-      
-      // Procesar datos mensuales
       const monthlyData = processMonthlyData(dailyData);
 
       setStepStats({
@@ -145,8 +135,6 @@ const Cardiocaminar = () => {
       setLoading(false);
     }
   };
-
-  // Procesar datos semanales
   const processWeeklyData = (dailyData: StepRecord[]) => {
     const weeklyMap = new Map();
     
@@ -179,7 +167,6 @@ const Cardiocaminar = () => {
     }));
   };
 
-  // Procesar datos mensuales
   const processMonthlyData = (dailyData: StepRecord[]) => {
     const monthlyMap = new Map();
     
@@ -249,7 +236,6 @@ const Cardiocaminar = () => {
       updateInterval.current = setInterval(updateDataFromService, 1000);
       getLastSyncTime();
       
-      // Cargar estadísticas cuando se enfoca la pantalla
       if (viewMode !== 'tracker') {
         loadStepStats();
       }
@@ -267,13 +253,12 @@ const Cardiocaminar = () => {
     };
   }, [isFocused, viewMode]);
 
-  // Guardar datos automáticamente cada minuto
   useEffect(() => {
     const saveInterval = setInterval(() => {
       if (stepCount > 0) {
         saveDailyData();
       }
-    }, 60000); // Cada minuto
+    }, 60000); 
 
     return () => clearInterval(saveInterval);
   }, [stepCount, distance, time]);
@@ -293,7 +278,6 @@ const Cardiocaminar = () => {
   const toggleCounting = async () => {
     if (isActive) {
       await stepService.stopCounting();
-      // Guardar datos al pausar
       await saveDailyData();
       Alert.alert('Pausado', 'El conteo de pasos se ha pausado y los datos se han guardado.');
     } else {
@@ -306,7 +290,7 @@ const Cardiocaminar = () => {
   const handleManualSync = async () => {
     try {
       const success = await stepService.forceSyncToFirebase();
-      await saveDailyData(); // También guardar nuestros datos
+      await saveDailyData(); 
       
       if (success) {
         await AsyncStorage.setItem('lastSyncTime', new Date().toISOString());
@@ -380,7 +364,6 @@ const Cardiocaminar = () => {
     });
   };
 
-  // Función para cambiar entre vistas
   const handleViewChange = (newView: 'tracker' | 'daily' | 'weekly' | 'monthly') => {
     setViewMode(newView);
     if (newView !== 'tracker') {
@@ -388,7 +371,6 @@ const Cardiocaminar = () => {
     }
   };
 
-  // Renderizar vista de seguimiento
   const renderStatsView = () => {
     if (loading) {
       return (
@@ -490,14 +472,8 @@ const Cardiocaminar = () => {
         <View className="flex-1 justify-center items-center bg-black pb-10">
           <View className="mt-10">
             <Text className="text-white text-3xl font-mono mb-5">Caminar</Text>
-            {lastSyncTime && (
-              <Text className="text-gray-400 text-sm text-center">
-                Última sync: {lastSyncTime}
-              </Text>
-            )}
           </View>
 
-          {/* Botones de navegación */}
           <View className="flex-row justify-around w-full px-4 mb-4">
             <TouchableOpacity
               className={`px-3 py-2 rounded-full ${viewMode === 'tracker' ? 'bg-blue-600' : 'bg-gray-600'}`}
@@ -533,17 +509,6 @@ const Cardiocaminar = () => {
                   className="rounded-2xl w-[200] h-[200]"
                 />
               </View>
-              <View className="flex-row items-center mt-4 mb-2">
-                <View 
-                  className={`w-3 h-3 rounded-full mr-2 ${
-                    isActive ? 'bg-green-500' : 'bg-red-500'
-                  }`} 
-                />
-                <Text className="text-white text-sm">
-                  {isActive ? 'Contando en segundo plano' : 'Pausado'}
-                </Text>
-              </View>
-
               <View className="flex-1 items-center justify-center mt-[-20] rounded-t-3xl px-5 w-full">
                 <Text className="text-white text-3xl font-mono mb-5">Resumen</Text>
                 
@@ -616,41 +581,15 @@ const Cardiocaminar = () => {
                       {isActive ? 'Pausar Conteo' : 'Iniciar Conteo'}
                     </Text>
                   </TouchableOpacity>
-
                   <TouchableOpacity
-                    className="py-3 px-6 rounded-full w-full bg-[#2563ea]"
-                    onPress={handleManualSync}
-                  >
-                    <Text className="text-white font-bold text-center">
-                      Sincronizar Ahora
-                    </Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    className="py-3 px-6 rounded-full w-full bg-gray-600"
+                   className="py-3 px-8 rounded-full w-full bg-[#2563ea]"
                     onPress={() => navigation.goBack()}
                   >
                     <Text className="text-white font-bold text-center">
-                      Volver (Sigue contando)
-                    </Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    className="py-2 px-4 rounded-full w-full bg-red-600"
-                    onPress={handleResetDay}
-                  >
-                    <Text className="text-white font-bold text-center text-sm">
-                      Reiniciar Día
+                      Guardar y Volver
                     </Text>
                   </TouchableOpacity>
                 </View>
-
-                <Text className="text-green-400 mt-4 text-center text-sm">
-                  ✓ Los pasos se cuentan automáticamente en segundo plano
-                  {'\n'}✓ Sincronización automática cada 30 segundos
-                  {'\n'}✓ Los datos se conservan al cerrar la app
-                  {'\n'}✓ Seguimiento automático por día, semana y mes
-                </Text>
               </View>
             </>
           ) : (

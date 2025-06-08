@@ -19,17 +19,6 @@ const origamiExamples = {
     finalImage: 'https://res.cloudinary.com/dynoxftwk/image/upload/v1748464173/9_fgvv2z.png',
     difficulty: 'Fácil'
   },
-  'Rana': {
-    steps: [
-      'https://res.cloudinary.com/dynoxftwk/image/upload/v1748465902/1_ngsnui.png',
-      'https://res.cloudinary.com/dynoxftwk/image/upload/v1748465902/2_oe9cpe.png',
-      'https://res.cloudinary.com/dynoxftwk/image/upload/v1748465903/3_urv4ym.png',
-      'https://res.cloudinary.com/dynoxftwk/image/upload/v1748465903/4_xgb52y.png',
-      'https://res.cloudinary.com/dynoxftwk/image/upload/v1748465903/5_spxfec.png',
-    ],
-    finalImage: 'https://res.cloudinary.com/dynoxftwk/image/upload/v1748465902/6_ngwnut.png',
-    difficulty: 'Intermedio'
-  },
   'Corazon': {
     steps: [
       'https://res.cloudinary.com/dynoxftwk/image/upload/v1748466099/Photos_WHMn8pokSs_wlpl7r.png',
@@ -41,6 +30,41 @@ const origamiExamples = {
     ],
     finalImage: 'https://res.cloudinary.com/dynoxftwk/image/upload/v1748466098/Photos_mzAMxa0MkN_ab0owc.png',
     difficulty: 'Fácil'
+  },
+  'Rana': {
+    steps: [
+      'https://res.cloudinary.com/dynoxftwk/image/upload/v1748465902/1_ngsnui.png',
+      'https://res.cloudinary.com/dynoxftwk/image/upload/v1748465902/2_oe9cpe.png',
+      'https://res.cloudinary.com/dynoxftwk/image/upload/v1748465903/3_urv4ym.png',
+      'https://res.cloudinary.com/dynoxftwk/image/upload/v1748465903/4_xgb52y.png',
+      'https://res.cloudinary.com/dynoxftwk/image/upload/v1748465903/5_spxfec.png',
+    ],
+    finalImage: 'https://res.cloudinary.com/dynoxftwk/image/upload/v1748465902/6_ngwnut.png',
+    difficulty: 'Intermedio'
+  },
+  'Zorro': {
+    steps: [
+      'https://res.cloudinary.com/dynoxftwk/image/upload/v1749406360/origamiZorro1_eitiyx.png',
+      'https://res.cloudinary.com/dynoxftwk/image/upload/v1749406360/origamiZorro2_mb987q.png',
+      'https://res.cloudinary.com/dynoxftwk/image/upload/v1749406360/origamiZorro3_jvn0cs.png',
+      'https://res.cloudinary.com/dynoxftwk/image/upload/v1749406360/origamiZorro4_yspl0e.png',
+    ],
+    finalImage: 'https://res.cloudinary.com/dynoxftwk/image/upload/v1749406360/origamiZorro5_qnjesv.png',
+    difficulty: 'Intermedio'
+  },
+  
+  'Casa': {
+    steps: [
+      'https://res.cloudinary.com/dynoxftwk/image/upload/v1749406121/origamiCasa1_irpsgp.png',
+      'https://res.cloudinary.com/dynoxftwk/image/upload/v1749406121/origamiCasa2_zgcoxu.png',
+      'https://res.cloudinary.com/dynoxftwk/image/upload/v1749406121/origamiCasa3_jt7yvv.png',
+      'https://res.cloudinary.com/dynoxftwk/image/upload/v1749406121/origamiCasa4_bixlqb.png',
+      'https://res.cloudinary.com/dynoxftwk/image/upload/v1749406122/origamiCasa5_blheix.png',
+      'https://res.cloudinary.com/dynoxftwk/image/upload/v1749406126/origamiCasa6_n1mgdm.png',
+      'https://res.cloudinary.com/dynoxftwk/image/upload/v1749406120/origamiCasa7_cnb1pd.png',
+    ],
+    finalImage: 'https://res.cloudinary.com/dynoxftwk/image/upload/v1749406121/origamiCasa8_sivt8t.png',
+    difficulty: 'Dificil'
   }
 }; 
 
@@ -50,7 +74,7 @@ export default function OrigamiApp() {
   const [stepIndex, setStepIndex] = useState(0);
   const [gallery, setGallery] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
-  const [filter, setFilter] = useState('all'); // 'all', 'easy', 'medium', 'hard'
+  const [filter, setFilter] = useState('all');
 
   useEffect(() => {
     const names = Object.keys(origamiExamples);
@@ -215,10 +239,15 @@ export default function OrigamiApp() {
     return (
       <SafeAreaView className="flex-1 bg-white pt-10">
         <View className="flex-1 bg-black p-4">
-          <Text className="text-2xl font-bold mb-4 text-white">Origami Diario</Text>
-          
-          {/* Filtros de dificultad */}
-          <View className="flex-row justify-between mb-4">
+          <Text className="text-2xl font-bold mb-4 text-white text-center">Origami Diario</Text>       
+          <View className="mb-6 items-center">
+            <Image
+              source={{ uri: 'https://res.cloudinary.com/dynoxftwk/image/upload/v1749405943/origami_if9lyq.png' }}
+              className="w-full h-40 rounded-lg"
+              resizeMode="contain"
+            />
+          </View>
+          <View className="flex-row justify-between mb-6 mt-8">
             <TouchableOpacity
               className={`px-3 py-2 rounded-lg ${filter === 'all' ? 'bg-blue-500' : 'bg-gray-600'}`}
               onPress={() => setFilter('all')}
@@ -244,38 +273,40 @@ export default function OrigamiApp() {
               <Text className="text-white">Difícil</Text>
             </TouchableOpacity>
           </View>
-          
-          <ScrollView>
-            {filteredOrigamis.length === 0 ? (
-              <Text className="text-white text-center mt-4">
-                No hay origamis con esta dificultad
-              </Text>
-            ) : (
-              filteredOrigamis.map((item) => (
-                <TouchableOpacity
-                  key={item}
-                  className="p-3 bg-[#202938] mb-2 rounded-lg"
-                  onPress={() => { setSelected(item); setStepIndex(0); setView('detail'); }}
-                >
-                  <View className="flex-row justify-between items-center">
-                    <Text className="text-lg font-semibold text-white">{item}</Text>
-                    <View className={`px-2 py-1 rounded-full ${
-                      origamiExamples[item].difficulty === 'Fácil' ? 'bg-green-500' :
-                      origamiExamples[item].difficulty === 'Intermedio' ? 'bg-yellow-500' :
-                      'bg-red-500'
-                    }`}>
-                      <Text className="text-xs text-white">{origamiExamples[item].difficulty}</Text>
+          <View className="flex-1 justify-center">
+            <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}>
+              {filteredOrigamis.length === 0 ? (
+                <Text className="text-white text-center mt-4">
+                  No hay origamis con esta dificultad
+                </Text>
+              ) : (
+                filteredOrigamis.map((item) => (
+                  <TouchableOpacity
+                    key={item}
+                    className="p-3 bg-[#202938] mb-2 rounded-lg"
+                    onPress={() => { setSelected(item); setStepIndex(0); setView('detail'); }}
+                  >
+                    <View className="flex-row justify-between items-center">
+                      <Text className="text-lg font-semibold text-white">{item}</Text>
+                      <View className={`px-2 py-1 rounded-full ${
+                        origamiExamples[item].difficulty === 'Fácil' ? 'bg-green-500' :
+                        origamiExamples[item].difficulty === 'Intermedio' ? 'bg-yellow-500' :
+                        'bg-red-500'
+                      }`}>
+                        <Text className="text-xs text-white">{origamiExamples[item].difficulty}</Text>
+                      </View>
                     </View>
-                  </View>
-                  <Image
-                    source={{ uri: origamiExamples[item].finalImage }}
-                    className="w-full h-40 mt-2 rounded-lg"
-                    resizeMode="contain"
-                  />
-                </TouchableOpacity>
-              ))
-            )}
-          </ScrollView>
+                    <Image
+                      source={{ uri: origamiExamples[item].finalImage }}
+                      className="w-full h-40 mt-2 rounded-lg"
+                      resizeMode="contain"
+                    />
+                  </TouchableOpacity>
+                ))
+              )}
+            </ScrollView>
+          </View>
+          
           <TouchableOpacity
             className="mt-4 bg-blue-500 py-2 rounded-lg"
             onPress={() => setView('gallery')}
@@ -291,7 +322,7 @@ export default function OrigamiApp() {
     const data = origamiExamples[selected];
     return (
       <SafeAreaView className="flex-1 bg-white pt-10">
-        <View className="flex-1 bg-black p-4">
+        <View className="flex-1 bg-black p-4 justify-center">
           <Text className="text-2xl font-bold mb-4 text-white">{selected} - Paso {stepIndex + 1}/{data.steps.length}</Text>
           <View className={`absolute top-4 right-4 z-10 px-2 py-1 rounded-full ${
             data.difficulty === 'Fácil' ? 'bg-green-500' :
@@ -378,8 +409,7 @@ export default function OrigamiApp() {
       <SafeAreaView className="flex-1 bg-white pt-10">
         <View className="flex-1 bg-black p-4">
           <Text className="text-2xl font-bold mb-4 text-white">Galería de Origamis</Text>
-          
-          {/* Filtros para la galería */}
+
           <View className="flex-row justify-between mb-4">
             <TouchableOpacity
               className={`px-3 py-2 rounded-lg ${filter === 'all' ? 'bg-blue-500' : 'bg-gray-600'}`}
