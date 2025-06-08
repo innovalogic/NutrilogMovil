@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, FlatList, Alert, Image, Modal } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, Alert, Image, Modal, ScrollView } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native'; // Import useFocusEffect
 import { StackNavigationProp } from '@react-navigation/stack';
 import { auth, firestore } from '../firebase';
 import { collection, getDocs, doc, deleteDoc } from 'firebase/firestore';
 import BottomNavBar from '../Componentes/BottomNavBar';
+import { Ionicons } from '@expo/vector-icons';
 
 type RootStackParamList = {
   Habitos: undefined;
@@ -119,8 +120,8 @@ export default function HabitosScreen() {
           selectedHabit.category === 'fisicos'
             ? 'habitosFisicos'
             : selectedHabit.category === 'alimenticios'
-            ? 'habitosAlimenticios'
-            : 'habitosSaludMental';
+              ? 'habitosAlimenticios'
+              : 'habitosSaludMental';
         const habitDocRef = doc(firestore, 'habitosUsuarios', user.uid, collectionPath, selectedHabit.id);
         await deleteDoc(habitDocRef);
 
@@ -164,139 +165,129 @@ export default function HabitosScreen() {
 
       <View className="flex-1 px-6">
         {habitosFisicos.length > 0 || habitosAlimenticios.length > 0 || habitosSaludMental.length > 0 ? (
-          <>
-            {/* Hábitos físicos */}
+          <ScrollView className="flex-1 px-6" contentContainerStyle={{ paddingBottom: 100 }}>
+
+            {/* Físicos */}
             {habitosFisicos.length > 0 && (
               <>
-                <Text className="text-xl font-semibold text-white Family mb-4">Hábitos Físicos</Text>
-                <FlatList
-                  data={habitosFisicos}
-                  keyExtractor={item => `fisico-${item.id}`}
-                  contentContainerStyle={{ paddingBottom: 20 }}
-                  renderItem={({ item }) => (
-                    <TouchableOpacity
-                      onPress={() => handleHabitPress(item.habito)}
-                      onLongPress={() => handleLongPress(item.id, item.habito, 'fisicos')}
-                      activeOpacity={0.8}
+                <Text className="text-xl font-semibold text-white mb-4">Hábitos Físicos</Text>
+                {habitosFisicos.map(item => (
+                  <TouchableOpacity
+                    key={`fisico-${item.id}`}
+                    onPress={() => handleHabitPress(item.habito)}
+                    onLongPress={() => handleLongPress(item.id, item.habito, 'fisicos')}
+                    activeOpacity={0.8}
+                    style={{
+                      backgroundColor: '#fff',
+                      borderRadius: 16,
+                      paddingVertical: 20,
+                      paddingHorizontal: 20,
+                      marginBottom: 16,
+                      alignItems: 'center',
+                      shadowColor: '#000',
+                      shadowOffset: { width: 0, height: 4 },
+                      shadowOpacity: 0.3,
+                      shadowRadius: 5,
+                      elevation: 6,
+                    }}
+                  >
+                    <Image
+                      source={habitImages[item.habito] || require('../assets/yogamenu.png')}
                       style={{
-                        backgroundColor: '#fff',
-                        borderRadius: 16,
-                        paddingVertical: 20,
-                        paddingHorizontal: 20,
-                        marginBottom: 16,
-                        alignItems: 'center',
-                        shadowColor: '#000',
-                        shadowOffset: { width: 0, height: 4 },
-                        shadowOpacity: 0.3,
-                        shadowRadius: 5,
-                        elevation: 6,
+                        width: 80,
+                        height: 80,
+                        marginBottom: 12,
+                        borderRadius: 40,
+                        resizeMode: 'cover',
                       }}
-                    >
-                      <Image
-                        source={habitImages[item.habito] || require('../assets/yogamenu.png')}
-                        style={{
-                          width: 80,
-                          height: 80,
-                          marginBottom: 12,
-                          borderRadius: 40,
-                          resizeMode: 'cover',
-                        }}
-                      />
-                      <Text style={{ fontSize: 20, fontWeight: '600', color: '#1f2937' }}>{item.habito}</Text>
-                    </TouchableOpacity>
-                  )}
-                />
+                    />
+                    <Text style={{ fontSize: 20, fontWeight: '600', color: '#1f2937' }}>{item.habito}</Text>
+                  </TouchableOpacity>
+                ))}
               </>
             )}
 
-            {/* Hábitos alimenticios */}
+            {/* Alimenticios */}
             {habitosAlimenticios.length > 0 && (
               <>
                 <Text className="text-xl font-semibold text-white mb-4">Hábitos Alimenticios</Text>
-                <FlatList
-                  data={habitosAlimenticios}
-                  keyExtractor={item => `alimenticio-${item.id}`}
-                  contentContainerStyle={{ paddingBottom: 20 }}
-                  renderItem={({ item }) => (
-                    <TouchableOpacity
-                      onPress={() => handleHabitPress(item.habito)}
-                      onLongPress={() => handleLongPress(item.id, item.habito, 'alimenticios')}
-                      activeOpacity={0.8}
+                {habitosAlimenticios.map(item => (
+                  <TouchableOpacity
+                    key={`alimenticio-${item.id}`}
+                    onPress={() => handleHabitPress(item.habito)}
+                    onLongPress={() => handleLongPress(item.id, item.habito, 'alimenticios')}
+                    activeOpacity={0.8}
+                    style={{
+                      backgroundColor: '#fff',
+                      borderRadius: 16,
+                      paddingVertical: 20,
+                      paddingHorizontal: 20,
+                      marginBottom: 16,
+                      alignItems: 'center',
+                      shadowColor: '#000',
+                      shadowOffset: { width: 0, height: 4 },
+                      shadowOpacity: 0.3,
+                      shadowRadius: 5,
+                      elevation: 6,
+                    }}
+                  >
+                    <Image
+                      source={habitImages[item.habito] || require('../assets/yogamenu.png')}
                       style={{
-                        backgroundColor: '#fff',
-                        borderRadius: 16,
-                        paddingVertical: 20,
-                        paddingHorizontal: 20,
-                        marginBottom: 16,
-                        alignItems: 'center',
-                        shadowColor: '#000',
-                        shadowOffset: { width: 0, height: 4 },
-                        shadowOpacity: 0.3,
-                        shadowRadius: 5,
-                        elevation: 6,
+                        width: 80,
+                        height: 80,
+                        marginBottom: 12,
+                        borderRadius: 40,
+                        resizeMode: 'cover',
                       }}
-                    >
-                      <Image
-                        source={habitImages[item.habito] || require('../assets/yogamenu.png')}
-                        style={{
-                          width: 80,
-                          height: 80,
-                          marginBottom: 12,
-                          borderRadius: 40,
-                          resizeMode: 'cover',
-                        }}
-                      />
-                      <Text style={{ fontSize: 20, fontWeight: '600', color: '#1f2937' }}>{item.habito}</Text>
-                    </TouchableOpacity>
-                  )}
-                />
+                    />
+                    <Text style={{ fontSize: 20, fontWeight: '600', color: '#1f2937' }}>{item.habito}</Text>
+                  </TouchableOpacity>
+                ))}
               </>
             )}
 
-            {/* Hábitos de salud mental */}
+            {/* Salud Mental */}
             {habitosSaludMental.length > 0 && (
               <>
                 <Text className="text-xl font-semibold text-white mb-4">Hábitos de Salud Mental</Text>
-                <FlatList
-                  data={habitosSaludMental}
-                  keyExtractor={item => `saludMental-${item.id}`}
-                  contentContainerStyle={{ paddingBottom: 20 }}
-                  renderItem={({ item }) => (
-                    <TouchableOpacity
-                      onPress={() => handleHabitPress(item.habito)}
-                      onLongPress={() => handleLongPress(item.id, item.habito, 'saludMental')}
-                      activeOpacity={0.8}
+                {habitosSaludMental.map(item => (
+                  <TouchableOpacity
+                    key={`saludMental-${item.id}`}
+                    onPress={() => handleHabitPress(item.habito)}
+                    onLongPress={() => handleLongPress(item.id, item.habito, 'saludMental')}
+                    activeOpacity={0.8}
+                    style={{
+                      backgroundColor: '#fff',
+                      borderRadius: 16,
+                      paddingVertical: 20,
+                      paddingHorizontal: 20,
+                      marginBottom: 16,
+                      alignItems: 'center',
+                      shadowColor: '#000',
+                      shadowOffset: { width: 0, height: 4 },
+                      shadowOpacity: 0.3,
+                      shadowRadius: 5,
+                      elevation: 6,
+                    }}
+                  >
+                    <Image
+                      source={habitImages[item.habito] || require('../assets/yogamenu.png')}
                       style={{
-                        backgroundColor: '#fff',
-                        borderRadius: 16,
-                        paddingVertical: 20,
-                        paddingHorizontal: 20,
-                        marginBottom: 16,
-                        alignItems: 'center',
-                        shadowColor: '#000',
-                        shadowOffset: { width: 0, height: 4 },
-                        shadowOpacity: 0.3,
-                        shadowRadius: 5,
-                        elevation: 6,
+                        width: 80,
+                        height: 80,
+                        marginBottom: 12,
+                        borderRadius: 40,
+                        resizeMode: 'cover',
                       }}
-                    >
-                      <Image
-                        source={habitImages[item.habito] || require('../assets/yogamenu.png')}
-                        style={{
-                          width: 80,
-                          height: 80,
-                          marginBottom: 12,
-                          borderRadius: 40,
-                          resizeMode: 'cover',
-                        }}
-                      />
-                      <Text style={{ fontSize: 20, fontWeight: '600', color: '#1f2937' }}>{item.habito}</Text>
-                    </TouchableOpacity>
-                  )}
-                />
+                    />
+                    <Text style={{ fontSize: 20, fontWeight: '600', color: '#1f2937' }}>{item.habito}</Text>
+                  </TouchableOpacity>
+                ))}
               </>
             )}
-          </>
+
+          </ScrollView>
         ) : (
           <View className="flex-1 justify-center items-center">
             <Text className="text-white text-lg">No tienes hábitos registrados aún.</Text>
@@ -354,7 +345,7 @@ export default function HabitosScreen() {
         </View>
       </Modal>
 
-      <TouchableOpacity
+      {/* <TouchableOpacity
         onPress={() => navigation.navigate('RegistroHabitosCategorias')}
         style={{
           backgroundColor: '#2563eb',
@@ -366,6 +357,13 @@ export default function HabitosScreen() {
         }}
       >
         <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold' }}>+ Añadir Hábito</Text>
+      </TouchableOpacity> */}
+
+      <TouchableOpacity
+        onPress={() => navigation.navigate('RegistroHabitosCategorias')}
+        className="absolute bottom-20 right-6 bg-blue-600 px-3 py-3 rounded-full items-center z-50"
+      >
+        <Ionicons name="add" size={24} color="white" />
       </TouchableOpacity>
 
       <BottomNavBar />
