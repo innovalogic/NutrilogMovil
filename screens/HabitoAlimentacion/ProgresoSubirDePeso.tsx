@@ -7,7 +7,7 @@ import {
   TextInput,
   ActivityIndicator
 } from 'react-native';
-import { auth, firestore } from '../../firebase'; // Asegúrate de que esta ruta sea correcta
+import { auth, firestore } from '../../firebase';
 import { doc, setDoc, onSnapshot } from 'firebase/firestore';
 
 // Componente de icono personalizado
@@ -74,77 +74,48 @@ const CircularProgress = ({ progress, size = 120, daysCompleted, totalDays }: {
   );
 };
 
-// Interfaz para los datos del usuario, ahora con campos específicos para "SubirDePeso"
-interface UserDataSubirDePeso {
-  weightGoal?: number; // La meta de peso para subir
-  weight?: string; // El peso actual del usuario
-  // Campos específicos para el seguimiento del progreso en "SubirDePeso"
+interface UserData {
+  weightGoal?: number;
+  weight?: string;
   currentStreakSubirDePeso?: number;
   totalDaysTrackedSubirDePeso?: number;
   lastCompletedDaySubirDePeso?: string;
-  // Puedes añadir otras propiedades de usuario generales o específicas para subir de peso aquí
 }
 
-// Props que el componente espera recibir
-interface ProgresoSubirDePesoProps {
-  userData: UserDataSubirDePeso | null; // Datos específicos de subir de peso
-  onGoalUpdated?: () => void; // Callback para cuando la meta se actualiza
+interface ProgresoAlimentacionProps {
+  userData: UserData | null;
+  onGoalUpdated?: () => void;
 }
 
-const ProgresoSubirDePeso: React.FC<ProgresoSubirDePesoProps> = ({ 
+const ProgresoAlimentacion: React.FC<ProgresoAlimentacionProps> = ({ 
   userData, 
   onGoalUpdated 
 }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [weightGoalInput, setWeightGoalInput] = useState('');
   const [saving, setSaving] = useState(false);
-  // Usa un estado local para los datos, inicializado con las props
-  const [localUserData, setLocalUserData] = useState<UserDataSubirDePeso | null>(userData);
+  const [localUserData, setLocalUserData] = useState<UserData | null>(userData);
 
   // Constante para días objetivo (30 días = 1 mes)
   const TARGET_DAYS = 30;
 
-  // Actualiza el estado local si las props de userData cambian
   useEffect(() => {
     setLocalUserData(userData);
   }, [userData]);
 
-  // Este useEffect ya escuchaba los cambios en tiempo real del documento del usuario.
-  // Es importante que este listener apunte a la ubicación correcta de los datos
-  // de "subir de peso" en Firestore si no se pasan completamente por props.
-  // Sin embargo, si la 'ParentScreen' ya gestiona la suscripción, este puede ser redundante
-  // o necesitar una ruta más específica si los datos de subirDePeso están en un subdocumento.
-  // Para este ejemplo, asumiremos que los datos relevantes están en el doc principal del usuario
-  // o que la 'ParentScreen' se encargará de pasar las propiedades actualizadas.
-  // Si los datos de 'subirDePeso' están en un subdocumento, la ruta aquí DEBE coincidir.
   useEffect(() => {
     if (auth.currentUser) {
-      // Si los campos de totalDaysTrackedSubirDePeso etc. están directamente
-      // en el documento principal del usuario:
       const userDocRef = doc(firestore, 'users', auth.currentUser.uid);
-
-      // Si los datos de 'subirDePeso' están en un subdocumento específico
-      // como 'users/userId/subirDePeso/data', la ruta sería:
-      // const userDocRef = doc(firestore, 'users', auth.currentUser.uid, 'subirDePeso', 'data');
-
-      const unsubscribe = onSnapshot(userDocRef, (docSnap) => {
-        if (docSnap.exists()) {
-          // Asegúrate de que los datos recibidos coincidan con la interfaz
-          setLocalUserData(docSnap.data() as UserDataSubirDePeso);
-        } else {
-          console.log("No such user document!");
-          setLocalUserData(null);
+      const unsubscribe = onSnapshot(userDocRef, (doc) => {
+        if (doc.exists()) {
+          setLocalUserData(doc.data() as UserData);
         }
-      }, (err) => {
-        console.error("Error fetching user data:", err);
-        // Podrías manejar el error aquí si es necesario
       });
       return () => unsubscribe();
     }
-  }, []); // Dependencias vacías para que se ejecute solo una vez al montar
+  }, []);
 
   const calculateProgress = () => {
-    // Usamos el campo específico para "SubirDePeso"
     if (!localUserData?.totalDaysTrackedSubirDePeso) return 0;
     const daysCompleted = localUserData.totalDaysTrackedSubirDePeso;
     const progressPercentage = Math.min((daysCompleted / TARGET_DAYS) * 100, 100);
@@ -152,7 +123,6 @@ const ProgresoSubirDePeso: React.FC<ProgresoSubirDePesoProps> = ({
   };
 
   const getDaysInfo = () => {
-    // Usamos el campo específico para "SubirDePeso"
     const daysCompleted = localUserData?.totalDaysTrackedSubirDePeso || 0;
     const remainingDays = Math.max(TARGET_DAYS - daysCompleted, 0);
     return {
@@ -211,10 +181,9 @@ const ProgresoSubirDePeso: React.FC<ProgresoSubirDePesoProps> = ({
         return;
       }
 
-      // Actualizar los campos específicos para "SubirDePeso"
       await setDoc(doc(firestore, 'users', auth.currentUser.uid), 
         { 
-          weightGoal, // La meta de peso en general (puedes hacerla también específica si tienes objetivos duales)
+          weightGoal,
           totalDaysTrackedSubirDePeso: localUserData?.totalDaysTrackedSubirDePeso || 0,
           currentStreakSubirDePeso: localUserData?.currentStreakSubirDePeso || 0
         }, 
@@ -223,7 +192,7 @@ const ProgresoSubirDePeso: React.FC<ProgresoSubirDePesoProps> = ({
       
       setModalVisible(false);
       setWeightGoalInput('');
-      onGoalUpdated?.(); // Llama al callback si se proporcionó
+      onGoalUpdated?.();
       
     } catch (error) {
       console.error('Error al guardar:', error);
@@ -240,7 +209,7 @@ const ProgresoSubirDePeso: React.FC<ProgresoSubirDePesoProps> = ({
       <View className="bg-gray-800 rounded-3xl p-6 mb-6 shadow-2xl border border-gray-700">
         <View className="flex-row items-center justify-between mb-4">
           <View>
-            <Text className="text-white text-xl font-bold">Tu Progreso de Aumento</Text> {/* Título más específico */}
+            <Text className="text-white text-xl font-bold">Tu Progreso</Text>
             <Text className="text-gray-400 text-sm">{getMotivationalMessage()}</Text>
           </View>
           <Icon name="chart" size={28} />
@@ -264,6 +233,7 @@ const ProgresoSubirDePeso: React.FC<ProgresoSubirDePesoProps> = ({
                 {localUserData?.weightGoal ? `Subir ${localUserData.weightGoal} kg` : 'Sin meta definida'}
               </Text>
             </View>
+
             {localUserData?.weightGoal && (
               <View className="space-y-3">
                 <View className="flex-row items-center space-x-4">
@@ -334,7 +304,7 @@ const ProgresoSubirDePeso: React.FC<ProgresoSubirDePesoProps> = ({
             <Text className="text-gray-400 text-xs">
               {daysInfo.isCompleted 
                 ? "¡Completaste tu primer ciclo! Puedes empezar uno nuevo o ajustar tu meta."
-                : `Te encuentras en el día ${daysInfo.completed} de tu ciclo de transformación de 30 días para subir de peso.`
+                : `Te encuentras en el día ${daysInfo.completed} de tu ciclo de transformación de 30 días.`
               }
             </Text>
           </View>
@@ -390,7 +360,7 @@ const ProgresoSubirDePeso: React.FC<ProgresoSubirDePesoProps> = ({
               </TouchableOpacity>
               
               <TouchableOpacity
-                className="bg-purple-500 px-6 py-4 rounded-2xl flex-1 shadow-lg items-center justify-center"
+                className="bg-purple-500 px-6 py-4 rounded-2xl flex-1"
                 onPress={saveWeightGoal}
                 disabled={saving}
               >
@@ -408,4 +378,4 @@ const ProgresoSubirDePeso: React.FC<ProgresoSubirDePesoProps> = ({
   );
 };
 
-export default ProgresoSubirDePeso;
+export default ProgresoAlimentacion;
