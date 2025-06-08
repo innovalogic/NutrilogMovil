@@ -7,15 +7,12 @@ import { doc, onSnapshot, collection, getDocs } from 'firebase/firestore';
 import ProgresoAlimentacion from './HabitoAlimentacion/ProgresoAlimentacion';
 import BottomNavBar from '../Componentes/BottomNavBar';
 import ProgresoYoga from './HabitoEjercicioFisico/ProgresoYoga';
-<<<<<<< HEAD
 import ServicioDeProgreso from './HabitoEjercicioFisico/ServicioDeProgreso';
 import ProgresoSubirDePeso from './HabitoAlimentacion/ProgresoSubirDePeso';
-=======
 import ProgresoLectura from './HabitoSaludMental/ProgresoLectura';
 import ProgresoOrigami from './HabitoSaludMental/ProgresoOrigami';
 import ProgresoAudioInspira from './HabitoSaludMental/ProgresoAudioInspira';
 import ProgresoSteps from './HabitoEjercicioFisico/ProgresoSteps';
->>>>>>> 96936e130179994807e14a493716bfb983c16175
 
 interface UserData {
   weightGoal?: number;
@@ -63,10 +60,7 @@ export default function SeguimientoScreen() {
     
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       if (user) {
-<<<<<<< HEAD
-=======
         // Verificar si tiene hábitos registrados
->>>>>>> 96936e130179994807e14a493716bfb983c16175
         checkHabits(user.uid);
 
         const userDocRef = doc(firestore, 'users', user.uid);
