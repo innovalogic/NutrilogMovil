@@ -7,12 +7,12 @@ import { doc, onSnapshot, collection, getDocs } from 'firebase/firestore';
 import ProgresoAlimentacion from './HabitoAlimentacion/ProgresoAlimentacion';
 import BottomNavBar from '../Componentes/BottomNavBar';
 import ProgresoYoga from './HabitoEjercicioFisico/ProgresoYoga';
-import ServicioDeProgreso from './HabitoEjercicioFisico/ServicioDeProgreso';
-import ProgresoSubirDePeso from './HabitoAlimentacion/ProgresoSubirDePeso';
 import ProgresoLectura from './HabitoSaludMental/ProgresoLectura';
 import ProgresoOrigami from './HabitoSaludMental/ProgresoOrigami';
 import ProgresoAudioInspira from './HabitoSaludMental/ProgresoAudioInspira';
 import ProgresoSteps from './HabitoEjercicioFisico/ProgresoSteps';
+import ServicioDeProgreso from './HabitoEjercicioFisico/ServicioDeProgreso';
+import ProgresoSubirDePeso from './HabitoAlimentacion/ProgresoSubirDePeso';
 
 interface UserData {
   weightGoal?: number;
@@ -45,7 +45,7 @@ const motivationalMessages = [
 export default function SeguimientoScreen() {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [hasDietHabit, setHasDietHabit] = useState(false);
+  const [tipoHabitoAlimenticio, setTipoHabitoAlimenticio] = useState<string | null>(null);
   const [hasAnyHabit, setHasAnyHabit] = useState(false);
   const [habitoYoga, sethabitoYoga] = useState(false);
   const [habitoOrigami, setHabitoOrigami] = useState(false);
@@ -73,12 +73,13 @@ export default function SeguimientoScreen() {
         return () => unsubscribeSnapshot();
       } else {
         setUserData(null);
-        setHasDietHabit(false);
+        setTipoHabitoAlimenticio(null);
         setHasAnyHabit(false);
         sethabitoYoga(false);
         setHabitoOrigami(false);
         setHabitoAudioInspira(false);
         setHabitoSteps(false);
+        setHabitoLectura(false);
         setLoading(false);
       }
     });
@@ -90,11 +91,18 @@ export default function SeguimientoScreen() {
       const habitosAlimenticiosRef = collection(firestore, 'habitosUsuarios', userId, 'habitosAlimenticios');
       const alimenticiosSnapshot = await getDocs(habitosAlimenticiosRef);
 
-      const hasDiet = alimenticiosSnapshot.docs.some(doc =>
-        doc.data().habitoSeleccionado === 'Dieta Para Bajar de Peso'
-      );
+      // Verificar qué tipo de hábito alimenticio tiene
+      let tipoHabito = null;
+      alimenticiosSnapshot.docs.forEach(doc => {
+        const habitoData = doc.data();
+        if (habitoData.habitoSeleccionado === 'Dieta Para Bajar de Peso') {
+          tipoHabito = 'bajar';
+        } else if (habitoData.habitoSeleccionado === 'Dieta Para Subir de Peso') {
+          tipoHabito = 'subir';
+        }
+      });
 
-      setHasDietHabit(hasDiet);
+      setTipoHabitoAlimenticio(tipoHabito);
 
       // Verificar hábitos de Yoga
       const habitosFisicos = collection(firestore, 'users', userId, 'ejerciciosYoga');
@@ -114,7 +122,7 @@ export default function SeguimientoScreen() {
       const hasOrigami = capturarOrigami.size > 0;
       setHabitoOrigami(hasOrigami);
 
-      // Verificar hábitos de Audio Inspira - ACTUALIZADO
+      // Verificar hábitos de Audio Inspira
       const habitosAudioInspira = collection(firestore, 'users', userId, 'audios');
       const capturarAudioInspira = await getDocs(habitosAudioInspira);
       const hasAudioInspira = capturarAudioInspira.size > 0;
@@ -132,7 +140,7 @@ export default function SeguimientoScreen() {
 
     } catch (error) {
       console.error('Error al verificar hábitos:', error);
-      setHasDietHabit(false);
+      setTipoHabitoAlimenticio(null);
       setHasAnyHabit(false);
       sethabitoYoga(false);
       setHabitoOrigami(false);
@@ -191,27 +199,26 @@ export default function SeguimientoScreen() {
             <Text className="text-gray-100 text-lg italic">"{randomMessage}"</Text>
           </View>
 
-          {/* Componente de Progreso Alimentación */}
-          {hasDietHabit && (
+          {/* Componente de Progreso Alimentación - Solo mostrar el correspondiente */}
+          {tipoHabitoAlimenticio === 'bajar' && (
             <ProgresoAlimentacion
               userData={userData}
               onGoalUpdated={handleGoalUpdated}
             />
           )}
 
-          {hasDietHabit && (
+          {tipoHabitoAlimenticio === 'subir' && (
             <ProgresoSubirDePeso
               userData={userData}
               onGoalUpdated={handleGoalUpdated}
             />
           )}
 
-
           {/* Mostrar el progreso de ejercicios */}
           <ServicioDeProgreso />
 
           {/* Mensaje cuando no hay hábito de dieta pero sí otros hábitos */}
-          {!hasDietHabit && hasAnyHabit && (
+          {!tipoHabitoAlimenticio && hasAnyHabit && (
             <View className="bg-gray-800 rounded-3xl p-6 mb-6 shadow-2xl border border-gray-700">
               <View className="items-center">
                 <Text style={{ fontSize: 48 }}>🍎</Text>
@@ -219,7 +226,7 @@ export default function SeguimientoScreen() {
                   Progreso de Alimentación
                 </Text>
                 <Text className="text-gray-400 text-base mt-2 text-center">
-                  Para ver tu progreso de peso específico, registra el hábito "Dieta Para Bajar de Peso" en la sección de Hábitos.
+                  Para ver tu progreso de peso específico, registra un hábito alimenticio en la sección de Hábitos.
                 </Text>
               </View>
             </View>
@@ -250,19 +257,64 @@ export default function SeguimientoScreen() {
             <ProgresoYoga />
           )}
 
-          {/* Progreso de Origami */}
-          {habitoOrigami && (
-            <ProgresoOrigami />
-          )}
-
-          {/* Progreso de Audio Inspira - ACTUALIZADO */}
-          {habitoAudioInspira && (
-            <ProgresoAudioInspira />
+          {/* Mensaje cuando no hay hábito de Yoga pero sí otros hábitos */}
+          {!habitoYoga && hasAnyHabit && (
+            <View className="bg-gray-800 rounded-3xl p-6 mb-6 shadow-2xl border border-gray-700">
+              <View className="items-center">
+                <Text style={{ fontSize: 48 }}>🧘</Text>
+                <Text className="text-white text-xl font-bold mt-4 text-center">
+                  Progreso de Yoga
+                </Text>
+                <Text className="text-gray-400 text-base mt-2 text-center">
+                  Para ver tu progreso de yoga, completa ejercicios en la sección "Yoga".
+                </Text>
+              </View>
+            </View>
           )}
 
           {/* Progreso de Lectura*/}
           {habitoLectura && (
             <ProgresoLectura/>
+          )}
+
+          {/* Mensaje cuando no hay hábito de Lectura pero sí otros hábitos */}
+          {!habitoLectura && hasAnyHabit && (
+            <View className="bg-gray-800 rounded-3xl p-6 mb-6 shadow-2xl border border-gray-700">
+              <View className="items-center">
+                <Text style={{ fontSize: 48 }}>📚</Text>
+                <Text className="text-white text-xl font-bold mt-4 text-center">
+                  Progreso de Lectura
+                </Text>
+                <Text className="text-gray-400 text-base mt-2 text-center">
+                  Para ver tu progreso de lectura, lee libros en la sección "Lectura".
+                </Text>
+              </View>
+            </View>
+          )}
+
+          {/* Progreso de Origami */}
+          {habitoOrigami && (
+            <ProgresoOrigami />
+          )}
+
+          {/* Mensaje cuando no hay hábito de Origami pero sí otros hábitos */}
+          {!habitoOrigami && hasAnyHabit && (
+            <View className="bg-gray-800 rounded-3xl p-6 mb-6 shadow-2xl border border-gray-700">
+              <View className="items-center">
+                <Text style={{ fontSize: 48 }}>📜</Text>
+                <Text className="text-white text-xl font-bold mt-4 text-center">
+                  Progreso de Origami
+                </Text>
+                <Text className="text-gray-400 text-base mt-2 text-center">
+                  Para ver tu progreso de origami, completa figuras en la sección "Origami".
+                </Text>
+              </View>
+            </View>
+          )}
+
+          {/* Progreso de Audio Inspira */}
+          {habitoAudioInspira && (
+            <ProgresoAudioInspira />
           )}
 
           {/* Mensaje cuando no hay hábito de Audio Inspira pero sí otros hábitos */}
