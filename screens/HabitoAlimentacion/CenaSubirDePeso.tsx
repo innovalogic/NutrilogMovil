@@ -18,10 +18,10 @@ import WeeklyCalendar from 'Componentes/WeeklyCalendar';
 
 // Define the navigation stack's param list
 type RootStackParamList = {
-  BajarDePeso: undefined;
-  DesayunoBajarDePeso: undefined;
-  AlmuerzoBajarDePeso: undefined;
-  CenaBajarDePeso: undefined;
+  SubirDePeso: undefined;
+  DesayunoSubirDePeso: undefined;
+  AlmuerzoSubirDePeso: undefined;
+  CenaSubirDePeso: undefined;
 };
 
 // Define navigation prop type
@@ -102,7 +102,7 @@ const MealCard = ({ meal, index }: { meal: string; index: number }) => {
   );
 };
 
-export default function CenaBajarDePeso() {
+export default function CenaSubirDePeso() {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [mealPlan, setMealPlan] = useState<MealPlan | null>(null);
@@ -110,83 +110,81 @@ export default function CenaBajarDePeso() {
   const [scaleAnim] = useState(new Animated.Value(0.95));
   const navigation = useNavigation<NavigationProp>();
 
-  // Define meal plans based on weight loss goals
+  // Define meal plans based on weight gain goals
   const mealPlans: { [key: string]: MealPlan } = {
     '1-5': {
-      title: 'Plan Ligero',
-      description: 'Cenas nutritivas y bajas en calorías para una pérdida de peso saludable y sostenible.',
-      calories: '200-300 cal',
+      title: 'Plan Energético',
+      description: 'Cenas ricas en calorías y nutrientes para favorecer el aumento de peso saludable.',
+      calories: '500-650 cal',
       difficulty: 'Fácil',
       meals: [
-        '🥗 Ensalada de quinoa con vegetales y atún (100g quinoa cocida, lechuga, tomate, 100g atún al natural)',
-        '🍲 Sopa de verduras con pechuga de pollo (200ml sopa, 100g pollo a la plancha)',
-        '🍳 Tortilla de claras con espinacas (3 claras, 1 taza espinacas, pimientos)',
+        '🍝 Pasta integral con pollo, crema y aguacate (100g pasta, 100g pollo, 1/2 aguacate, 1 cda crema)',
+        '🥪 Sándwich de pan integral con atún, huevo y mayonesa (2 rebanadas pan, 1 lata atún, 1 huevo, 1 cda mayonesa)',
+        '🥔 Puré de patata con queso rallado y jamón cocido (200g patata, 30g queso, 50g jamón)',
       ],
       tips: [
-        'Usa especias para dar sabor sin añadir calorías',
-        'Evita aderezos grasos en las ensaladas',
-        'Come lentamente para sentirte satisfecho con menos'
+        'Añade frutos secos o semillas a tus platos para sumar calorías',
+        'Utiliza aceites saludables como oliva o aguacate en preparaciones',
+        'Incluye una bebida láctea o batido en la cena para mayor aporte calórico'
       ]
     },
     '6-10': {
-      title: 'Plan Equilibrado',
-      description: 'Mayor control calórico con énfasis en proteínas magras y vegetales bajos en carbohidratos.',
-      calories: '150-250 cal',
+      title: 'Plan Equilibrado para Subir de Peso',
+      description: 'Cenas completas y balanceadas, con énfasis en proteínas, carbohidratos y grasas saludables.',
+      calories: '600-750 cal',
       difficulty: 'Moderado',
       meals: [
-        '🥗 Ensalada verde con pechuga de pavo (100g pavo, espinacas, pepino, sin aderezo calórico)',
-        '🐟 Pescado al vapor con brócoli (120g pescado blanco, 150g brócoli al vapor)',
-        '🍲 Sopa de calabacín sin crema (200ml sopa, calabacín, cebolla, especias)',
+        '🍚 Arroz integral con salmón a la plancha y brócoli (100g arroz, 120g salmón, 100g brócoli)',
+        '🌮 Tacos de tortilla de trigo con carne magra, queso y guacamole (2 tortillas, 100g carne, 30g queso, 2 cdas guacamole)',
+        '🥗 Ensalada de garbanzos con huevo, atún, aguacate y aceite de oliva (100g garbanzos, 1 huevo, 50g atún, 1/2 aguacate)',
       ],
       tips: [
-        'Prioriza vegetales de hoja verde para mayor saciedad',
-        'Bebe agua antes de la cena para controlar el apetito',
-        'Evita carbohidratos refinados por la noche'
+        'No te saltes la cena, es clave para sumar calorías diarias',
+        'Aumenta las porciones de carbohidratos complejos en tus platos',
+        'Incluye siempre una fuente de proteína y otra de grasa saludable'
       ]
     },
     '11-15': {
-      title: 'Plan Intensivo',
-      description: 'Cenas ricas en fibra y muy bajas en calorías para resultados más rápidos.',
-      calories: '100-200 cal',
+      title: 'Plan Intensivo de Masa',
+      description: 'Cenas muy densas en energía para favorecer el desarrollo muscular y el aumento de peso.',
+      calories: '700-900 cal',
       difficulty: 'Avanzado',
       meals: [
-        '🥗 Ensalada de espinacas con huevo cocido (1 taza espinacas, 1 huevo cocido, pepino)',
-        '🥒 Calabacín salteado con tofu (100g tofu, 150g calabacín, especias)',
-        '🍲 Sopa de verduras bajas en carbohidratos (200ml sopa, coliflor, espinacas)',
+        '🍔 Hamburguesa casera de ternera con pan integral, queso y aguacate (120g ternera, 2 panes, 30g queso, 1/2 aguacate)',
+        '🥘 Lasaña de pollo y espinacas con salsa bechamel (150g pollo, 100g pasta, 50g espinaca, 50g bechamel)',
+        '🍛 Curry de garbanzos con arroz y frutos secos (100g garbanzos, 100g arroz, 30g frutos secos)',
       ],
       tips: [
-        'Incorpora infusiones como té verde para mejorar la digestión',
-        'Mantén porciones pequeñas pero ricas en nutrientes',
-        'Evita comer tarde para optimizar el metabolismo'
+        'Puedes añadir una rebanada de pan extra o un postre lácteo para incrementar calorías',
+        'No olvides hidratarte bien, pero evita beber mucha agua justo antes de cenar',
+        'Entrena fuerza para potenciar el aumento de masa muscular'
       ]
     },
     '16-20': {
-      title: 'Plan Extremo',
-      description: 'Enfoque riguroso en cenas muy ligeras para maximizar la pérdida de peso.',
-      calories: '80-150 cal',
+      title: 'Plan Extremo para Ganancia Rápida',
+      description: 'Cenas muy calóricas y completas para quienes buscan un aumento de peso acelerado.',
+      calories: '900-1100 cal',
       difficulty: 'Experto',
       meals: [
-        '🥗 Ensalada de lechuga con camarones (100g camarones cocidos, lechuga, pepino)',
-        '🥬 Espárragos al vapor con huevo cocido (150g espárragos, 1 huevo cocido)',
-        '🍲 Caldo de verduras sin grasa (200ml caldo, apio, zanahoria, especias)',
+        '🍕 Pizza casera con pollo, queso extra y vegetales (2-3 porciones, 150g pollo, 80g queso, vegetales al gusto)',
+        '🥩 Filete de res con papas al horno y ensalada de aguacate (150g res, 200g papas, 1/2 aguacate)',
+        '🥯 Bagel integral con salmón, queso crema y nueces picadas (1 bagel, 80g salmón, 30g queso, 20g nueces)',
       ],
       tips: [
-        'Consulta con un nutricionista para este plan',
-        'Considera suplementos vitamínicos si es necesario',
-        'Monitorea tu energía y evita excesos'
+        'Consulta con un nutricionista si buscas un aumento muy rápido',
+        'Incluye snacks nocturnos saludables si tienes hambre después de cenar',
+        'Escucha a tu cuerpo y ajusta cantidades según tu progreso'
       ]
     },
   };
 
   useEffect(() => {
-    console.log('Cargando pantalla CenaBajarDePeso');
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       if (user) {
         const userDocRef = doc(firestore, 'users', user.uid);
         const unsubscribeSnapshot = onSnapshot(userDocRef, (snapshot) => {
           if (snapshot.exists()) {
             const data = snapshot.data() as UserData;
-            console.log('Datos del usuario:', data);
             setUserData(data);
             
             // Determine the meal plan based on weight goal
@@ -201,11 +199,9 @@ export default function CenaBajarDePeso() {
                 setMealPlan(mealPlans['16-20']);
               } else {
                 setMealPlan(null);
-                console.log('Meta de peso fuera de rango:', data.weightGoal);
               }
             }
-            
-            // Animate content appearance with fade and scale
+
             Animated.parallel([
               Animated.timing(fadeAnim, {
                 toValue: 1,
@@ -218,17 +214,13 @@ export default function CenaBajarDePeso() {
                 useNativeDriver: true,
               })
             ]).start();
-          } else {
-            console.log('No se encontraron datos del usuario');
           }
           setLoading(false);
         }, (error) => {
-          console.error('Error en onSnapshot:', error);
           setLoading(false);
         });
         return () => unsubscribeSnapshot();
       } else {
-        console.log('Usuario no autenticado');
         setUserData(null);
         setLoading(false);
       }
@@ -265,8 +257,8 @@ export default function CenaBajarDePeso() {
             </TouchableOpacity>
             <View className="flex-1 items-center">
               <Icon name="dinner" size={28} color="#F5F5F5" />
-              <Text className="text-gray-100 text-xl font-semibold mt-2">Cena Saludable</Text>
-              <Text className="text-gray-300 text-sm">Termina el día con ligereza</Text>
+              <Text className="text-gray-100 text-xl font-semibold mt-2">Cena para Subir de Peso</Text>
+              <Text className="text-gray-300 text-sm">Termina el día sumando energía</Text>
             </View>
             <View className="w-10" />
           </View>
@@ -300,7 +292,6 @@ export default function CenaBajarDePeso() {
                       <Text className="text-gray-600 text-xs">{mealPlan.difficulty}</Text>
                     </View>
                   </View>
-
                   <Text className="text-gray-600 text-sm leading-6 mb-4">
                     {mealPlan.description}
                   </Text>
@@ -313,7 +304,7 @@ export default function CenaBajarDePeso() {
                     </View>
                     <View className="bg-indigo-100 rounded-lg px-4 py-2">
                       <Text className="text-indigo-900 text-xs font-medium">
-                        <Icon name="clock" size={12} color="#1F2A44" /> 10-15 min
+                        <Icon name="clock" size={12} color="#1F2A44" /> 15-25 min
                       </Text>
                     </View>
                   </View>
@@ -364,7 +355,7 @@ export default function CenaBajarDePeso() {
                   🌟 Motivación del Día
                 </Text>
                 <Text className="text-blue-700 text-center text-sm leading-6">
-                  "Una cena ligera y saludable te acerca a tus metas. ¡Cada elección cuenta!"
+                  "Cada cena nutritiva es un paso más hacia tu meta. ¡Suma energía y sigue avanzando!"
                 </Text>
               </View>
             </Animated.View>
@@ -380,7 +371,7 @@ export default function CenaBajarDePeso() {
               </Text>
               <TouchableOpacity
                 className="bg-blue-600 py-3 px-6 rounded-lg shadow-sm"
-                onPress={() => navigation.navigate('BajarDePeso')}
+                onPress={() => navigation.navigate('SubirDePeso')}
               >
                 <Text className="text-white font-semibold">Establecer Meta</Text>
               </TouchableOpacity>

@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, FlatList, Alert, Image } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { View, Text, TouchableOpacity, FlatList, Alert, Image, Modal } from 'react-native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native'; // Import useFocusEffect
 import { StackNavigationProp } from '@react-navigation/stack';
 import { auth, firestore } from '../firebase';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, doc, deleteDoc } from 'firebase/firestore';
 import BottomNavBar from '../Componentes/BottomNavBar';
 
 type RootStackParamList = {
@@ -16,52 +16,66 @@ type RootStackParamList = {
   DietaMantenerPeso: undefined;
   BajarDePeso: undefined;
   RegistroDietaMantenerPeso: undefined;
-  RegistroDietaSubirPeso: undefined;
+  SubirDePeso: undefined;
   RegistroLecturaDiaria: undefined;
-  RegistroVideoInspira: undefined;
-  RegistroOrigamiDiario: undefined;
-  RegistroHabitosCategorias:undefined;
+  AudioInspira: undefined;
+  Origami: undefined;
+  RegistroHabitosCategorias: undefined;
 };
 
 type HabitosScreenNavigationProp = StackNavigationProp<RootStackParamList>;
 
 export default function HabitosScreen() {
   const navigation = useNavigation<HabitosScreenNavigationProp>();
-  const [habitosFisicos, setHabitosFisicos] = useState<string[]>([]);
-  const [habitosAlimenticios, setHabitosAlimenticios] = useState<string[]>([]);
-  const [habitosSaludMental, setHabitosSaludMental] = useState<string[]>([]);
+  const [habitosFisicos, setHabitosFisicos] = useState<{ id: string; habito: string }[]>([]);
+  const [habitosAlimenticios, setHabitosAlimenticios] = useState<{ id: string; habito: string }[]>([]);
+  const [habitosSaludMental, setHabitosSaludMental] = useState<{ id: string; habito: string }[]>([]);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedHabit, setSelectedHabit] = useState<{ id: string; habito: string; category: string } | null>(null);
 
-  useEffect(() => {
-    const fetchHabitos = async () => {
-      const user = auth.currentUser;
-      if (user) {
-        try {
-          // Recuperar hábitos físicos
-          const habitosFisicosRef = collection(firestore, 'habitosUsuarios', user.uid, 'habitosFisicos');
-          const fisicosSnapshot = await getDocs(habitosFisicosRef);
-          const habitosFisicos = fisicosSnapshot.docs.map(doc => doc.data().habitoSeleccionado);
-          setHabitosFisicos(habitosFisicos);
+  const fetchHabitos = async () => {
+    const user = auth.currentUser;
+    if (user) {
+      try {
+        // Recuperar hábitos físicos
+        const habitosFisicosRef = collection(firestore, 'habitosUsuarios', user.uid, 'habitosFisicos');
+        const fisicosSnapshot = await getDocs(habitosFisicosRef);
+        const habitosFisicos = fisicosSnapshot.docs.map(doc => ({
+          id: doc.id,
+          habito: doc.data().habitoSeleccionado,
+        }));
+        setHabitosFisicos(habitosFisicos);
 
-          // Recuperar hábitos alimenticios
-          const habitosAlimenticiosRef = collection(firestore, 'habitosUsuarios', user.uid, 'habitosAlimenticios');
-          const alimenticiosSnapshot = await getDocs(habitosAlimenticiosRef);
-          const habitosAlimenticios = alimenticiosSnapshot.docs.map(doc => doc.data().habitoSeleccionado);
-          setHabitosAlimenticios(habitosAlimenticios);
+        // Recuperar hábitos alimenticios
+        const habitosAlimenticiosRef = collection(firestore, 'habitosUsuarios', user.uid, 'habitosAlimenticios');
+        const alimenticiosSnapshot = await getDocs(habitosAlimenticiosRef);
+        const habitosAlimenticios = alimenticiosSnapshot.docs.map(doc => ({
+          id: doc.id,
+          habito: doc.data().habitoSeleccionado,
+        }));
+        setHabitosAlimenticios(habitosAlimenticios);
 
-          // Recuperar hábitos de salud mental
-          const habitosSaludMentalRef = collection(firestore, 'habitosUsuarios', user.uid, 'habitosSaludMental');
-          const saludMentalSnapshot = await getDocs(habitosSaludMentalRef);
-          const habitosSaludMental = saludMentalSnapshot.docs.map(doc => doc.data().habitoSeleccionado);
-          setHabitosSaludMental(habitosSaludMental);
-        } catch (error) {
-          console.error('Error al obtener los hábitos:', error);
-          Alert.alert('Error', 'No se pudieron cargar tus hábitos.');
-        }
+        // Recuperar hábitos de salud mental
+        const habitosSaludMentalRef = collection(firestore, 'habitosUsuarios', user.uid, 'habitosSaludMental');
+        const saludMentalSnapshot = await getDocs(habitosSaludMentalRef);
+        const habitosSaludMental = saludMentalSnapshot.docs.map(doc => ({
+          id: doc.id,
+          habito: doc.data().habitoSeleccionado,
+        }));
+        setHabitosSaludMental(habitosSaludMental);
+      } catch (error) {
+        console.error('Error al obtener los hábitos:', error);
+        Alert.alert('Error', 'No se pudieron cargar tus hábitos.');
       }
-    };
+    }
+  };
 
-    fetchHabitos();
-  }, []);
+  // Use useFocusEffect to fetch habits when the screen is focused
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchHabitos();
+    }, [])
+  );
 
   const handleHabitPress = (habit: string) => {
     // Hábitos físicos
@@ -78,15 +92,54 @@ export default function HabitosScreen() {
     } else if (habit === 'Dieta Para Mantener el Peso') {
       navigation.navigate('DietaMantenerPeso');
     } else if (habit === 'Dieta Para Subir de Peso') {
-      navigation.navigate('RegistroDietaSubirPeso');
+      navigation.navigate('SubirDePeso');
     }
     // Hábitos de salud mental
     else if (habit === 'Lectura diaria') {
       navigation.navigate('RegistroLecturaDiaria');
-    } else if (habit === 'Video-Inspira') {
-      navigation.navigate('RegistroVideoInspira');
+    } else if (habit === 'Audio-Inspira') {
+      navigation.navigate('AudioInspira');
     } else if (habit === 'Origami Diario') {
-      navigation.navigate('RegistroOrigamiDiario');
+      navigation.navigate('Origami');
+    }
+  };
+
+  const handleLongPress = (id: string, habito: string, category: string) => {
+    setSelectedHabit({ id, habito, category });
+    setModalVisible(true);
+  };
+
+  const handleDeleteHabit = async () => {
+    if (!selectedHabit) return;
+
+    const user = auth.currentUser;
+    if (user) {
+      try {
+        const collectionPath =
+          selectedHabit.category === 'fisicos'
+            ? 'habitosFisicos'
+            : selectedHabit.category === 'alimenticios'
+            ? 'habitosAlimenticios'
+            : 'habitosSaludMental';
+        const habitDocRef = doc(firestore, 'habitosUsuarios', user.uid, collectionPath, selectedHabit.id);
+        await deleteDoc(habitDocRef);
+
+        // Update state to remove the deleted habit
+        if (selectedHabit.category === 'fisicos') {
+          setHabitosFisicos(habitosFisicos.filter(habit => habit.id !== selectedHabit.id));
+        } else if (selectedHabit.category === 'alimenticios') {
+          setHabitosAlimenticios(habitosAlimenticios.filter(habit => habit.id !== selectedHabit.id));
+        } else {
+          setHabitosSaludMental(habitosSaludMental.filter(habit => habit.id !== selectedHabit.id));
+        }
+
+        setModalVisible(false);
+        setSelectedHabit(null);
+        Alert.alert('Éxito', 'El hábito ha sido eliminado.');
+      } catch (error) {
+        console.error('Error al eliminar el hábito:', error);
+        Alert.alert('Error', 'No se pudo eliminar el hábito.');
+      }
     }
   };
 
@@ -99,7 +152,7 @@ export default function HabitosScreen() {
     'Dieta Para Mantener el Peso': require('../assets/DietaMantenerPeso.png'),
     'Dieta Para Subir de Peso': require('../assets/DietaSubirPeso.png'),
     'Lectura diaria': require('../assets/LecturaDiaria.png'),
-    'Video-Inspira': require('../assets/VideoInspira.png'),
+    'Audio-Inspira': require('../assets/AudioInspira.png'),
     'Origami Diario': require('../assets/Origami.png'),
   };
 
@@ -115,14 +168,15 @@ export default function HabitosScreen() {
             {/* Hábitos físicos */}
             {habitosFisicos.length > 0 && (
               <>
-                <Text className="text-xl font-semibold text-white mb-4">Hábitos Físicos</Text>
+                <Text className="text-xl font-semibold text-white Family mb-4">Hábitos Físicos</Text>
                 <FlatList
                   data={habitosFisicos}
-                  keyExtractor={(item, index) => `fisico-${index}`}
+                  keyExtractor={item => `fisico-${item.id}`}
                   contentContainerStyle={{ paddingBottom: 20 }}
                   renderItem={({ item }) => (
                     <TouchableOpacity
-                      onPress={() => handleHabitPress(item)}
+                      onPress={() => handleHabitPress(item.habito)}
+                      onLongPress={() => handleLongPress(item.id, item.habito, 'fisicos')}
                       activeOpacity={0.8}
                       style={{
                         backgroundColor: '#fff',
@@ -139,7 +193,7 @@ export default function HabitosScreen() {
                       }}
                     >
                       <Image
-                        source={habitImages[item] || require('../assets/yogamenu.png')}
+                        source={habitImages[item.habito] || require('../assets/yogamenu.png')}
                         style={{
                           width: 80,
                           height: 80,
@@ -148,7 +202,7 @@ export default function HabitosScreen() {
                           resizeMode: 'cover',
                         }}
                       />
-                      <Text style={{ fontSize: 20, fontWeight: '600', color: '#1f2937' }}>{item}</Text>
+                      <Text style={{ fontSize: 20, fontWeight: '600', color: '#1f2937' }}>{item.habito}</Text>
                     </TouchableOpacity>
                   )}
                 />
@@ -161,11 +215,12 @@ export default function HabitosScreen() {
                 <Text className="text-xl font-semibold text-white mb-4">Hábitos Alimenticios</Text>
                 <FlatList
                   data={habitosAlimenticios}
-                  keyExtractor={(item, index) => `alimenticio-${index}`}
+                  keyExtractor={item => `alimenticio-${item.id}`}
                   contentContainerStyle={{ paddingBottom: 20 }}
                   renderItem={({ item }) => (
                     <TouchableOpacity
-                      onPress={() => handleHabitPress(item)}
+                      onPress={() => handleHabitPress(item.habito)}
+                      onLongPress={() => handleLongPress(item.id, item.habito, 'alimenticios')}
                       activeOpacity={0.8}
                       style={{
                         backgroundColor: '#fff',
@@ -182,7 +237,7 @@ export default function HabitosScreen() {
                       }}
                     >
                       <Image
-                        source={habitImages[item] || require('../assets/yogamenu.png')}
+                        source={habitImages[item.habito] || require('../assets/yogamenu.png')}
                         style={{
                           width: 80,
                           height: 80,
@@ -191,7 +246,7 @@ export default function HabitosScreen() {
                           resizeMode: 'cover',
                         }}
                       />
-                      <Text style={{ fontSize: 20, fontWeight: '600', color: '#1f2937' }}>{item}</Text>
+                      <Text style={{ fontSize: 20, fontWeight: '600', color: '#1f2937' }}>{item.habito}</Text>
                     </TouchableOpacity>
                   )}
                 />
@@ -204,11 +259,12 @@ export default function HabitosScreen() {
                 <Text className="text-xl font-semibold text-white mb-4">Hábitos de Salud Mental</Text>
                 <FlatList
                   data={habitosSaludMental}
-                  keyExtractor={(item, index) => `saludMental-${index}`}
+                  keyExtractor={item => `saludMental-${item.id}`}
                   contentContainerStyle={{ paddingBottom: 20 }}
                   renderItem={({ item }) => (
                     <TouchableOpacity
-                      onPress={() => handleHabitPress(item)}
+                      onPress={() => handleHabitPress(item.habito)}
+                      onLongPress={() => handleLongPress(item.id, item.habito, 'saludMental')}
                       activeOpacity={0.8}
                       style={{
                         backgroundColor: '#fff',
@@ -225,7 +281,7 @@ export default function HabitosScreen() {
                       }}
                     >
                       <Image
-                        source={habitImages[item] || require('../assets/yogamenu.png')}
+                        source={habitImages[item.habito] || require('../assets/yogamenu.png')}
                         style={{
                           width: 80,
                           height: 80,
@@ -234,7 +290,7 @@ export default function HabitosScreen() {
                           resizeMode: 'cover',
                         }}
                       />
-                      <Text style={{ fontSize: 20, fontWeight: '600', color: '#1f2937' }}>{item}</Text>
+                      <Text style={{ fontSize: 20, fontWeight: '600', color: '#1f2937' }}>{item.habito}</Text>
                     </TouchableOpacity>
                   )}
                 />
@@ -247,13 +303,66 @@ export default function HabitosScreen() {
           </View>
         )}
       </View>
+
+      {/* Modal para confirmar eliminación */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
+          <View style={{ backgroundColor: '#fff', borderRadius: 16, padding: 20, width: '80%', alignItems: 'center' }}>
+            <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10 }}>
+              ¿Deseas eliminar este hábito?
+            </Text>
+            <Text style={{ fontSize: 16, color: '#4b5563', marginBottom: 20, textAlign: 'center' }}>
+              Todos los datos asociados a "{selectedHabit?.habito}" serán eliminados permanentemente.
+            </Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
+              <TouchableOpacity
+                onPress={() => setModalVisible(false)}
+                style={{
+                  backgroundColor: '#6b7280',
+                  borderRadius: 8,
+                  paddingVertical: 10,
+                  paddingHorizontal: 20,
+                  flex: 1,
+                  marginRight: 10,
+                }}
+              >
+                <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600', textAlign: 'center' }}>
+                  Cancelar
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleDeleteHabit}
+                style={{
+                  backgroundColor: '#dc2626',
+                  borderRadius: 8,
+                  paddingVertical: 10,
+                  paddingHorizontal: 20,
+                  flex: 1,
+                }}
+              >
+                <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600', textAlign: 'center' }}>
+                  Eliminar
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
       <TouchableOpacity
         onPress={() => navigation.navigate('RegistroHabitosCategorias')}
         style={{
           backgroundColor: '#2563eb',
           borderRadius: 30,
-          paddingVertical: 14,
+          paddingVertical: 10,
+          paddingHorizontal: 20,
           alignItems: 'center',
+          alignSelf: 'center',
         }}
       >
         <Text style={{ color: '#fff', fontSize: 18, fontWeight: 'bold' }}>+ Añadir Hábito</Text>
