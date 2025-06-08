@@ -85,7 +85,7 @@ const CambiarHora = ({ onHoraSeleccionada, horaInicial, minutosIniciales, titulo
                 </Text>
             </View>
 
-            <View className='items-center bg-black rounded-2xl mx-16 mb-4'>
+            <View className='items-center bg-black rounded-2xl mx-16 mb-4 border border-gray-500/75'>
                 <Text className='text-white text-2xl'>
                     {hora.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
                 </Text>
