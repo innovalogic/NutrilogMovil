@@ -57,7 +57,7 @@ const ProgresoYoga = ({ }) => {
                                 className="p-4 justify-between items-center"
                             >
                                 <LinearGradient
-                                    colors={['#121826', '#202938']} // #202938, #424799, #121826
+                                    colors={['#424799', '#5a189a']} // #202938, #424799, #121826
                                     start={{ x: 0.5, y: 0 }}
                                     end={{ x: 0.5, y: 1 }}
                                     style={{ borderRadius: 16 }}
