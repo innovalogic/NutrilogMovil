@@ -62,15 +62,15 @@ const RegistroScreen: React.FC = () => {
       <TouchableOpacity className="bg-blue-700 py-3 px-5 mb-5 rounded w-full items-center" onPress={handleRegister}>
         <Text className="text-white font-bold">Registrar</Text>
       </TouchableOpacity>
-
+      {/*
       <TouchableOpacity
       className="bg-red-600 py-3 px-5 mb-5 rounded w-full items-center"
-      /*</View>disabled={!request}
-      onPress={() => promptAsync()}*/
+      </View>disabled={!request}
+      onPress={() => promptAsync()}
     >
       <Text className="text-white font-bold">Registro con Google</Text>
     </TouchableOpacity>
-
+    */}
       <TouchableOpacity onPress={() => navigation.navigate('InicioSesion')}>
         <Text className="text-black mt-5 underline">¿Tienes cuenta? Inicia Sesión</Text>
       </TouchableOpacity>

@@ -27,7 +27,7 @@ const InicioSesionScreen = () => {
   };
 
   return (
-    <View className="flex-1 bg-blue-500 items-center justify-center px-5">
+    <View className="flex-1 bg-gray-900 items-center justify-center px-5">
       <Text className="text-white text-3xl font-bold mb-5">Bienvenido de nuevo</Text>
       <Text className="text-white text-3xl font-bold mb-5">A NutriLog</Text>
 
@@ -56,19 +56,20 @@ const InicioSesionScreen = () => {
       />
 
       <TouchableOpacity
-        className="bg-green-500 w-full py-3 rounded-md mb-4 items-center"
+        className="bg-red-600 w-full py-3 rounded-md mb-4 items-center"
         onPress={handleLogin}
       >
         <Text className="text-white font-bold text-base">Iniciar Sesión</Text>
       </TouchableOpacity>
+      {/*
       <TouchableOpacity
         className="bg-red-600 py-3 px-5 mb-5 rounded w-full items-center"
-        /*disabled={!request}
-        onPress={() => promptAsync()}*/
+        disabled={!request}
+        onPress={() => promptAsync()}
       >
         <Text className="text-white font-bold">Registro con Google</Text>
       </TouchableOpacity>
-
+      */}
       <TouchableOpacity onPress={() => navigation.navigate('Registro')}>
         <Text className="text-white mt-5 underline">
           Nuevo Usuario? Regístrate

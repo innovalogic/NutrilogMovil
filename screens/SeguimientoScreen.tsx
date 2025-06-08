@@ -13,6 +13,7 @@ import ProgresoLectura from './HabitoSaludMental/ProgresoLectura';
 import ProgresoOrigami from './HabitoSaludMental/ProgresoOrigami';
 import ProgresoAudioInspira from './HabitoSaludMental/ProgresoAudioInspira';
 import ProgresoSteps from './HabitoEjercicioFisico/ProgresoSteps';
+import ProgresoDietaMantenerPeso from './HabitoAlimentacion/ProgresoDietaMantenerPeso';
 
 interface UserData {
   weightGoal?: number;
@@ -53,6 +54,8 @@ export default function SeguimientoScreen() {
   const [habitoSteps, setHabitoSteps] = useState(false);
   const [randomMessage, setRandomMessage] = useState("");
   const [habitoLectura, setHabitoLectura] = useState(false);
+  const [habitoDietaMantenerPeso, setHabitoDietaMantenerPeso] = useState(false);
+
 
   useEffect(() => {
     // Seleccionar un mensaje motivacional aleatorio al cargar
@@ -129,6 +132,12 @@ export default function SeguimientoScreen() {
       // Verificar si tiene cualquier hábito registrado
       const hasAny = alimenticiosSnapshot.size > 0 || hasYoga || hasOrigami || hasAudioInspira || hasSteps || tieneLecturas;
       setHasAnyHabit(hasAny);
+      
+      const tieneDietaMantenerPeso = alimenticiosSnapshot.docs.some(doc =>
+        doc.data().habitoSeleccionado === 'Dieta Para Mantener el Peso'
+      );
+      setHabitoDietaMantenerPeso(tieneDietaMantenerPeso);
+
 
     } catch (error) {
       console.error('Error al verificar hábitos:', error);
@@ -205,6 +214,10 @@ export default function SeguimientoScreen() {
               onGoalUpdated={handleGoalUpdated}
             />
           )}
+          {habitoDietaMantenerPeso && (
+            <ProgresoDietaMantenerPeso />
+          )}
+
 
 
           {/* Mostrar el progreso de ejercicios */}
