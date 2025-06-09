@@ -177,7 +177,7 @@ export default function SeguimientoScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView className="flex-1 bg-purple-900 items-center justify-center">
+      <SafeAreaView className="flex-1 bg-gray-900 items-center justify-center">
         <View className="items-center">
           <ActivityIndicator size="large" color="#FFFFFF" />
           <Text className="text-white mt-4 text-lg">Cargando tu progreso...</Text>
