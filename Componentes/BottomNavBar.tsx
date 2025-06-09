@@ -22,9 +22,9 @@ const BottomNavBar = () => {
   const navigation = useNavigation<NavigationProp>();
 
   return (
-    <View className="flex-row justify-around items-center bg-black py-4 border-t border-black">
+    <View className="flex-row justify-evenly items-center bg-black py-4 border-t border-black">
       <TouchableOpacity
-        className="items-center"
+        className="flex-1 items-center justify-center"
         onPress={() => navigation.navigate('Seguimiento')}
       >
         <Image
@@ -35,7 +35,7 @@ const BottomNavBar = () => {
         <Text className="text-white text-xs font-extrabold">Seguimiento</Text>
       </TouchableOpacity>
       <TouchableOpacity
-        className="items-center"
+        className="flex-1 items-center justify-center"
         onPress={() => navigation.navigate('Habitos')}
       >
         <Image
@@ -46,7 +46,7 @@ const BottomNavBar = () => {
         <Text className="text-white text-xs font-extrabold">Hábitos</Text>
       </TouchableOpacity>
       <TouchableOpacity
-        className="items-center"
+        className="flex-1 items-center justify-center"
         onPress={() => navigation.navigate('Perfil')}
       >
         <Image
