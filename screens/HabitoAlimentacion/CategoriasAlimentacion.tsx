@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Image, Modal, Pressable, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { auth, firestore } from '../../firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, getDocs } from 'firebase/firestore';
 
 type RootStackParamList = {
   Habitos: { selectedHabit: 'Dieta Para Bajar de Peso' | 'Dieta Para Mantener el Peso' | 'Dieta Para Subir de Peso' };
@@ -15,8 +15,39 @@ export default function CategoriasAlimentacion() {
   const navigation = useNavigation<HabitScreenNavigationProp>();
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedRoute, setSelectedRoute] = useState<'Dieta Para Bajar de Peso' | 'Dieta Para Mantener el Peso' | 'Dieta Para Subir de Peso' | null>(null);
+  const [existingHabits, setExistingHabits] = useState<string[]>([]);
+
+  // Fetch existing habits to check for conflicts
+  const fetchExistingHabits = async () => {
+    const user = auth.currentUser;
+    if (user) {
+      try {
+        const habitosAlimenticiosRef = collection(firestore, 'habitosUsuarios', user.uid, 'habitosAlimenticios');
+        const snapshot = await getDocs(habitosAlimenticiosRef);
+        const habits = snapshot.docs.map(doc => doc.data().habitoSeleccionado);
+        setExistingHabits(habits);
+      } catch (error) {
+        console.error('Error al obtener los hábitos:', error);
+        Alert.alert('Error', 'No se pudieron cargar los hábitos existentes.');
+      }
+    }
+  };
+
+  // Fetch habits when component mounts
+  useEffect(() => {
+    fetchExistingHabits();
+  }, []);
 
   const handleNavigation = (route: 'Dieta Para Bajar de Peso' | 'Dieta Para Mantener el Peso' | 'Dieta Para Subir de Peso') => {
+    // Check for conflicting habits
+    if (route === 'Dieta Para Bajar de Peso' && existingHabits.includes('Dieta Para Subir de Peso')) {
+      Alert.alert('Atención', 'No puedes registrar "Dieta Para Bajar de Peso" porque ya tienes registrado "Dieta Para Subir de Peso".');
+      return;
+    }
+    if (route === 'Dieta Para Subir de Peso' && existingHabits.includes('Dieta Para Bajar de Peso')) {
+      Alert.alert('Atención', 'No puedes registrar "Dieta Para Subir de Peso" porque ya tienes registrado "Dieta Para Bajar de Peso".');
+      return;
+    }
     setSelectedRoute(route);
     setModalVisible(true);
   };
@@ -34,10 +65,12 @@ export default function CategoriasAlimentacion() {
           // Agregar un nuevo documento con el hábito seleccionado
           await addDoc(habitosAlimenticiosRef, {
             habitoSeleccionado: selectedRoute,
-            timestamp: serverTimestamp()
+            timestamp: serverTimestamp(),
           });
 
           console.log('Hábito alimenticio registrado correctamente');
+          // Refresh existing habits after adding a new one
+          await fetchExistingHabits();
         } catch (error) {
           console.error('Error al registrar el hábito:', error);
           Alert.alert('Error', 'Hubo un problema al registrar tu hábito.');
