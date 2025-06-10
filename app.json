@@ -18,7 +18,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true
     },
@@ -31,8 +33,13 @@
         "android.permission.ACTIVITY_RECOGNITION",
         "android.permission.FOREGROUND_SERVICE",
         "android.permission.RECEIVE_BOOT_COMPLETED"
-      ]
+      ],
+      "package": "com.andresojr.myexpoapp"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "11ac6a1a-5620-41b5-b487-c69d171ce2ad"
+      }
     }
   }
 }
-
