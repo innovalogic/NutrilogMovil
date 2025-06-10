@@ -39,13 +39,28 @@ export default function CategoriasAlimentacion() {
   }, []);
 
   const handleNavigation = (route: 'Dieta Para Bajar de Peso' | 'Dieta Para Mantener el Peso' | 'Dieta Para Subir de Peso') => {
-    // Check for conflicting habits
-    if (route === 'Dieta Para Bajar de Peso' && existingHabits.includes('Dieta Para Subir de Peso')) {
-      Alert.alert('Atención', 'No puedes registrar "Dieta Para Bajar de Peso" porque ya tienes registrado "Dieta Para Subir de Peso".');
+    if (route === 'Dieta Para Bajar de Peso' && existingHabits.includes('Dieta Para Bajar de Peso')) {
+      Alert.alert('Atención', 'El hábito "Dieta Para Bajar de Peso" ya está registrado.');
       return;
     }
-    if (route === 'Dieta Para Subir de Peso' && existingHabits.includes('Dieta Para Bajar de Peso')) {
-      Alert.alert('Atención', 'No puedes registrar "Dieta Para Subir de Peso" porque ya tienes registrado "Dieta Para Bajar de Peso".');
+    if (route === 'Dieta Para Bajar de Peso' && (existingHabits.includes('Dieta Para Subir de Peso') || existingHabits.includes('Dieta Para Mantener el Peso'))) {
+      Alert.alert('Atención', `No puedes registrar "Dieta Para Bajar de Peso" porque ya tienes registrado "${existingHabits[0]}". Por favor, elimina el hábito actual antes de añadir uno nuevo.`);
+      return;
+    }
+    if (route === 'Dieta Para Subir de Peso' && existingHabits.includes('Dieta Para Subir de Peso')) {
+      Alert.alert('Atención', 'El hábito "Dieta Para Subir de Peso" ya está registrado.');
+      return;
+    }
+    if (route === 'Dieta Para Subir de Peso' && (existingHabits.includes('Dieta Para Bajar de Peso') || existingHabits.includes('Dieta Para Mantener el Peso'))) {
+      Alert.alert('Atención', `No puedes registrar "Dieta Para Subir de Peso" porque ya tienes registrado "${existingHabits[0]}". Por favor, elimina el hábito actual antes de añadir uno nuevo.`);
+      return;
+    }
+    if (route === 'Dieta Para Mantener el Peso' && existingHabits.includes('Dieta Para Mantener el Peso')) {
+      Alert.alert('Atención', 'El hábito "Dieta Para Mantener el Peso" ya está registrado.');
+      return;
+    }
+    if (route === 'Dieta Para Mantener el Peso' && (existingHabits.includes('Dieta Para Bajar de Peso') || existingHabits.includes('Dieta Para Subir de Peso'))) {
+      Alert.alert('Atención', `No puedes registrar "Dieta Para Mantener el Peso" porque ya tienes registrado "${existingHabits[0]}". Por favor, elimina el hábito actual antes de añadir uno nuevo.`);
       return;
     }
     setSelectedRoute(route);
